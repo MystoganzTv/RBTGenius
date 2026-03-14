@@ -1,0 +1,123 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  BarChart3,
+  Bot,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  CreditCard,
+  GraduationCap,
+  HelpCircle,
+  LayoutDashboard,
+  Sparkles,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { createPageUrl } from "@/utils";
+
+const navItems = [
+  { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
+  { name: "Practice", icon: HelpCircle, page: "Practice" },
+  { name: "Flashcards", icon: Sparkles, page: "Flashcards", badge: "NEW" },
+  { name: "Mock Exams", icon: ClipboardCheck, page: "MockExams" },
+  { name: "AI Tutor", icon: Bot, page: "AITutor", badge: "AI" },
+  { name: "Analytics", icon: BarChart3, page: "Analytics" },
+  { name: "Pricing", icon: CreditCard, page: "Pricing" },
+];
+
+export default function Sidebar({ currentPage, isAdmin: _isAdmin }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside
+      className={cn(
+        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-slate-100 bg-white transition-all duration-300",
+        collapsed ? "w-[72px]" : "w-[260px]",
+      )}
+    >
+      <div className="flex h-16 items-center border-b border-slate-100 px-4">
+        <Link
+          to={createPageUrl("Dashboard")}
+          className="flex min-w-0 items-center gap-2.5"
+        >
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#1E5EFF]">
+            <GraduationCap className="h-5 w-5 text-white" />
+          </div>
+
+          {!collapsed ? (
+            <div className="flex items-center gap-1">
+              <span className="text-lg font-bold tracking-tight text-slate-900">
+                RBT
+              </span>
+              <span className="text-lg font-bold tracking-tight text-[#1E5EFF]">
+                Genius
+              </span>
+              <Sparkles className="-mt-1 h-3.5 w-3.5 text-[#FFB800]" />
+            </div>
+          ) : null}
+        </Link>
+      </div>
+
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <div
+          className={cn(
+            "mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400",
+            collapsed ? "text-center" : "px-3",
+          )}
+        >
+          {collapsed ? "•" : "Learning"}
+        </div>
+
+        {navItems.map((item) => {
+          const isActive = currentPage === item.page;
+
+          return (
+            <Link
+              key={item.page}
+              to={createPageUrl(item.page)}
+              className={cn(
+                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-[#1E5EFF]/8 text-[#1E5EFF]"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700",
+              )}
+            >
+              <item.icon
+                className={cn(
+                  "h-[18px] w-[18px] flex-shrink-0",
+                  isActive && "text-[#1E5EFF]",
+                )}
+              />
+
+              {!collapsed ? <span>{item.name}</span> : null}
+
+              {!collapsed && item.badge ? (
+                <span className="ml-auto rounded-full bg-gradient-to-r from-[#1E5EFF] to-[#6366F1] px-2 py-0.5 text-[10px] font-bold text-white">
+                  {item.badge}
+                </span>
+              ) : null}
+
+              {isActive ? (
+                <div className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[#1E5EFF]" />
+              ) : null}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-slate-100 p-3">
+        <button
+          type="button"
+          onClick={() => setCollapsed((current) => !current)}
+          className="flex w-full items-center justify-center rounded-xl py-2 text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-600"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+    </aside>
+  );
+}
