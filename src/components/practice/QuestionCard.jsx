@@ -1,0 +1,212 @@
+import { useState } from "react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Lightbulb,
+  XCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+const topicLabels = {
+  measurement: "Measurement",
+  assessment: "Assessment",
+  skill_acquisition: "Skill Acquisition",
+  behavior_reduction: "Behavior Reduction",
+  documentation: "Documentation",
+  professional_conduct: "Professional Conduct",
+};
+
+export default function QuestionCard({
+  question,
+  questionNumber,
+  totalQuestions,
+  onAnswer,
+  onNext,
+}) {
+  const [selected, setSelected] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = () => {
+    if (!selected) {
+      return;
+    }
+
+    setSubmitted(true);
+    onAnswer?.(selected, selected === question.correct_answer);
+  };
+
+  const handleNext = () => {
+    setSelected(null);
+    setSubmitted(false);
+    onNext?.();
+  };
+
+  const isCorrect = selected === question?.correct_answer;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold text-slate-400">
+            Question {questionNumber} of {totalQuestions}
+          </span>
+          <Badge
+            variant="secondary"
+            className="border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 text-[10px] text-[#1E5EFF]"
+          >
+            {topicLabels[question?.topic] || question?.topic}
+          </Badge>
+          {question?.bacb_concept ? (
+            <Badge variant="secondary" className="text-[10px]">
+              {question.bacb_concept}
+            </Badge>
+          ) : null}
+        </div>
+
+        <Badge
+          variant="secondary"
+          className={cn(
+            "text-[10px]",
+            question?.difficulty === "beginner"
+              ? "bg-green-50 text-green-700"
+              : question?.difficulty === "intermediate"
+                ? "bg-yellow-50 text-yellow-700"
+                : "bg-red-50 text-red-700",
+          )}
+        >
+          {question?.difficulty}
+        </Badge>
+      </div>
+
+      <div className="p-6">
+        <p className="mb-6 text-base font-medium leading-relaxed text-slate-900">
+          {question?.text}
+        </p>
+
+        <div className="space-y-3">
+          {(question?.options || []).map((option) => {
+            const isThis = selected === option.label;
+            const isCorrectAnswer = option.label === question?.correct_answer;
+            let optionStyle =
+              "border-slate-200 hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/3";
+
+            if (submitted) {
+              if (isCorrectAnswer) {
+                optionStyle = "border-emerald-400 bg-emerald-50";
+              } else if (isThis && !isCorrect) {
+                optionStyle = "border-red-400 bg-red-50";
+              } else {
+                optionStyle = "border-slate-100 opacity-60";
+              }
+            } else if (isThis) {
+              optionStyle =
+                "border-[#1E5EFF] bg-[#1E5EFF]/5 shadow-sm shadow-[#1E5EFF]/10";
+            }
+
+            return (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => !submitted && setSelected(option.label)}
+                disabled={submitted}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
+                  optionStyle,
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm font-semibold",
+                    submitted && isCorrectAnswer
+                      ? "bg-emerald-500 text-white"
+                      : submitted && isThis && !isCorrect
+                        ? "bg-red-500 text-white"
+                        : isThis
+                          ? "bg-[#1E5EFF] text-white"
+                          : "bg-slate-100 text-slate-500",
+                  )}
+                >
+                  {submitted && isCorrectAnswer ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : submitted && isThis && !isCorrect ? (
+                    <XCircle className="h-4 w-4" />
+                  ) : (
+                    option.label
+                  )}
+                </span>
+                <span className="text-sm text-slate-900">{option.text}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100 px-6 py-4">
+        {!submitted ? (
+          <Button
+            onClick={handleSubmit}
+            disabled={!selected}
+            className="w-full rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+          >
+            Submit Answer
+          </Button>
+        ) : (
+          <div className="space-y-4">
+            <div
+              className={cn(
+                "flex items-start gap-3 rounded-xl border p-4",
+                isCorrect
+                  ? "border-emerald-200 bg-emerald-50"
+                  : "border-red-200 bg-red-50",
+              )}
+            >
+              {isCorrect ? (
+                <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+              ) : (
+                <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
+              )}
+              <div>
+                <p
+                  className={cn(
+                    "text-sm font-semibold",
+                    isCorrect ? "text-emerald-700" : "text-red-700",
+                  )}
+                >
+                  {isCorrect ? "Correct!" : "Incorrect"}
+                </p>
+                {!isCorrect ? (
+                  <p className="mt-1 text-xs text-red-600">
+                    The correct answer is {question?.correct_answer}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            {question?.explanation ? (
+              <div className="rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-[#FFB800]" />
+                  <span className="text-xs font-semibold text-[#1E5EFF]">
+                    Explanation
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed text-slate-600">
+                  {question.explanation}
+                </p>
+              </div>
+            ) : null}
+
+            <Button
+              onClick={handleNext}
+              className="w-full gap-2 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+            >
+              Next Question <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
