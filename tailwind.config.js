@@ -23,6 +23,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       colors: {
+        background: "#ffffff",
+        foreground: "#0f172a",
+        border: "#e2e8f0",
         brand: {
           50: "#eef7ff",
           100: "#d9ecff",
@@ -34,6 +37,14 @@ export default {
           700: "#1959eb",
           800: "#1c49be",
           900: "#1d4195",
+        },
+        sidebar: {
+          DEFAULT: "#ffffff",
+          foreground: "#334155",
+          border: "#e2e8f0",
+          accent: "#eff6ff",
+          "accent-foreground": "#1f6fff",
+          ring: "#93c5fd",
         },
       },
     },
