@@ -38,7 +38,7 @@ export default function App() {
           </div>
         </section>
       </Layout>
-      <Toaster richColors position="top-right" />
+      <Toaster />
     </>
   );
 }

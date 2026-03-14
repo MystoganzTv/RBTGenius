@@ -10,8 +10,8 @@ import {
   Loader2,
   Zap,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
 function FunctionDisplay({ toolCall }) {

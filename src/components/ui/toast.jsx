@@ -3,6 +3,8 @@ import { cva } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const ToastContext = React.createContext({ onOpenChange: undefined });
+
 const ToastProvider = React.forwardRef(({ ...props }, ref) => (
   <div
     ref={ref}
@@ -38,15 +40,20 @@ const toastVariants = cva(
   },
 );
 
-const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
-  return (
-    <div
-      ref={ref}
-      className={cn(toastVariants({ variant }), className)}
-      {...props}
-    />
-  );
-});
+const Toast = React.forwardRef(
+  ({ className, variant, open = true, onOpenChange, ...props }, ref) => {
+    return (
+      <ToastContext.Provider value={{ onOpenChange }}>
+        <div
+          ref={ref}
+          data-state={open ? "open" : "closed"}
+          className={cn(toastVariants({ variant }), className)}
+          {...props}
+        />
+      </ToastContext.Provider>
+    );
+  },
+);
 
 Toast.displayName = "Toast";
 
@@ -63,19 +70,27 @@ const ToastAction = React.forwardRef(({ className, ...props }, ref) => (
 
 ToastAction.displayName = "ToastAction";
 
-const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
-  <button
-    ref={ref}
-    className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-slate-500/70 opacity-0 transition-opacity hover:text-slate-900 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-300 group-hover:opacity-100 group-[.destructive]:text-red-100/80 group-[.destructive]:hover:text-white group-[.destructive]:focus:ring-red-300",
-      className,
-    )}
-    toast-close=""
-    {...props}
-  >
-    <X className="h-4 w-4" />
-  </button>
-));
+const ToastClose = React.forwardRef(({ className, onClick, ...props }, ref) => {
+  const { onOpenChange } = React.useContext(ToastContext);
+
+  return (
+    <button
+      ref={ref}
+      className={cn(
+        "absolute right-2 top-2 rounded-md p-1 text-slate-500/70 opacity-0 transition-opacity hover:text-slate-900 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-300 group-hover:opacity-100 group-[.destructive]:text-red-100/80 group-[.destructive]:hover:text-white group-[.destructive]:focus:ring-red-300",
+        className,
+      )}
+      toast-close=""
+      onClick={(event) => {
+        onClick?.(event);
+        onOpenChange?.(false);
+      }}
+      {...props}
+    >
+      <X className="h-4 w-4" />
+    </button>
+  );
+});
 
 ToastClose.displayName = "ToastClose";
 
