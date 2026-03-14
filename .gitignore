@@ -5,6 +5,10 @@
 *.userosscache
 *.sln.docstates
 
+# Node
+node_modules/
+dist/
+
 # Build outputs
 [Bb]in/
 [Oo]bj/
@@ -23,3 +27,8 @@ Thumbs.db
 # Tooling
 .idea/
 .vscode/
+
+# Env files
+.env
+.env.local
+.env.*.local

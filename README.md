@@ -1,17 +1,23 @@
 # RBT GENIUS
 
-Boilerplate inicial del proyecto para empezar a agregar clases y organizar el codigo desde GitHub.
+Boilerplate inicial con Vite, React y Tailwind para empezar a agregar clases, paginas y componentes.
 
-## Estructura
+## Scripts
 
-- `src/`: codigo fuente principal
-- `tests/`: pruebas automatizadas
+- `npm install`
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
+- `npm run lint`
 
-## Siguiente paso sugerido
+## Estructura principal
 
-Cuando definas el tipo de proyecto, podemos convertir esta base en:
+- `entities/`: modelos base del dominio
+- `src/pages/`: pantallas principales
+- `src/components/`: componentes reutilizables
+- `src/lib/`: utilidades de aplicacion y contexto
+- `src/utils/`: helpers compartidos
 
-- libreria de clases `.NET`
-- aplicacion de consola
-- API
-- proyecto web
+## Estado actual
+
+La estructura esta preparada como punto de partida. Todavia no se han instalado dependencias en este entorno.
