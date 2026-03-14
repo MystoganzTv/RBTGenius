@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import { useAuth } from "@/lib/AuthContext";
@@ -24,17 +25,41 @@ function getStoredPlan() {
 
 export default function Layout({ children, currentPageName }) {
   const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const plan = getStoredPlan();
+  const isAdmin = user?.role === "admin";
+
+  if (currentPageName === "Pricing") {
+    return <div className="min-h-screen bg-[#F8FAFC]">{children}</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar currentPage={currentPageName} />
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {sidebarOpen ? (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      ) : null}
 
-      <div className="min-h-screen lg:pl-[260px]">
-        <TopBar user={user} plan={plan} onLogout={() => logout(false)} />
+      <div className="hidden lg:block">
+        <Sidebar currentPage={currentPageName} isAdmin={isAdmin} />
+      </div>
 
-        <main className="px-4 py-6 sm:px-6">
-          <div className="mx-auto max-w-7xl">{children}</div>
+      <div className={sidebarOpen ? "lg:hidden block" : "hidden lg:hidden"}>
+        <Sidebar currentPage={currentPageName} isAdmin={isAdmin} />
+      </div>
+
+      <div className="transition-all duration-300 lg:ml-[260px]">
+        <TopBar
+          onMenuClick={() => setSidebarOpen((current) => !current)}
+          user={user}
+          plan={plan}
+          onLogout={() => logout(false)}
+        />
+
+        <main className="p-4 lg:p-6">
+          {children}
         </main>
       </div>
     </div>
