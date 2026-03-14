@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+  useParams,
+} from "react-router-dom";
 import UserNotRegisteredError from "@/components/UserNotRegisteredError.jsx";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
@@ -18,6 +24,43 @@ function LayoutWrapper({ children, currentPageName }) {
   }
 
   return <Layout currentPageName={currentPageName}>{children}</Layout>;
+}
+
+function resolvePageComponent(pageName) {
+  return Pages[pageName] || null;
+}
+
+function QueryPageRenderer() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const requestedPage = searchParams.get("page");
+  const pageKey = requestedPage && Pages[requestedPage] ? requestedPage : mainPageKey;
+  const PageComponent = resolvePageComponent(pageKey) || MainPage;
+
+  if (!PageComponent) {
+    return <PageNotFound />;
+  }
+
+  return (
+    <LayoutWrapper currentPageName={pageKey}>
+      <PageComponent />
+    </LayoutWrapper>
+  );
+}
+
+function LegacyPageRenderer() {
+  const { pageName } = useParams();
+  const PageComponent = resolvePageComponent(pageName);
+
+  if (!PageComponent) {
+    return <PageNotFound />;
+  }
+
+  return (
+    <LayoutWrapper currentPageName={pageName}>
+      <PageComponent />
+    </LayoutWrapper>
+  );
 }
 
 function AuthenticatedApp() {
@@ -52,27 +95,8 @@ function AuthenticatedApp() {
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <LayoutWrapper currentPageName={mainPageKey}>
-            {MainPage ? <MainPage /> : null}
-          </LayoutWrapper>
-        }
-      />
-
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-
+      <Route path="/" element={<QueryPageRenderer />} />
+      <Route path="/:pageName" element={<LegacyPageRenderer />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

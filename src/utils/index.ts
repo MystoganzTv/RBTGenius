@@ -6,5 +6,5 @@ export function cn(...inputs: Array<string | false | null | undefined>) {
 }
 
 export function createPageUrl(pageName: string) {
-  return `/${pageName.replace(/ /g, "-")}`;
+  return `/?page=${pageName.replace(/ /g, "-")}`;
 }
