@@ -1,6 +1,6 @@
 import Layout from "./Layout";
 import pages from "./pages.config";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function App() {
   return (
