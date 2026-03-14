@@ -1,44 +1,26 @@
-const pages = [
-  {
-    path: "/dashboard",
-    label: "Dashboard",
-    description: "Vista principal para progreso, metricas y accesos rapidos.",
-  },
-  {
-    path: "/practice",
-    label: "Practice",
-    description: "Espacio para preguntas, ejercicios y simulacion de estudio.",
-  },
-  {
-    path: "/mock-exams",
-    label: "Mock Exams",
-    description: "Seccion para examenes de practica y seguimiento de resultados.",
-  },
-  {
-    path: "/flashcards",
-    label: "Flashcards",
-    description: "Tarjetas de estudio para repasar conceptos clave.",
-  },
-  {
-    path: "/ai-tutor",
-    label: "AI Tutor",
-    description: "Asistente de apoyo para resolver dudas y practicar.",
-  },
-  {
-    path: "/analytics",
-    label: "Analytics",
-    description: "Resumen del desempeno del usuario y avances acumulados.",
-  },
-  {
-    path: "/pricing",
-    label: "Pricing",
-    description: "Planes, membresias y detalles de acceso al producto.",
-  },
-  {
-    path: "/profile",
-    label: "Profile",
-    description: "Configuracion del usuario, informacion personal y progreso.",
-  },
-];
+import Layout from "./Layout";
+import AITutor from "@/pages/AITutor";
+import Analytics from "@/pages/Analytics";
+import Dashboard from "@/pages/Dashboard";
+import Flashcards from "@/pages/Flashcards";
+import MockExams from "@/pages/MockExams";
+import Practice from "@/pages/Practice";
+import Pricing from "@/pages/Pricing";
+import Profile from "@/pages/Profile";
 
-export default pages;
+export const pagesConfig = {
+  Layout,
+  mainPage: "Dashboard",
+  Pages: {
+    Dashboard,
+    Practice,
+    Flashcards,
+    MockExams,
+    AITutor,
+    Analytics,
+    Pricing,
+    Profile,
+  },
+};
+
+export default pagesConfig;
