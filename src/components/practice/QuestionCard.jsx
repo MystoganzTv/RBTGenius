@@ -104,12 +104,12 @@ export default function QuestionCard({
             if (isSubmitted) {
               if (isCorrectAnswer) {
                 optionStyle =
-                  "border-emerald-400 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/35";
-                optionTextStyle = "text-emerald-950 dark:text-emerald-100";
+                  "border-emerald-400 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-900/70";
+                optionTextStyle = "text-emerald-950 dark:text-white";
               } else if (isThis && !isCorrect) {
                 optionStyle =
-                  "border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950/35";
-                optionTextStyle = "text-red-950 dark:text-red-100";
+                  "border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-900/70";
+                optionTextStyle = "text-red-950 dark:text-white";
               } else {
                 optionStyle = "border-slate-100 opacity-60 dark:border-slate-900";
                 optionTextStyle = "text-slate-600 dark:text-slate-400";
