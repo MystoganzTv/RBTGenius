@@ -23,6 +23,8 @@ const topicLabels = {
   professional_conduct: "Professional Conduct",
 };
 
+const PRACTICE_BANK_SIZE = 500;
+
 const fallbackQuestions = [
   {
     id: "q1",
@@ -116,6 +118,45 @@ const fallbackQuestions = [
   },
 ];
 
+const scenarioPrefixes = [
+  "During a clinic session,",
+  "During home-based therapy,",
+  "While collecting data,",
+  "When supporting a skill acquisition program,",
+  "During supervision review,",
+  "In a community outing,",
+  "While implementing the treatment plan,",
+  "At the start of session,",
+  "During a transition between activities,",
+  "While preparing session notes,",
+];
+
+const scenarioSuffixes = [
+  "Choose the best response.",
+  "Identify the most appropriate action.",
+  "Select the option most aligned with RBT practice.",
+  "Pick the answer that best matches ABA principles.",
+  "Choose the response that protects treatment integrity.",
+];
+
+function buildPracticeQuestionBank(size = PRACTICE_BANK_SIZE) {
+  return Array.from({ length: size }, (_, index) => {
+    const seed = fallbackQuestions[index % fallbackQuestions.length];
+    const prefix = scenarioPrefixes[index % scenarioPrefixes.length];
+    const suffix = scenarioSuffixes[index % scenarioSuffixes.length];
+    const topicLabel =
+      topicLabels[seed.topic] || seed.topic.replace(/_/g, " ");
+    const variantNumber = index + 1;
+
+    return {
+      ...seed,
+      id: `practice_${seed.id}_${variantNumber}`,
+      text: `${prefix} (${topicLabel} set ${variantNumber}) ${seed.text} ${suffix}`,
+      original_id: seed.id,
+    };
+  });
+}
+
 function readLocalJson(key, fallback) {
   if (typeof window === "undefined") {
     return fallback;
@@ -143,10 +184,15 @@ function writeLocalJson(key, value) {
 }
 
 async function loadPracticeQuestions() {
-  const questions = readLocalJson(QUESTIONS_STORAGE_KEY, fallbackQuestions);
-  return Array.isArray(questions) && questions.length > 0
-    ? questions
-    : fallbackQuestions;
+  const generatedFallbackQuestions = buildPracticeQuestionBank();
+  const questions = readLocalJson(QUESTIONS_STORAGE_KEY, generatedFallbackQuestions);
+
+  if (Array.isArray(questions) && questions.length >= PRACTICE_BANK_SIZE) {
+    return questions;
+  }
+
+  writeLocalJson(QUESTIONS_STORAGE_KEY, generatedFallbackQuestions);
+  return generatedFallbackQuestions;
 }
 
 async function storeAttempt(attempt) {
