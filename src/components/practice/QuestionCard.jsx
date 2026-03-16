@@ -1,7 +1,7 @@
-import { useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
+  Flag,
   Lightbulb,
   XCircle,
 } from "lucide-react";
@@ -22,28 +22,27 @@ export default function QuestionCard({
   question,
   questionNumber,
   totalQuestions,
+  selectedAnswer = null,
+  isSubmitted = false,
+  isFlagged = false,
+  onSelectAnswer,
   onAnswer,
   onNext,
+  onToggleFlag,
 }) {
-  const [selected, setSelected] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
-
   const handleSubmit = () => {
-    if (!selected) {
+    if (!selectedAnswer) {
       return;
     }
 
-    setSubmitted(true);
-    onAnswer?.(selected, selected === question.correct_answer);
+    onAnswer?.(selectedAnswer, selectedAnswer === question.correct_answer);
   };
 
   const handleNext = () => {
-    setSelected(null);
-    setSubmitted(false);
     onNext?.();
   };
 
-  const isCorrect = selected === question?.correct_answer;
+  const isCorrect = selectedAnswer === question?.correct_answer;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
@@ -78,6 +77,21 @@ export default function QuestionCard({
         >
           {question?.difficulty}
         </Badge>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "ml-2 rounded-xl px-2.5 text-xs",
+            isFlagged
+              ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+              : "text-slate-500 hover:bg-slate-100",
+          )}
+          onClick={onToggleFlag}
+        >
+          <Flag className={cn("h-3.5 w-3.5", isFlagged && "fill-current")} />
+          {isFlagged ? "Flagged" : "Flag"}
+        </Button>
       </div>
 
       <div className="p-6">
@@ -87,12 +101,12 @@ export default function QuestionCard({
 
         <div className="space-y-3">
           {(question?.options || []).map((option) => {
-            const isThis = selected === option.label;
+            const isThis = selectedAnswer === option.label;
             const isCorrectAnswer = option.label === question?.correct_answer;
             let optionStyle =
               "border-slate-200 hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/3";
 
-            if (submitted) {
+            if (isSubmitted) {
               if (isCorrectAnswer) {
                 optionStyle = "border-emerald-400 bg-emerald-50";
               } else if (isThis && !isCorrect) {
@@ -109,8 +123,8 @@ export default function QuestionCard({
               <button
                 key={option.label}
                 type="button"
-                onClick={() => !submitted && setSelected(option.label)}
-                disabled={submitted}
+                onClick={() => !isSubmitted && onSelectAnswer?.(option.label)}
+                disabled={isSubmitted}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
                   optionStyle,
@@ -119,18 +133,18 @@ export default function QuestionCard({
                 <span
                   className={cn(
                     "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm font-semibold",
-                    submitted && isCorrectAnswer
+                    isSubmitted && isCorrectAnswer
                       ? "bg-emerald-500 text-white"
-                      : submitted && isThis && !isCorrect
+                      : isSubmitted && isThis && !isCorrect
                         ? "bg-red-500 text-white"
                         : isThis
                           ? "bg-[#1E5EFF] text-white"
                           : "bg-slate-100 text-slate-500",
                   )}
                 >
-                  {submitted && isCorrectAnswer ? (
+                  {isSubmitted && isCorrectAnswer ? (
                     <CheckCircle2 className="h-4 w-4" />
-                  ) : submitted && isThis && !isCorrect ? (
+                  ) : isSubmitted && isThis && !isCorrect ? (
                     <XCircle className="h-4 w-4" />
                   ) : (
                     option.label
@@ -144,10 +158,10 @@ export default function QuestionCard({
       </div>
 
       <div className="border-t border-slate-100 px-6 py-4">
-        {!submitted ? (
+        {!isSubmitted ? (
           <Button
             onClick={handleSubmit}
-            disabled={!selected}
+            disabled={!selectedAnswer}
             className="w-full rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
           >
             Submit Answer
