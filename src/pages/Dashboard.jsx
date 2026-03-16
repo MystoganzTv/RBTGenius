@@ -37,6 +37,26 @@ const fallbackQuestions = Array.from({ length: 320 }, (_, index) => ({
   id: `question-${index + 1}`,
 }));
 
+const PROGRESS_STORAGE_KEY = "rbt_genius_user_progress";
+
+const planStyles = {
+  free: {
+    label: "Free Plan",
+    className:
+      "border-[#FFB800]/40 bg-[#FFB800]/10 text-[#D18B00] dark:border-[#FFB800]/30 dark:bg-[#FFB800]/15 dark:text-[#FFD36A]",
+  },
+  premium_monthly: {
+    label: "Premium Monthly",
+    className:
+      "border-[#1E5EFF]/25 bg-[#1E5EFF]/10 text-[#1E5EFF] dark:border-[#1E5EFF]/30 dark:bg-[#1E5EFF]/15 dark:text-[#8EB0FF]",
+  },
+  premium_yearly: {
+    label: "Premium Yearly",
+    className:
+      "border-emerald-300/70 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+  },
+};
+
 function readLocalJson(key, fallback) {
   if (typeof window === "undefined") {
     return fallback;
@@ -53,6 +73,11 @@ function readLocalJson(key, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function getStoredPlan() {
+  const progress = readLocalJson(PROGRESS_STORAGE_KEY, fallbackProgress);
+  return progress?.plan || "free";
 }
 
 async function loadDashboardData() {
@@ -85,6 +110,8 @@ export default function Dashboard() {
 
   const firstName =
     user?.full_name?.split(" ")[0] || user?.name?.split(" ")[0] || null;
+  const plan = getStoredPlan();
+  const activePlan = planStyles[plan] || planStyles.free;
 
   const badges = [
     { emoji: "🔥", label: "Streak 3", unlocked: streak >= 3 },
@@ -100,23 +127,44 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Welcome back{firstName ? `, ${firstName}` : ""} 👋
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Let's continue your RBT exam preparation.
-          </p>
-        </div>
+      <section className="relative overflow-hidden rounded-[2rem] border border-[#1E5EFF]/10 bg-white px-8 py-9 shadow-[0_30px_80px_-40px_rgba(30,94,255,0.35)] dark:border-slate-800 dark:bg-slate-950 sm:px-10">
+        <div className="pointer-events-none absolute -bottom-10 -left-12 h-44 w-44 rounded-full bg-[#1E5EFF]/16 blur-[1px] dark:bg-[#1E5EFF]/20" />
+        <div className="pointer-events-none absolute -right-3 -top-8 h-40 w-40 rounded-full bg-[#FFB800]/18 blur-[1px] dark:bg-[#FFB800]/12" />
 
-        <Link to={createPageUrl("Practice")}>
-          <Button className="gap-2 rounded-xl bg-[#1E5EFF] shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
-            <Zap className="h-4 w-4" />
-            Start Practicing
-          </Button>
-        </Link>
-      </div>
+        <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-sm font-extrabold uppercase tracking-[0.22em] text-[#1E5EFF]">
+              RBT Genius
+            </p>
+            <h1 className="mt-4 max-w-2xl text-4xl font-black leading-[0.95] text-[#0F172A] dark:text-slate-50 sm:text-5xl">
+              Welcome back,
+              <br />
+              {firstName || "Student"}
+            </h1>
+            <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-500 dark:text-slate-300">
+              Exam readiness at {readiness}% based on your latest practice performance.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <div className="rounded-full border border-[#1E5EFF]/20 bg-[#1E5EFF]/10 px-5 py-3 text-base font-semibold text-[#1E5EFF] dark:border-[#1E5EFF]/30 dark:bg-[#1E5EFF]/15 dark:text-[#8EB0FF]">
+                Study streak {streak} days
+              </div>
+              <div className={`rounded-full border px-5 py-3 text-base font-semibold ${activePlan.className}`}>
+                {activePlan.label}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10">
+            <Link to={createPageUrl("Practice")}>
+              <Button className="h-12 gap-2 rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
+                <Zap className="h-4 w-4" />
+                Start Practicing
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
