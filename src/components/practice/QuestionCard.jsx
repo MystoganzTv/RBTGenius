@@ -1,10 +1,4 @@
-import {
-  ArrowRight,
-  CheckCircle2,
-  Flag,
-  Lightbulb,
-  XCircle,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, Flag, Lightbulb, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -168,36 +162,6 @@ export default function QuestionCard({
           </Button>
         ) : (
           <div className="space-y-4">
-            <div
-              className={cn(
-                "flex items-start gap-3 rounded-xl border p-4",
-                isCorrect
-                  ? "border-emerald-200 bg-emerald-50"
-                  : "border-red-200 bg-red-50",
-              )}
-            >
-              {isCorrect ? (
-                <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
-              ) : (
-                <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-500" />
-              )}
-              <div>
-                <p
-                  className={cn(
-                    "text-sm font-semibold",
-                    isCorrect ? "text-emerald-700" : "text-red-700",
-                  )}
-                >
-                  {isCorrect ? "Correct!" : "Incorrect"}
-                </p>
-                {!isCorrect ? (
-                  <p className="mt-1 text-xs text-red-600">
-                    The correct answer is {question?.correct_answer}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-
             {question?.explanation ? (
               <div className="rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
                 <div className="mb-2 flex items-center gap-2">
