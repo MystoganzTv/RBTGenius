@@ -459,10 +459,10 @@ export default function Flashcards() {
                 </Card>
 
                 <Card
-                  className="absolute inset-0 border-2 border-[#1E5EFF] bg-white p-8 [backface-visibility:hidden]"
+                  className="absolute inset-0 overflow-hidden border-2 border-[#1E5EFF] bg-white p-8 [backface-visibility:hidden]"
                   style={{ transform: "rotateY(180deg)" }}
                 >
-                  <div className="flex h-full flex-col justify-between">
+                  <div className="flex h-full flex-col justify-between overflow-y-auto pr-1">
                     <div>
                       <p className="mb-4 text-xs uppercase tracking-wider text-[#1E5EFF]">
                         Respuesta Correcta
