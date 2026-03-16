@@ -63,10 +63,10 @@ export default function QuestionCard({
           className={cn(
             "text-[10px]",
             question?.difficulty === "beginner"
-              ? "bg-green-50 text-green-700"
+              ? "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"
               : question?.difficulty === "intermediate"
-                ? "bg-yellow-50 text-yellow-700"
-                : "bg-red-50 text-red-700",
+                ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300"
+                : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300",
           )}
         >
           {question?.difficulty}
@@ -99,14 +99,20 @@ export default function QuestionCard({
             const isCorrectAnswer = option.label === question?.correct_answer;
             let optionStyle =
               "border-slate-200 hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/3 dark:border-slate-800 dark:hover:bg-[#1E5EFF]/10";
+            let optionTextStyle = "text-slate-900 dark:text-slate-100";
 
             if (isSubmitted) {
               if (isCorrectAnswer) {
-                optionStyle = "border-emerald-400 bg-emerald-50";
+                optionStyle =
+                  "border-emerald-400 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950/35";
+                optionTextStyle = "text-emerald-950 dark:text-emerald-100";
               } else if (isThis && !isCorrect) {
-                optionStyle = "border-red-400 bg-red-50";
+                optionStyle =
+                  "border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950/35";
+                optionTextStyle = "text-red-950 dark:text-red-100";
               } else {
                 optionStyle = "border-slate-100 opacity-60 dark:border-slate-900";
+                optionTextStyle = "text-slate-600 dark:text-slate-400";
               }
             } else if (isThis) {
               optionStyle =
@@ -144,7 +150,7 @@ export default function QuestionCard({
                     option.label
                   )}
                 </span>
-                <span className="text-sm text-slate-900 dark:text-slate-100">{option.text}</span>
+                <span className={cn("text-sm", optionTextStyle)}>{option.text}</span>
               </button>
             );
           })}
