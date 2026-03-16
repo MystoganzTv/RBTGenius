@@ -18,7 +18,7 @@ import { createPageUrl } from "@/utils";
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
   { name: "Practice", icon: HelpCircle, page: "Practice" },
-  { name: "Flashcards", icon: Sparkles, page: "Flashcards", badge: "NEW" },
+  { name: "Flashcards", icon: Sparkles, page: "Flashcards" },
   { name: "Mock Exams", icon: ClipboardCheck, page: "MockExams" },
   { name: "AI Tutor", icon: Bot, page: "AITutor", badge: "AI" },
   { name: "Analytics", icon: BarChart3, page: "Analytics" },
