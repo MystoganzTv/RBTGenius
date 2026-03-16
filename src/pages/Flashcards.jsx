@@ -459,7 +459,7 @@ export default function Flashcards() {
                 </Card>
 
                 <Card
-                  className="absolute inset-0 overflow-hidden border-2 border-[#1E5EFF] bg-white p-8 [backface-visibility:hidden]"
+                  className="absolute inset-0 overflow-hidden border-2 border-[#1E5EFF] bg-white p-8 [backface-visibility:hidden] dark:bg-slate-950"
                   style={{ transform: "rotateY(180deg)" }}
                 >
                   <div className="flex h-full flex-col justify-between overflow-y-auto pr-1">
@@ -471,10 +471,10 @@ export default function Flashcards() {
                         {currentCard.options?.map((option) => (
                           <div
                             key={option.label}
-                            className={`rounded-lg p-3 ${
+                            className={`rounded-lg p-3 text-slate-900 dark:text-slate-100 ${
                               option.label === currentCard.correct_answer
-                                ? "border-2 border-emerald-500 bg-emerald-50"
-                                : "bg-slate-50 opacity-50"
+                                ? "border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                                : "bg-slate-50 opacity-50 dark:bg-slate-900"
                             }`}
                           >
                             <span className="font-semibold">{option.label}.</span>{" "}
@@ -484,11 +484,11 @@ export default function Flashcards() {
                       </div>
 
                       {currentCard.explanation ? (
-                        <div className="rounded-lg bg-blue-50 p-4">
+                        <div className="rounded-lg bg-blue-50 p-4 dark:bg-slate-900">
                           <p className="mb-1 text-xs font-semibold text-[#1E5EFF]">
                             Explicación:
                           </p>
-                          <p className="text-sm text-slate-700">
+                          <p className="text-sm text-slate-700 dark:text-slate-200">
                             {currentCard.explanation}
                           </p>
                         </div>
