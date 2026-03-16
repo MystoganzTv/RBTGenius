@@ -30,14 +30,18 @@ export default function Layout({ children, currentPageName }) {
   const isAdmin = user?.role === "admin";
 
   if (currentPageName === "Pricing") {
-    return <div className="min-h-screen bg-[#F8FAFC]">{children}</div>;
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] text-foreground transition-colors dark:bg-background">
+        {children}
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-[#F8FAFC] text-foreground transition-colors dark:bg-background">
       {sidebarOpen ? (
         <div
-          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/30 lg:hidden dark:bg-black/60"
           onClick={() => setSidebarOpen(false)}
         />
       ) : null}

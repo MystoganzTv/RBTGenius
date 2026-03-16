@@ -39,10 +39,10 @@ export default function QuestionCard({
   const isCorrect = selectedAnswer === question?.correct_answer;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
-      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-slate-400">
+          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
             Question {questionNumber} of {totalQuestions}
           </span>
           <Badge
@@ -79,7 +79,7 @@ export default function QuestionCard({
             "ml-2 rounded-xl px-2.5 text-xs",
             isFlagged
               ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-              : "text-slate-500 hover:bg-slate-100",
+              : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900",
           )}
           onClick={onToggleFlag}
         >
@@ -89,7 +89,7 @@ export default function QuestionCard({
       </div>
 
       <div className="p-6">
-        <p className="mb-6 text-base font-medium leading-relaxed text-slate-900">
+        <p className="mb-6 text-base font-medium leading-relaxed text-slate-900 dark:text-slate-50">
           {question?.text}
         </p>
 
@@ -98,7 +98,7 @@ export default function QuestionCard({
             const isThis = selectedAnswer === option.label;
             const isCorrectAnswer = option.label === question?.correct_answer;
             let optionStyle =
-              "border-slate-200 hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/3";
+              "border-slate-200 hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/3 dark:border-slate-800 dark:hover:bg-[#1E5EFF]/10";
 
             if (isSubmitted) {
               if (isCorrectAnswer) {
@@ -106,7 +106,7 @@ export default function QuestionCard({
               } else if (isThis && !isCorrect) {
                 optionStyle = "border-red-400 bg-red-50";
               } else {
-                optionStyle = "border-slate-100 opacity-60";
+                optionStyle = "border-slate-100 opacity-60 dark:border-slate-900";
               }
             } else if (isThis) {
               optionStyle =
@@ -133,7 +133,7 @@ export default function QuestionCard({
                         ? "bg-red-500 text-white"
                         : isThis
                           ? "bg-[#1E5EFF] text-white"
-                          : "bg-slate-100 text-slate-500",
+                          : "bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400",
                   )}
                 >
                   {isSubmitted && isCorrectAnswer ? (
@@ -144,14 +144,14 @@ export default function QuestionCard({
                     option.label
                   )}
                 </span>
-                <span className="text-sm text-slate-900">{option.text}</span>
+                <span className="text-sm text-slate-900 dark:text-slate-100">{option.text}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="border-t border-slate-100 px-6 py-4">
+      <div className="border-t border-slate-100 px-6 py-4 dark:border-slate-800">
         {!isSubmitted ? (
           <Button
             onClick={handleSubmit}
@@ -170,7 +170,7 @@ export default function QuestionCard({
                     Explanation
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-600">
+                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   {question.explanation}
                 </p>
               </div>

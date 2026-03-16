@@ -299,9 +299,9 @@ function QuestionNavigator({
 
         <div className="mt-6 space-y-5">
           <div className="grid grid-cols-3 gap-3 text-xs">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p className="text-slate-500">Total</p>
-              <p className="mt-1 text-lg font-semibold text-slate-900">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-slate-500 dark:text-slate-400">Total</p>
+              <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
                 {questions.length}
               </p>
             </div>
@@ -349,7 +349,7 @@ function QuestionNavigator({
                       "border-red-200 bg-red-50 text-red-700",
                     !isCurrent &&
                       !state.submitted &&
-                      "border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
+                      "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900",
                   )}
                 >
                   {index + 1}
@@ -572,18 +572,18 @@ export default function Practice() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1E5EFF]/8">
             <HelpCircle className="h-8 w-8 text-[#1E5EFF]" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
             Practice Questions
           </h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Choose your topic and difficulty to start practicing.
           </p>
         </div>
 
-        <div className="space-y-6 rounded-2xl border border-slate-100 bg-white p-8">
+        <div className="space-y-6 rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-800 dark:bg-slate-950">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Topic
               </label>
               <Select value={topicFilter} onValueChange={setTopicFilter}>
@@ -602,7 +602,7 @@ export default function Practice() {
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Difficulty
               </label>
               <Select
@@ -622,7 +622,7 @@ export default function Practice() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700">
+          <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700 dark:text-slate-200">
             The local bank is ready with up to {PRACTICE_BANK_SIZE} practice questions.
           </div>
 
@@ -642,7 +642,7 @@ export default function Practice() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-12 text-center">
+        <div className="animate-pulse rounded-2xl border border-slate-100 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-950">
           <div className="mx-auto mb-4 h-6 w-1/2 rounded bg-slate-100" />
           <div className="mx-auto h-4 w-1/3 rounded bg-slate-50" />
         </div>
@@ -653,9 +653,9 @@ export default function Practice() {
   if (baseFilteredQuestions.length === 0) {
     return (
       <div className="mx-auto max-w-3xl text-center">
-        <div className="rounded-2xl border border-slate-100 bg-white p-12">
+        <div className="rounded-2xl border border-slate-100 bg-white p-12 dark:border-slate-800 dark:bg-slate-950">
           <HelpCircle className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-          <p className="font-medium text-slate-500">
+          <p className="font-medium text-slate-500 dark:text-slate-400">
             No questions available for this filter
           </p>
           <Button
@@ -673,12 +673,12 @@ export default function Practice() {
   if (isComplete) {
     return (
       <div className="mx-auto max-w-3xl text-center">
-        <div className="rounded-2xl border border-slate-100 bg-white p-12">
+        <div className="rounded-2xl border border-slate-100 bg-white p-12 dark:border-slate-800 dark:bg-slate-950">
           <Trophy className="mx-auto mb-4 h-16 w-16 text-[#FFB800]" />
-          <h2 className="text-2xl font-bold text-slate-900">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
             Session Complete!
           </h2>
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
             You answered {correctCount} out of {answeredCount} correctly.
           </p>
           <div
@@ -717,11 +717,11 @@ export default function Practice() {
   if (questions.length === 0 || !currentQuestion) {
     return (
       <div className="mx-auto max-w-3xl text-center">
-        <div className="rounded-2xl border border-slate-100 bg-white p-12">
-          <p className="font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-100 bg-white p-12 dark:border-slate-800 dark:bg-slate-950">
+          <p className="font-medium text-slate-700 dark:text-slate-200">
             No questions match the current review filter.
           </p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Try switching back to all questions or another review state.
           </p>
           <div className="mt-4 flex justify-center gap-3">
@@ -751,24 +751,24 @@ export default function Practice() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4">
+      <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-1.5">
               <Target className="h-4 w-4 text-[#1E5EFF]" />
-              <span className="text-sm font-medium text-slate-600">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 {accuracy}% accuracy
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <HelpCircle className="h-4 w-4 text-slate-400" />
-              <span className="text-sm text-slate-500">
+              <HelpCircle className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+              <span className="text-sm text-slate-500 dark:text-slate-400">
                 {answeredCount}/{baseFilteredQuestions.length} answered
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <Flag className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-slate-500 dark:text-slate-400">
                 {flaggedCount} flagged
               </span>
             </div>
@@ -787,7 +787,7 @@ export default function Practice() {
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-xl text-xs text-slate-400"
+              className="rounded-xl text-xs text-slate-400 dark:text-slate-500 dark:hover:bg-slate-900 dark:hover:text-slate-200"
               onClick={endSession}
             >
               End Session
@@ -805,7 +805,7 @@ export default function Practice() {
                 "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
                 reviewFilter === filter.id
                   ? "border-[#1E5EFF] bg-[#1E5EFF]/10 text-[#1E5EFF]"
-                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
+                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900",
               )}
             >
               {filter.label}
@@ -814,7 +814,7 @@ export default function Practice() {
         </div>
       </div>
 
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
         <div
           className="h-full rounded-full bg-[#1E5EFF] transition-all duration-500"
           style={{
