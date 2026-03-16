@@ -1,4 +1,4 @@
-import { Bell, Crown, LogOut, Menu, Moon, Search, Sun, User } from "lucide-react";
+import { Crown, LogOut, Menu, Moon, Search, Sun, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -69,15 +69,6 @@ export default function TopBar({
           ) : (
             <Moon className="h-[18px] w-[18px]" />
           )}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative rounded-xl text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-900 dark:hover:text-slate-200"
-        >
-          <Bell className="h-[18px] w-[18px]" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#1E5EFF]" />
         </Button>
 
         <DropdownMenu>

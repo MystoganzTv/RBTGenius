@@ -76,20 +76,20 @@ const plans = [
 
 export default function Pricing() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F8FAFC] to-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#F8FAFC] to-white dark:from-slate-950 dark:to-slate-900">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1E5EFF]">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-lg font-bold text-[#0F172A]">RBT</span>
+            <span className="text-lg font-bold text-[#0F172A] dark:text-slate-50">RBT</span>
             <span className="text-lg font-bold text-[#1E5EFF]">Genius</span>
             <Sparkles className="-mt-1 h-3.5 w-3.5 text-[#FFB800]" />
           </div>
         </Link>
         <Link to={createPageUrl("Dashboard")}>
-          <Button variant="ghost" className="gap-2 rounded-xl text-sm text-slate-500">
+          <Button variant="ghost" className="gap-2 rounded-xl text-sm text-slate-500 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100">
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
@@ -101,10 +101,10 @@ export default function Pricing() {
           <Crown className="mr-1 h-3 w-3" />
           Pricing Plans
         </Badge>
-        <h1 className="mt-2 text-4xl font-bold text-[#0F172A] md:text-5xl">
+        <h1 className="mt-2 text-4xl font-bold text-[#0F172A] dark:text-slate-50 md:text-5xl">
           Invest in Your <span className="text-[#1E5EFF]">RBT Career</span>
         </h1>
-        <p className="mx-auto mt-4 max-w-lg text-slate-500">
+        <p className="mx-auto mt-4 max-w-lg text-slate-500 dark:text-slate-400">
           Choose the plan that fits your study needs. Upgrade anytime.
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function Pricing() {
             <div
               key={plan.name}
               className={cn(
-                "relative rounded-2xl border-2 bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-lg",
+                "relative rounded-2xl border-2 bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-950/90",
                 plan.style,
               )}
             >
@@ -135,11 +135,11 @@ export default function Pricing() {
               )}
 
               <div className="mb-6">
-                <h3 className="font-semibold text-[#0F172A]">{plan.name}</h3>
-                <p className="mt-1 text-sm text-slate-400">{plan.description}</p>
+                <h3 className="font-semibold text-[#0F172A] dark:text-slate-50">{plan.name}</h3>
+                <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">{plan.description}</p>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-[#0F172A]">{plan.price}</span>
-                  <span className="text-sm text-slate-400">{plan.period}</span>
+                  <span className="text-4xl font-bold text-[#0F172A] dark:text-slate-50">{plan.price}</span>
+                  <span className="text-sm text-slate-400 dark:text-slate-500">{plan.period}</span>
                 </div>
               </div>
 
@@ -150,7 +150,7 @@ export default function Pricing() {
                     ? "bg-[#1E5EFF] shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90"
                     : plan.badge
                       ? "bg-[#FFB800] text-[#0F172A] shadow-lg shadow-[#FFB800]/20 hover:bg-[#FFB800]/90"
-                      : "bg-slate-900 hover:bg-slate-800",
+                      : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200",
                 )}
               >
                 {plan.cta}
@@ -167,7 +167,9 @@ export default function Pricing() {
                     <span
                       className={cn(
                         "text-sm",
-                        feature.included ? "text-slate-600" : "text-slate-400",
+                        feature.included
+                          ? "text-slate-600 dark:text-slate-300"
+                          : "text-slate-400 dark:text-slate-600",
                       )}
                     >
                       {feature.text}
