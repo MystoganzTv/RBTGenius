@@ -23,6 +23,16 @@ import {
 
 const QUESTIONS_STORAGE_KEY = "rbt_genius_questions";
 const ATTEMPTS_STORAGE_KEY = "rbt_genius_question_attempts";
+const FLASHCARD_BANK_SIZE = 300;
+
+const topicLabels = {
+  measurement: "Measurement",
+  assessment: "Assessment",
+  skill_acquisition: "Skill Acquisition",
+  behavior_reduction: "Behavior Reduction",
+  documentation: "Documentation",
+  professional_conduct: "Professional Conduct",
+};
 
 const fallbackQuestions = [
   {
@@ -117,6 +127,27 @@ const fallbackQuestions = [
   },
 ];
 
+const scenarioPrefixes = [
+  "During a clinic session,",
+  "At the start of therapy,",
+  "While collecting data,",
+  "During a home visit,",
+  "When reviewing behavior plans,",
+  "In a school-based session,",
+  "During skills training,",
+  "While supporting a transition,",
+  "During supervision follow-up,",
+  "When documenting session notes,",
+];
+
+const scenarioSuffixes = [
+  "Choose the best response.",
+  "Pick the most appropriate action.",
+  "Select the answer that best follows ABA principles.",
+  "Choose the option most consistent with RBT practice.",
+  "Pick the response that best supports treatment integrity.",
+];
+
 function readLocalJson(key, fallback) {
   if (typeof window === "undefined") {
     return fallback;
@@ -143,11 +174,34 @@ function writeLocalJson(key, value) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+function buildFlashcardBank(size = FLASHCARD_BANK_SIZE) {
+  return Array.from({ length: size }, (_, index) => {
+    const seed = fallbackQuestions[index % fallbackQuestions.length];
+    const prefix = scenarioPrefixes[index % scenarioPrefixes.length];
+    const suffix = scenarioSuffixes[index % scenarioSuffixes.length];
+    const topicLabel =
+      topicLabels[seed.topic] || seed.topic.replace(/_/g, " ");
+    const variantNumber = index + 1;
+
+    return {
+      ...seed,
+      id: `flashcard_${seed.id}_${variantNumber}`,
+      text: `${prefix} (${topicLabel} set ${variantNumber}) ${seed.text} ${suffix}`,
+      original_id: seed.id,
+    };
+  });
+}
+
 async function loadQuestions() {
-  const questions = readLocalJson(QUESTIONS_STORAGE_KEY, fallbackQuestions);
-  return Array.isArray(questions) && questions.length > 0
-    ? questions
-    : fallbackQuestions;
+  const generatedQuestions = buildFlashcardBank();
+  const questions = readLocalJson(QUESTIONS_STORAGE_KEY, generatedQuestions);
+
+  if (Array.isArray(questions) && questions.length >= FLASHCARD_BANK_SIZE) {
+    return questions;
+  }
+
+  writeLocalJson(QUESTIONS_STORAGE_KEY, generatedQuestions);
+  return generatedQuestions;
 }
 
 async function storeAttempt(attempt) {
