@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Filter,
@@ -173,6 +173,9 @@ export default function Flashcards() {
   const [filterTopic, setFilterTopic] = useState("all");
   const [filterDifficulty, setFilterDifficulty] = useState("all");
   const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
+  const [cardHeight, setCardHeight] = useState(420);
+  const frontContentRef = useRef(null);
+  const backContentRef = useRef(null);
   const queryClient = useQueryClient();
 
   const { data: allQuestions = [], isLoading } = useQuery({
@@ -216,6 +219,24 @@ export default function Flashcards() {
 
     setIsFlipped(false);
   }, [currentIndex, filteredQuestions.length]);
+
+  useLayoutEffect(() => {
+    if (!currentCard) {
+      return;
+    }
+
+    const measureHeight = () => {
+      const frontHeight = frontContentRef.current?.scrollHeight ?? 0;
+      const backHeight = backContentRef.current?.scrollHeight ?? 0;
+      const nextHeight = Math.max(frontHeight + 112, backHeight + 112, 360);
+      setCardHeight(nextHeight);
+    };
+
+    measureHeight();
+    window.addEventListener("resize", measureHeight);
+
+    return () => window.removeEventListener("resize", measureHeight);
+  }, [currentCard]);
 
   const nextCard = () => {
     setIsFlipped(false);
@@ -437,7 +458,8 @@ export default function Flashcards() {
             </div>
 
             <div
-              className="relative h-[520px] cursor-pointer [perspective:1000px] sm:h-[560px]"
+              className="relative cursor-pointer [perspective:1000px]"
+              style={{ height: `${cardHeight}px` }}
               onClick={() => setIsFlipped((current) => !current)}
             >
               <div
@@ -445,7 +467,7 @@ export default function Flashcards() {
                 style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
               >
                 <Card className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1E5EFF] to-[#6366F1] p-8 text-white [backface-visibility:hidden]">
-                  <div className="text-center">
+                  <div ref={frontContentRef} className="text-center">
                     <p className="mb-4 text-xs uppercase tracking-wider opacity-80">
                       Pregunta
                     </p>
@@ -462,8 +484,8 @@ export default function Flashcards() {
                   className="absolute inset-0 overflow-hidden border-2 border-[#1E5EFF] bg-white p-8 [backface-visibility:hidden] dark:bg-slate-950"
                   style={{ transform: "rotateY(180deg)" }}
                 >
-                  <div className="flex h-full flex-col justify-between overflow-y-auto pr-1">
-                    <div>
+                  <div className="flex h-full flex-col justify-between pr-1">
+                    <div ref={backContentRef}>
                       <p className="mb-4 text-xs uppercase tracking-wider text-[#1E5EFF]">
                         Respuesta Correcta
                       </p>
