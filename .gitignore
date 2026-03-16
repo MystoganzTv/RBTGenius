@@ -44,3 +44,6 @@ x86/
 
 # Windows OS files
 Thumbs.db
+
+# Local Netlify folder
+.netlify
