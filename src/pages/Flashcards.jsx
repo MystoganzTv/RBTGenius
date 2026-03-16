@@ -437,7 +437,7 @@ export default function Flashcards() {
             </div>
 
             <div
-              className="relative h-[400px] cursor-pointer [perspective:1000px]"
+              className="relative h-[520px] cursor-pointer [perspective:1000px] sm:h-[560px]"
               onClick={() => setIsFlipped((current) => !current)}
             >
               <div
