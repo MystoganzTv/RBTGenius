@@ -110,13 +110,52 @@ function applyQuestionFilters(questions, searchParams) {
 
 function createTutorReply(text) {
   const normalized = text.toLowerCase();
+  const now = new Date();
+  const todayLabel = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(now);
 
   if (normalized.includes("discrete trial")) {
     return "Discrete trial training is a structured teaching method with a clear instruction, learner response, and consequence. It works well for breaking skills into smaller teachable parts.";
   }
 
+  if (
+    normalized.includes("what day is today") ||
+    normalized.includes("what day is it") ||
+    normalized.includes("what date is today") ||
+    normalized.includes("today's date") ||
+    normalized.includes("que dia es hoy") ||
+    normalized.includes("que día es hoy")
+  ) {
+    return `Today is ${todayLabel}.`;
+  }
+
   if (normalized.includes("positive reinforcement")) {
     return "Positive reinforcement means adding something valuable right after a behavior so that behavior is more likely to happen again. A simple example is praising a learner immediately after a correct response.";
+  }
+
+  if (
+    normalized.includes("prompting") ||
+    normalized.includes("prompt hierarchy")
+  ) {
+    return "A prompt hierarchy moves from more support to less support, or vice versa depending on the teaching plan. The goal is to help the learner respond correctly while fading prompts over time to build independence.";
+  }
+
+  if (
+    normalized.includes("data collection") ||
+    normalized.includes("taking data")
+  ) {
+    return "Accurate data collection helps the team measure progress, detect patterns, and make treatment decisions. RBTs should record data consistently and according to the supervisor's instructions.";
+  }
+
+  if (
+    normalized.includes("task analysis") ||
+    normalized.includes("chaining")
+  ) {
+    return "A task analysis breaks a skill into smaller teachable steps. Chaining then teaches those steps in sequence, often using forward chaining, backward chaining, or total task presentation.";
   }
 
   if (normalized.includes("functional behavior assessment")) {
@@ -131,7 +170,7 @@ function createTutorReply(text) {
     return "A strong RBT study session usually combines short concept review, practice questions, and explanation of missed answers. Focus on reinforcement, prompting, data collection, ethics, and behavior reduction vocabulary.";
   }
 
-  return "This AI Tutor is now backed by the server. We can later connect a real LLM endpoint, but your conversations are already persisted outside the browser.";
+  return "I can help with ABA concepts, RBT exam prep, reinforcement, prompting, data collection, behavior reduction, and study strategy. Ask me a specific question and I will give you a clear answer.";
 }
 
 function createId(prefix) {

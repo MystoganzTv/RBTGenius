@@ -188,42 +188,44 @@ export default function MockExams() {
     return (
       <div className="mx-auto max-w-3xl">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
-            <ClipboardCheck className="h-8 w-8 text-emerald-600" />
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+            <ClipboardCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-300" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Mock RBT Exam</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+            Mock RBT Exam
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Simulate the real BACB RBT certification exam.
           </p>
         </div>
 
-        <div className="space-y-6 rounded-2xl border border-slate-100 bg-white p-8">
+        <div className="space-y-6 rounded-3xl border border-slate-200/70 bg-white/95 p-8 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-xl bg-slate-50 p-4 text-center">
-              <p className="text-2xl font-bold text-slate-900">
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-center dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                 {TOTAL_QUESTIONS}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Questions</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Questions</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4 text-center">
-              <p className="text-2xl font-bold text-slate-900">
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-center dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                 {EXAM_DURATION_MINUTES}m
               </p>
-              <p className="mt-1 text-xs text-slate-500">Time Limit</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Time Limit</p>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4 text-center">
-              <p className="text-2xl font-bold text-slate-900">{PASS_SCORE}%</p>
-              <p className="mt-1 text-xs text-slate-500">Pass Score</p>
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-center dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{PASS_SCORE}%</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Pass Score</p>
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
+          <div className="flex items-start gap-3 rounded-2xl border border-amber-200/80 bg-amber-50/70 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500 dark:text-amber-300" />
             <div>
-              <p className="text-sm font-medium text-amber-800">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
                 Exam Instructions
               </p>
-              <ul className="mt-1 space-y-1 text-xs text-amber-700">
+              <ul className="mt-1 space-y-1 text-xs text-amber-700 dark:text-amber-100/85">
                 <li>• Answer all questions within the time limit</li>
                 <li>• You can navigate between questions freely</li>
                 <li>• Results are shown after submission</li>
@@ -233,7 +235,7 @@ export default function MockExams() {
 
           <Button
             onClick={handleStartExam}
-            className="w-full gap-2 rounded-xl py-6 text-base shadow-lg shadow-emerald-200 hover:bg-emerald-700"
+            className="w-full gap-2 rounded-2xl py-6 text-base hover:bg-emerald-700 dark:hover:bg-emerald-600"
             style={{ backgroundColor: "#059669" }}
           >
             <ClipboardCheck className="h-5 w-5" />
