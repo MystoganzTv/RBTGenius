@@ -49,6 +49,7 @@ export function normalizeDb(db) {
             .map((user) => ({
               ...user,
               token: user.token || createSessionToken(),
+              created_at: user.created_at || seedDb.createdAt,
               role: resolveUserRole(user.email, user.role || defaultUser.role),
               plan: user.plan || defaultUser.plan,
               auth_provider: user.auth_provider || "password",

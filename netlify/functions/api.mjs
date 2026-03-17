@@ -263,6 +263,7 @@ async function upsertOAuthUser(profile, providerId) {
             ...user,
             full_name: user.full_name || profile.name,
             token: sessionToken,
+            created_at: user.created_at || new Date().toISOString(),
             role: resolveUserRole(user.email, user.role || "student"),
             auth_provider: user.auth_provider || providerId,
             oauth_accounts: {
@@ -283,6 +284,7 @@ async function upsertOAuthUser(profile, providerId) {
             id: createId("user"),
             full_name: profile.name,
             email: profile.email,
+            created_at: new Date().toISOString(),
             role: resolveUserRole(profile.email),
             plan: "free",
             token: sessionToken,
@@ -540,6 +542,7 @@ export default async (request) => {
       id: createId("user"),
       full_name: fullName,
       email,
+      created_at: new Date().toISOString(),
       role: resolveUserRole(email),
       plan: "free",
       token: createSessionToken(),
@@ -898,12 +901,14 @@ export default async (request) => {
         const nextPayment = {
           id: existingPayment?.id || createId("payment"),
           user_id: auth.user.id,
+          created_at: existingPayment?.created_at || new Date().toISOString(),
           plan: checkout.plan,
           amount: Number(((checkout.amount_total || 0) / 100).toFixed(2)),
           currency: String(checkout.currency || "usd").toUpperCase(),
           status: checkout.payment_status === "paid" ? "completed" : checkout.status,
           payment_date: checkout.completed_at,
           provider: "stripe",
+          provider_label: "Stripe",
           stripe_session_id: checkout.session_id,
           stripe_customer_id: checkout.customer_id,
           stripe_subscription_id: checkout.subscription_id,
@@ -968,11 +973,24 @@ export default async (request) => {
       const progress = computeProgress(db, user.id);
       const attemptsCount = db.attempts.filter((attempt) => attempt.user_id === user.id).length;
       const examsCount = db.mockExams.filter((exam) => exam.user_id === user.id).length;
+      const memberPayments = db.payments.filter((payment) => payment.user_id === user.id);
+      const completedPayments = memberPayments.filter((payment) => payment.status === "completed");
+      const totalPaid = completedPayments.reduce(
+        (sum, payment) => sum + Number(payment.amount || 0),
+        0,
+      );
+      const latestPayment = [...memberPayments].sort((left, right) => {
+        const leftTime = new Date(left.payment_date || left.created_at || 0).getTime();
+        const rightTime = new Date(right.payment_date || right.created_at || 0).getTime();
+        return rightTime - leftTime;
+      })[0];
 
       return {
         id: user.id,
         full_name: user.full_name,
         email: user.email,
+        created_at: user.created_at || null,
+        auth_provider: user.auth_provider || "password",
         role: resolveUserRole(user.email, user.role || "student"),
         plan: user.plan || "free",
         study_streak_days: progress.study_streak_days,
@@ -981,6 +999,9 @@ export default async (request) => {
         attempts_count: attemptsCount,
         exams_count: examsCount,
         last_study_date: progress.last_study_date,
+        payments_count: memberPayments.length,
+        total_paid_amount: Number(totalPaid.toFixed(2)),
+        last_payment_date: latestPayment?.payment_date || latestPayment?.created_at || null,
       };
     });
 

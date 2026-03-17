@@ -26,6 +26,39 @@ const ROLE_OPTIONS = [
   { value: "admin", label: "Admin" },
 ];
 
+function formatJoinedDate(value) {
+  if (!value) {
+    return "Unknown join date";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(value));
+  } catch {
+    return "Unknown join date";
+  }
+}
+
+function getProviderLabel(provider) {
+  switch (provider) {
+    case "password":
+      return "Manual";
+    case "google":
+      return "Google";
+    case "apple":
+      return "Apple";
+    case "github":
+      return "GitHub";
+    case "microsoft":
+      return "Microsoft";
+    default:
+      return provider || "Unknown";
+  }
+}
+
 export default function AdminMembers() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -207,6 +240,7 @@ export default function AdminMembers() {
                         {member.full_name}
                       </h2>
                       <Badge variant="outline">{member.role === "admin" ? "Admin" : "User"}</Badge>
+                      <Badge variant="outline">{getProviderLabel(member.auth_provider)}</Badge>
                       <Badge
                         className={
                           member.plan === "free"
@@ -222,10 +256,13 @@ export default function AdminMembers() {
                       {member.email}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+                      <span>Joined {formatJoinedDate(member.created_at)}</span>
                       <span>{member.total_questions_completed} questions completed</span>
                       <span>{member.readiness_score}% readiness</span>
                       <span>{member.study_streak_days} day streak</span>
                       <span>{member.exams_count} exams</span>
+                      <span>{member.payments_count || 0} payments</span>
+                      <span>${Number(member.total_paid_amount || 0).toFixed(2)} paid</span>
                     </div>
                   </div>
 

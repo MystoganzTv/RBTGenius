@@ -538,11 +538,16 @@ export default function Profile() {
 
                     <div className="text-right">
                       <p className="font-bold text-[#0F172A] dark:text-slate-50">
-                        ${Number(payment.amount || 0).toFixed(2)}
+                        ${Number(payment.amount || 0).toFixed(2)} {payment.currency || "USD"}
                       </p>
-                      <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                        {payment.status}
-                      </p>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                          {payment.status}
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                          {payment.provider_label || payment.provider || "Billing"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}
