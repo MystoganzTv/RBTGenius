@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import PageNotFound from "@/lib/PageNotFound";
 import { queryClientInstance } from "@/lib/query-client";
+import Login from "@/pages/Login";
 import { pagesConfig } from "./pages.config";
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -71,12 +72,14 @@ function AuthenticatedApp() {
     authError,
     navigateToLogin,
   } = useAuth();
+  const location = useLocation();
+  const isLoginRoute = location.pathname === "/login";
 
   useEffect(() => {
-    if (authError?.type === "auth_required") {
+    if (authError?.type === "auth_required" && !isLoginRoute) {
       navigateToLogin();
     }
-  }, [authError?.type, navigateToLogin]);
+  }, [authError?.type, isLoginRoute, navigateToLogin]);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -90,12 +93,13 @@ function AuthenticatedApp() {
     return <UserNotRegisteredError />;
   }
 
-  if (authError?.type === "auth_required") {
+  if (authError?.type === "auth_required" && !isLoginRoute) {
     return null;
   }
 
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
       <Route path="/" element={<QueryPageRenderer />} />
       <Route path="/:pageName" element={<LegacyPageRenderer />} />
       <Route path="*" element={<PageNotFound />} />

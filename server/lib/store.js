@@ -8,29 +8,13 @@ import {
   buildPracticeQuestionBank,
 } from "../../src/lib/question-bank.js";
 import {
-  DEMO_TOKEN,
-  DEMO_USER_ID,
   computeProgress,
-  defaultUser,
 } from "../../src/lib/backend-core.js";
+import { buildSeedDb, normalizeDb } from "./seed.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dataDir = path.join(__dirname, "..", "data");
 const dbFile = path.join(dataDir, "db.json");
-
-function createSeedDb() {
-  return {
-    users: [defaultUser],
-    attempts: [],
-    mockExams: [],
-    payments: [],
-    practiceSessions: {},
-    tutorConversations: {},
-    customQuestions: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-}
 
 function ensureDb() {
   if (!fs.existsSync(dataDir)) {
@@ -38,14 +22,14 @@ function ensureDb() {
   }
 
   if (!fs.existsSync(dbFile)) {
-    fs.writeFileSync(dbFile, JSON.stringify(createSeedDb(), null, 2));
+    fs.writeFileSync(dbFile, JSON.stringify(buildSeedDb(), null, 2));
   }
 }
 
 export function readDb() {
   ensureDb();
   const raw = fs.readFileSync(dbFile, "utf8");
-  return JSON.parse(raw);
+  return normalizeDb(JSON.parse(raw));
 }
 
 export function writeDb(nextDb) {

@@ -1,13 +1,12 @@
 import { topicLabels } from "./question-bank.js";
 
-export const DEMO_TOKEN = "demo-student-token";
 export const DEMO_USER_ID = "user-demo";
 
 export const defaultUser = {
   id: DEMO_USER_ID,
-  token: DEMO_TOKEN,
-  full_name: "Alex Carter",
-  email: "alex.carter@example.com",
+  token: null,
+  full_name: "Demo Student",
+  email: "demo@rbtgenius.app",
   role: "student",
   plan: "free",
 };

@@ -6,7 +6,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { DEFAULT_AUTH_TOKEN } from "@/lib/api";
 import { appParams } from "@/lib/app-params";
 
 const AuthContext = createContext(null);
@@ -52,14 +51,13 @@ function getStoredAuthToken() {
   }
 
   if (!storage) {
-    return DEFAULT_AUTH_TOKEN;
+    return null;
   }
 
   const token =
     storage.getItem(AUTH_STORAGE_KEY) ||
     storage.getItem("access_token") ||
-    storage.getItem("token") ||
-    DEFAULT_AUTH_TOKEN;
+    storage.getItem("token");
 
   if (token) {
     persistAuthToken(token);
@@ -221,6 +219,17 @@ export function AuthProvider({
         );
 
         setAppPublicSettings(publicSettings);
+
+        if (!token && publicSettings?.auth_required) {
+          setUser(null);
+          setIsAuthenticated(false);
+          setIsLoadingAuth(false);
+          setAuthError({
+            type: "auth_required",
+            message: "Authentication required",
+          });
+          return;
+        }
       }
 
       if (token) {
@@ -296,6 +305,10 @@ export function AuthProvider({
   const navigateToLogin = useCallback(
     (redirectTo) => {
       if (typeof window === "undefined") {
+        return;
+      }
+
+      if (window.location.pathname === loginPath) {
         return;
       }
 

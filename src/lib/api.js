@@ -1,25 +1,23 @@
-const DEFAULT_AUTH_TOKEN = "demo-student-token";
-
 function getAuthToken() {
   if (typeof window === "undefined") {
-    return DEFAULT_AUTH_TOKEN;
+    return null;
   }
 
   return (
     window.localStorage.getItem("rbt_genius_auth_token") ||
-    window.localStorage.getItem("access_token") ||
-    DEFAULT_AUTH_TOKEN
+    window.localStorage.getItem("access_token")
   );
 }
 
 async function request(path, options = {}) {
   const { headers = {}, body, ...restOptions } = options;
+  const token = getAuthToken();
   const response = await fetch(path, {
     ...restOptions,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${getAuthToken()}`,
       ...headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -34,7 +32,10 @@ async function request(path, options = {}) {
     : await response.text();
 
   if (!response.ok) {
-    throw new Error(data?.message || response.statusText || "Request failed");
+    const error = new Error(data?.message || response.statusText || "Request failed");
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
   return data;
@@ -57,6 +58,18 @@ function createQuery(params = {}) {
 export const api = {
   getPublicSettings() {
     return request("/api/public-settings");
+  },
+  register(payload) {
+    return request("/api/auth/register", {
+      method: "POST",
+      body: payload,
+    });
+  },
+  login(payload) {
+    return request("/api/auth/login", {
+      method: "POST",
+      body: payload,
+    });
   },
   getMe() {
     return request("/api/auth/me");
@@ -128,5 +141,3 @@ export const api = {
     });
   },
 };
-
-export { DEFAULT_AUTH_TOKEN };

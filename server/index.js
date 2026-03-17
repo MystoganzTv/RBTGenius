@@ -5,7 +5,7 @@ import {
   readDb,
   updateDb,
 } from "./lib/store.js";
-import { DEMO_TOKEN } from "../src/lib/backend-core.js";
+import { createSessionToken, hashPassword, verifyPassword } from "./lib/auth.js";
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 function getToken(req) {
   const authHeader = req.headers.authorization || "";
   if (!authHeader.startsWith("Bearer ")) {
-    return DEMO_TOKEN;
+    return null;
   }
 
   return authHeader.slice("Bearer ".length);
@@ -35,8 +35,12 @@ function getToken(req) {
 
 function getCurrentUser(req) {
   const token = getToken(req);
+  if (!token) {
+    return null;
+  }
+
   const db = readDb();
-  return db.users.find((user) => user.token === token) || db.users[0] || null;
+  return db.users.find((user) => user.token === token) || null;
 }
 
 function requireUser(req, res, next) {
@@ -108,16 +112,105 @@ app.get("/api/health", (_req, res) => {
 
 app.get("/api/public-settings", (_req, res) => {
   res.json({
-    auth_required: false,
+    auth_required: true,
     app_name: "RBT Genius",
   });
 });
 
-app.get("/api/auth/me", requireUser, (req, res) => {
-  res.json(req.currentUser);
+app.post("/api/auth/register", (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const password = String(req.body?.password || "");
+  const fullName = String(req.body?.full_name || "").trim();
+
+  if (!email || !password || !fullName) {
+    res.status(400).json({ message: "Full name, email, and password are required" });
+    return;
+  }
+
+  if (password.length < 8) {
+    res.status(400).json({ message: "Password must be at least 8 characters" });
+    return;
+  }
+
+  const db = readDb();
+  if (db.users.some((user) => user.email.toLowerCase() === email)) {
+    res.status(409).json({ message: "An account with that email already exists" });
+    return;
+  }
+
+  const passwordData = hashPassword(password);
+  const newUser = {
+    id: createId("user"),
+    full_name: fullName,
+    email,
+    role: "student",
+    plan: "free",
+    token: createSessionToken(),
+    password_hash: passwordData.hash,
+    password_salt: passwordData.salt,
+  };
+
+  updateDb((current) => ({
+    ...current,
+    users: [...current.users, newUser],
+  }));
+
+  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = newUser;
+  res.status(201).json({ token: newUser.token, user: safeUser });
 });
 
-app.post("/api/auth/logout", requireUser, (_req, res) => {
+app.post("/api/auth/login", (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const password = String(req.body?.password || "");
+  const db = readDb();
+  const user = db.users.find((entry) => entry.email.toLowerCase() === email);
+
+  if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+    res.status(401).json({ message: "Invalid email or password" });
+    return;
+  }
+
+  const nextToken = createSessionToken();
+  let updatedUser = null;
+
+  updateDb((current) => ({
+    ...current,
+    users: current.users.map((entry) => {
+      if (entry.id !== user.id) {
+        return entry;
+      }
+
+      updatedUser = {
+        ...entry,
+        token: nextToken,
+      };
+      return updatedUser;
+    }),
+  }));
+
+  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = updatedUser;
+  res.json({ token: nextToken, user: safeUser });
+});
+
+app.get("/api/auth/me", requireUser, (req, res) => {
+  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
+    req.currentUser;
+  res.json(safeUser);
+});
+
+app.post("/api/auth/logout", requireUser, (req, res) => {
+  updateDb((current) => ({
+    ...current,
+    users: current.users.map((user) =>
+      user.id === req.currentUser.id
+        ? {
+            ...user,
+            token: null,
+          }
+        : user,
+    ),
+  }));
+
   res.json({ ok: true });
 });
 
@@ -220,7 +313,13 @@ app.get("/api/analytics", requireUser, (req, res) => {
 app.get("/api/profile", requireUser, (req, res) => {
   const db = readDb();
   res.json({
-    user: req.currentUser,
+    user: {
+      id: req.currentUser.id,
+      full_name: req.currentUser.full_name,
+      email: req.currentUser.email,
+      role: req.currentUser.role,
+      plan: req.currentUser.plan,
+    },
     progress: computeProgress(db, req.currentUser.id),
     payments: db.payments.filter((payment) => payment.user_id === req.currentUser.id),
   });
@@ -246,7 +345,8 @@ app.patch("/api/profile", requireUser, (req, res) => {
     }),
   }));
 
-  res.json(updatedUser);
+  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = updatedUser;
+  res.json(safeUser);
 });
 
 app.get("/api/ai-tutor/conversations", requireUser, (req, res) => {

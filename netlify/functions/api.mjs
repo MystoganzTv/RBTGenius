@@ -1,9 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import {
-  DEMO_TOKEN,
-  computeProgress,
-  defaultUser,
-} from "../../src/lib/backend-core.js";
+import { computeProgress } from "../../src/lib/backend-core.js";
 import {
   baseQuestions,
   buildFlashcardBank,
@@ -11,6 +7,12 @@ import {
   buildPracticeQuestionBank,
   topicLabels,
 } from "../../src/lib/question-bank.js";
+import {
+  createSessionToken,
+  hashPassword,
+  verifyPassword,
+} from "../../server/lib/auth.js";
+import { buildSeedDb, normalizeDb } from "../../server/lib/seed.js";
 
 const store = getStore("rbt-genius-data");
 
@@ -27,36 +29,22 @@ function json(body, init = {}) {
   });
 }
 
-function createSeedDb() {
-  return {
-    users: [defaultUser],
-    attempts: [],
-    mockExams: [],
-    payments: [],
-    practiceSessions: {},
-    tutorConversations: {},
-    customQuestions: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-}
-
 async function readDb() {
   const db = await store.get("db", { type: "json" });
   if (db) {
-    return db;
+    return normalizeDb(db);
   }
 
-  const seed = createSeedDb();
+  const seed = buildSeedDb();
   await store.setJSON("db", seed);
   return seed;
 }
 
 async function writeDb(nextDb) {
-  const payload = {
+  const payload = normalizeDb({
     ...nextDb,
     updatedAt: new Date().toISOString(),
-  };
+  });
   await store.setJSON("db", payload);
   return payload;
 }
@@ -130,15 +118,20 @@ function createId(prefix) {
 function getToken(request) {
   const authHeader = request.headers.get("authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
-    return DEMO_TOKEN;
+    return null;
   }
 
   return authHeader.slice("Bearer ".length);
 }
 
 async function getCurrentUser(request) {
+  const token = getToken(request);
+  if (!token) {
+    return null;
+  }
+
   const db = await readDb();
-  return db.users.find((user) => user.token === getToken(request)) || db.users[0] || null;
+  return db.users.find((user) => user.token === token) || null;
 }
 
 async function requireUser(request) {
@@ -179,7 +172,88 @@ export default async (request) => {
   }
 
   if (apiPath === "/public-settings" && request.method === "GET") {
-    return json({ auth_required: false, app_name: "RBT Genius" });
+    return json({ auth_required: true, app_name: "RBT Genius" });
+  }
+
+  if (apiPath === "/auth/register" && request.method === "POST") {
+    const body = await request.json();
+    const email = String(body?.email || "").trim().toLowerCase();
+    const password = String(body?.password || "");
+    const fullName = String(body?.full_name || "").trim();
+
+    if (!email || !password || !fullName) {
+      return json(
+        { message: "Full name, email, and password are required" },
+        { status: 400 },
+      );
+    }
+
+    if (password.length < 8) {
+      return json({ message: "Password must be at least 8 characters" }, { status: 400 });
+    }
+
+    const db = await readDb();
+    if (db.users.some((user) => user.email.toLowerCase() === email)) {
+      return json(
+        { message: "An account with that email already exists" },
+        { status: 409 },
+      );
+    }
+
+    const passwordData = hashPassword(password);
+    const newUser = {
+      id: createId("user"),
+      full_name: fullName,
+      email,
+      role: "student",
+      plan: "free",
+      token: createSessionToken(),
+      password_hash: passwordData.hash,
+      password_salt: passwordData.salt,
+    };
+
+    await updateDb((current) => ({
+      ...current,
+      users: [...current.users, newUser],
+    }));
+
+    const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
+      newUser;
+    return json({ token: newUser.token, user: safeUser }, { status: 201 });
+  }
+
+  if (apiPath === "/auth/login" && request.method === "POST") {
+    const body = await request.json();
+    const email = String(body?.email || "").trim().toLowerCase();
+    const password = String(body?.password || "");
+    const db = await readDb();
+    const user = db.users.find((entry) => entry.email.toLowerCase() === email);
+
+    if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+      return json({ message: "Invalid email or password" }, { status: 401 });
+    }
+
+    const nextToken = createSessionToken();
+    let updatedUser = null;
+
+    await updateDb((current) => ({
+      ...current,
+      users: current.users.map((entry) => {
+        if (entry.id !== user.id) {
+          return entry;
+        }
+
+        updatedUser = {
+          ...entry,
+          token: nextToken,
+        };
+        return updatedUser;
+      }),
+    }));
+
+    const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
+      updatedUser;
+    return json({ token: nextToken, user: safeUser });
   }
 
   if (apiPath === "/auth/me" && request.method === "GET") {
@@ -188,10 +262,29 @@ export default async (request) => {
       return auth.error;
     }
 
-    return json(auth.user);
+    const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
+      auth.user;
+    return json(safeUser);
   }
 
   if (apiPath === "/auth/logout" && request.method === "POST") {
+    const auth = await requireUser(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    await updateDb((current) => ({
+      ...current,
+      users: current.users.map((user) =>
+        user.id === auth.user.id
+          ? {
+              ...user,
+              token: null,
+            }
+          : user,
+      ),
+    }));
+
     return json({ ok: true });
   }
 
@@ -344,7 +437,13 @@ export default async (request) => {
 
     const db = await readDb();
     return json({
-      user: auth.user,
+      user: {
+        id: auth.user.id,
+        full_name: auth.user.full_name,
+        email: auth.user.email,
+        role: auth.user.role,
+        plan: auth.user.plan,
+      },
       progress: computeProgress(db, auth.user.id),
       payments: db.payments.filter((payment) => payment.user_id === auth.user.id),
     });
@@ -371,12 +470,13 @@ export default async (request) => {
           full_name: updates.full_name ?? user.full_name,
           plan: updates.plan ?? user.plan,
         };
-
         return updatedUser;
       }),
     }));
 
-    return json(updatedUser);
+    const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
+      updatedUser;
+    return json(safeUser);
   }
 
   if (apiPath === "/ai-tutor/conversations" && request.method === "GET") {

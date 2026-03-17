@@ -39,7 +39,7 @@ export default function Layout({ children, currentPageName }) {
           onMenuClick={() => setSidebarOpen((current) => !current)}
           user={user}
           plan={plan}
-          onLogout={() => logout(false)}
+          onLogout={() => logout()}
         />
 
         <main className="p-4 lg:p-6">
