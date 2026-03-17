@@ -17,10 +17,15 @@ import {
 import { resolveUserRole } from "./lib/seed.js";
 import {
   confirmStripeCheckoutSession,
+  constructStripeWebhookEvent,
   createStripeCheckoutSession,
   createStripePortalSession,
   getBillingConfig,
 } from "./lib/billing.js";
+import {
+  applyStripeWebhookEvent,
+  syncConfirmedCheckout,
+} from "./lib/stripe-sync.js";
 import {
   PLAN_IDS,
   countTutorMessagesToday,
@@ -30,6 +35,20 @@ import {
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
+
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req, res) => {
+  try {
+    const event = constructStripeWebhookEvent(
+      req.body,
+      req.headers["stripe-signature"],
+    );
+
+    updateDb((current) => applyStripeWebhookEvent(current, event, createId));
+    res.json({ received: true });
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Invalid Stripe webhook event" });
+  }
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -775,55 +794,25 @@ app.post("/api/billing/confirm", requireUser, async (req, res) => {
       return;
     }
 
-    let updatedUser = null;
-
-    updateDb((current) => {
-      const existingPayment = current.payments.find(
-        (payment) => payment.stripe_session_id === checkout.session_id,
-      );
-
-      const nextPayment = {
-        id: existingPayment?.id || createId("payment"),
-        user_id: req.currentUser.id,
-        created_at: existingPayment?.created_at || new Date().toISOString(),
-        plan: checkout.plan,
-        amount: Number(((checkout.amount_total || 0) / 100).toFixed(2)),
-        currency: String(checkout.currency || "usd").toUpperCase(),
-        status: checkout.payment_status === "paid" ? "completed" : checkout.status,
-        payment_date: checkout.completed_at,
-        provider: "stripe",
-        provider_label: "Stripe",
-        stripe_session_id: checkout.session_id,
-        stripe_customer_id: checkout.customer_id,
-        stripe_subscription_id: checkout.subscription_id,
-      };
-
-      return {
-        ...current,
-        users: current.users.map((user) => {
-          if (user.id !== req.currentUser.id) {
-            return user;
-          }
-
-          updatedUser = {
-            ...user,
-            plan: checkout.plan,
-            stripe_customer_id: checkout.customer_id || user.stripe_customer_id || null,
-            stripe_subscription_id:
-              checkout.subscription_id || user.stripe_subscription_id || null,
-          };
-          return updatedUser;
-        }),
-        payments: existingPayment
-          ? current.payments.map((payment) =>
-              payment.stripe_session_id === checkout.session_id ? nextPayment : payment,
-            )
-          : [nextPayment, ...current.payments],
-      };
-    });
+    updateDb((current) => syncConfirmedCheckout(current, {
+      id: checkout.session_id,
+      metadata: { plan: checkout.plan, user_id: req.currentUser.id },
+      customer: checkout.customer_id,
+      subscription: checkout.subscription_id,
+      amount_total: Math.round(Number(checkout.amount_total || 0)),
+      currency: checkout.currency,
+      payment_status: checkout.payment_status,
+      status: checkout.status,
+      created: Math.floor(new Date(checkout.completed_at).getTime() / 1000),
+      customer_details: { email: checkout.customer_email },
+      customer_email: checkout.customer_email,
+      client_reference_id: checkout.client_reference_id || req.currentUser.id,
+    }, createId));
 
     const db = readDb();
-    res.json(buildProfilePayload(db, updatedUser || req.currentUser));
+    const nextUser =
+      db.users.find((user) => user.id === req.currentUser.id) || req.currentUser;
+    res.json(buildProfilePayload(db, nextUser));
   } catch (error) {
     res.status(400).json({ message: error.message || "Unable to confirm checkout" });
   }

@@ -51,6 +51,7 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 STRIPE_SECRET_KEY=sk_live_or_test_xxx
 STRIPE_PRICE_PREMIUM_MONTHLY=price_xxx
 STRIPE_PRICE_PREMIUM_YEARLY=price_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
 ```
 
 Google OAuth redirect URI:
@@ -75,6 +76,7 @@ Notas:
 
 - Si `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` no existen, Google no aparece en login.
 - Si faltan `STRIPE_SECRET_KEY` o los `STRIPE_PRICE_*`, el checkout premium queda desactivado.
+- Si falta `STRIPE_WEBHOOK_SECRET`, el cobro puede abrir Checkout, pero la activación premium ya no queda respaldada por webhooks automáticos.
 - Las preguntas ya salen del backend por `/api/questions`; no se leen desde `localStorage`.
 
 ## Project Structure

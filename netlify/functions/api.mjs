@@ -23,10 +23,15 @@ import {
 import { buildSeedDb, normalizeDb, resolveUserRole } from "../../server/lib/seed.js";
 import {
   confirmStripeCheckoutSession,
+  constructStripeWebhookEvent,
   createStripeCheckoutSession,
   createStripePortalSession,
   getBillingConfig,
 } from "../../server/lib/billing.js";
+import {
+  applyStripeWebhookEvent,
+  syncConfirmedCheckout,
+} from "../../server/lib/stripe-sync.js";
 import {
   countTutorMessagesToday,
   getEntitlements,
@@ -443,6 +448,24 @@ export default async (request) => {
 
   const url = new URL(request.url);
   const apiPath = getApiPath(request.url);
+
+  if (apiPath === "/billing/webhook" && request.method === "POST") {
+    try {
+      const payload = await request.text();
+      const event = constructStripeWebhookEvent(
+        payload,
+        request.headers.get("stripe-signature"),
+      );
+
+      await updateDb((current) => applyStripeWebhookEvent(current, event, createId));
+      return json({ received: true });
+    } catch (error) {
+      return json(
+        { message: error.message || "Invalid Stripe webhook event" },
+        { status: 400 },
+      );
+    }
+  }
 
   if (apiPath === "/health" && request.method === "GET") {
     return json({ ok: true });
@@ -930,55 +953,30 @@ export default async (request) => {
         );
       }
 
-      let updatedUser = null;
-
-      await updateDb((current) => {
-        const existingPayment = current.payments.find(
-          (payment) => payment.stripe_session_id === checkout.session_id,
-        );
-
-        const nextPayment = {
-          id: existingPayment?.id || createId("payment"),
-          user_id: auth.user.id,
-          created_at: existingPayment?.created_at || new Date().toISOString(),
-          plan: checkout.plan,
-          amount: Number(((checkout.amount_total || 0) / 100).toFixed(2)),
-          currency: String(checkout.currency || "usd").toUpperCase(),
-          status: checkout.payment_status === "paid" ? "completed" : checkout.status,
-          payment_date: checkout.completed_at,
-          provider: "stripe",
-          provider_label: "Stripe",
-          stripe_session_id: checkout.session_id,
-          stripe_customer_id: checkout.customer_id,
-          stripe_subscription_id: checkout.subscription_id,
-        };
-
-        return {
-          ...current,
-          users: current.users.map((user) => {
-            if (user.id !== auth.user.id) {
-              return user;
-            }
-
-            updatedUser = {
-              ...user,
-              plan: checkout.plan,
-              stripe_customer_id: checkout.customer_id || user.stripe_customer_id || null,
-              stripe_subscription_id:
-                checkout.subscription_id || user.stripe_subscription_id || null,
-            };
-            return updatedUser;
-          }),
-          payments: existingPayment
-            ? current.payments.map((payment) =>
-                payment.stripe_session_id === checkout.session_id ? nextPayment : payment,
-              )
-            : [nextPayment, ...current.payments],
-        };
-      });
+      await updateDb((current) =>
+        syncConfirmedCheckout(
+          current,
+          {
+            id: checkout.session_id,
+            metadata: { plan: checkout.plan, user_id: auth.user.id },
+            customer: checkout.customer_id,
+            subscription: checkout.subscription_id,
+            amount_total: Number(checkout.amount_total || 0),
+            currency: checkout.currency,
+            payment_status: checkout.payment_status,
+            status: checkout.status,
+            created: Math.floor(new Date(checkout.completed_at).getTime() / 1000),
+            customer_details: { email: checkout.customer_email },
+            customer_email: checkout.customer_email,
+            client_reference_id: checkout.client_reference_id || auth.user.id,
+          },
+          createId,
+        ),
+      );
 
       const db = await readDb();
-      return json(buildProfilePayload(db, updatedUser || auth.user));
+      const nextUser = db.users.find((user) => user.id === auth.user.id) || auth.user;
+      return json(buildProfilePayload(db, nextUser));
     } catch (error) {
       return json({ message: error.message || "Unable to confirm checkout" }, { status: 400 });
     }

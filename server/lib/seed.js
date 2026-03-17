@@ -16,6 +16,7 @@ export function buildSeedDb() {
     attempts: [],
     mockExams: [],
     payments: [],
+    stripeEvents: {},
     practiceSessions: {},
     oauthStates: {},
     tutorConversations: {},
@@ -62,6 +63,10 @@ export function normalizeDb(db) {
     attempts: Array.isArray(db.attempts) ? db.attempts : [],
     mockExams: Array.isArray(db.mockExams) ? db.mockExams : [],
     payments: Array.isArray(db.payments) ? db.payments : [],
+    stripeEvents:
+      db.stripeEvents && typeof db.stripeEvents === "object"
+        ? db.stripeEvents
+        : {},
     practiceSessions:
       db.practiceSessions && typeof db.practiceSessions === "object"
         ? db.practiceSessions

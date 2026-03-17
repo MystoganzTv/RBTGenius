@@ -37,6 +37,14 @@ export function getPlanPriceId(plan) {
   return envKey ? process.env[envKey] || null : null;
 }
 
+export function resolvePlanFromPriceId(priceId) {
+  const matchedPlan = Object.keys(STRIPE_PRICE_ENV).find(
+    (plan) => getPlanPriceId(plan) === priceId,
+  );
+
+  return normalizePlan(matchedPlan || PLAN_IDS.FREE);
+}
+
 export function getBillingConfig() {
   const stripe = getStripeClient();
 
@@ -61,6 +69,29 @@ function ensureStripeReady(plan) {
   }
 
   return stripe;
+}
+
+function getWebhookSecret() {
+  return process.env.STRIPE_WEBHOOK_SECRET || null;
+}
+
+export function isStripeWebhookConfigured() {
+  return Boolean(getStripeClient() && getWebhookSecret());
+}
+
+export function constructStripeWebhookEvent(payload, signature) {
+  const stripe = ensureStripeReady();
+  const secret = getWebhookSecret();
+
+  if (!secret) {
+    throw new Error("Stripe webhook secret is not configured yet.");
+  }
+
+  if (!signature) {
+    throw new Error("Stripe signature header is missing.");
+  }
+
+  return stripe.webhooks.constructEvent(payload, signature, secret);
 }
 
 function buildAbsoluteUrl(origin, pathname, params = {}) {
