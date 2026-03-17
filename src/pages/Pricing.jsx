@@ -91,6 +91,13 @@ export default function Pricing() {
 
   const currentPlan = profileData?.user?.plan || user?.plan || PLAN_IDS.FREE;
   const billing = getBillingAvailability(publicSettings, profileData);
+  const visiblePlans = useMemo(() => {
+    if (isAuthenticated && isPremiumPlan(currentPlan)) {
+      return PLAN_CATALOG.filter((plan) => plan.id !== PLAN_IDS.FREE);
+    }
+
+    return PLAN_CATALOG;
+  }, [currentPlan, isAuthenticated]);
 
   const checkoutMutation = useMutation({
     mutationFn: (planId) => api.createCheckoutSession(planId),
@@ -222,9 +229,19 @@ export default function Pricing() {
         ) : null}
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 pb-12">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {PLAN_CATALOG.map((plan) => {
+      <div
+        className={cn(
+          "mx-auto px-6 pb-12",
+          visiblePlans.length === 2 ? "max-w-4xl" : "max-w-6xl",
+        )}
+      >
+        <div
+          className={cn(
+            "grid grid-cols-1 gap-6",
+            visiblePlans.length === 2 ? "lg:grid-cols-2" : "lg:grid-cols-3",
+          )}
+        >
+          {visiblePlans.map((plan) => {
             const isCurrent = isAuthenticated && currentPlan === plan.id;
             const checkoutReady =
               plan.id === PLAN_IDS.FREE || billing.checkout_enabled?.[plan.id];
@@ -235,7 +252,7 @@ export default function Pricing() {
               <div
                 key={plan.id}
                 className={cn(
-                  "relative rounded-3xl border bg-white p-7 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.3)] transition-all dark:bg-slate-950",
+                  "relative flex h-full flex-col rounded-3xl border bg-white p-7 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.3)] transition-all dark:bg-slate-950",
                   plan.popular
                     ? "border-[#1E5EFF]/35"
                     : "border-slate-200/80 dark:border-slate-800",
@@ -299,7 +316,7 @@ export default function Pricing() {
                   )}
                 </Button>
 
-                <div className="space-y-3">
+                <div className="flex-1 space-y-3">
                   {planFeatureMap[plan.id].map((feature) => (
                     <div key={feature} className="flex items-start gap-2.5">
                       <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
