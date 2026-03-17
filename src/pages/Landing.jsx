@@ -218,8 +218,9 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950">
-            <div className="relative min-h-[410px] rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="relative min-h-[430px] px-4 py-6">
+            <div className="pointer-events-none absolute inset-0 rounded-[2.4rem] bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.08),transparent_50%)] dark:bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.12),transparent_48%)]" />
+            <div className="relative min-h-[390px]">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, content }, index) => {
                   const order =
@@ -227,9 +228,9 @@ export default function Landing() {
                     premiumPreviewPanels.length;
 
                   const cardStyles = [
-                    "z-30 translate-y-0 rotate-0 scale-100 opacity-100 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.4)]",
-                    "z-20 translate-x-5 translate-y-5 rotate-[2.5deg] scale-[0.96] opacity-90 shadow-[0_24px_60px_-45px_rgba(15,23,42,0.28)]",
-                    "z-10 translate-x-10 translate-y-10 -rotate-[2deg] scale-[0.92] opacity-75 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.2)]",
+                    "z-30 translate-y-0 rotate-0 scale-100 opacity-100 shadow-[0_40px_90px_-46px_rgba(15,23,42,0.34)]",
+                    "z-20 translate-x-4 translate-y-6 rotate-[1.8deg] scale-[0.965] opacity-[0.9] shadow-[0_30px_70px_-48px_rgba(15,23,42,0.22)]",
+                    "z-10 translate-x-8 translate-y-12 -rotate-[1.8deg] scale-[0.93] opacity-[0.72] shadow-[0_24px_60px_-52px_rgba(15,23,42,0.16)]",
                   ];
 
                   return (
@@ -238,9 +239,10 @@ export default function Landing() {
                       type="button"
                       aria-label={`Show ${title} preview`}
                       onClick={() => setActivePreviewIndex(index)}
-                      className={`absolute inset-4 w-[calc(100%-2rem)] rounded-[1.5rem] border border-slate-200 bg-white text-left transition-all duration-1000 dark:border-slate-800 dark:bg-slate-950 ${cardStyles[order]}`}
+                      className={`absolute inset-0 w-full rounded-[1.8rem] border border-slate-200/80 bg-white text-left transition-all dark:border-slate-800 dark:bg-slate-950 ${cardStyles[order]}`}
                       style={{
-                        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                        transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
+                        transitionDuration: "1600ms",
                       }}
                     >
                       <div className="flex h-full flex-col p-6">
@@ -275,7 +277,7 @@ export default function Landing() {
                 },
               )}
 
-              <div className="absolute bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+              <div className="absolute bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/92 px-3 py-2 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/92">
                 {premiumPreviewPanels.map((panel, index) => (
                   <button
                     key={panel.title}
