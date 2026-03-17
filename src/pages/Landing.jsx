@@ -38,6 +38,36 @@ const featureCards = [
   },
 ];
 
+function PreviewPage({ eyebrow, pageTitle, status, children }) {
+  return (
+    <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_18px_40px_-34px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950">
+      <div className="flex items-center justify-between border-b border-slate-200/80 bg-slate-50/90 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-rose-300 dark:bg-rose-500/60" />
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-300 dark:bg-amber-500/60" />
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-300 dark:bg-emerald-500/60" />
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+              {eyebrow}
+            </p>
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+              {pageTitle}
+            </p>
+          </div>
+        </div>
+        {status ? (
+          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-500">
+            {status}
+          </span>
+        ) : null}
+      </div>
+      <div className="p-4">{children}</div>
+    </div>
+  );
+}
+
 const premiumPreviewPanels = [
   {
     label: "Premium Preview",
@@ -47,16 +77,35 @@ const premiumPreviewPanels = [
       "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
     Icon: Brain,
     content: (
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
-          <p className="text-3xl font-black text-slate-900 dark:text-slate-50">3000</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">practice questions</p>
+      <PreviewPage eyebrow="Dashboard" pageTitle="Study Overview" status="Live">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+              Question Bank
+            </p>
+            <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">3000</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">practice questions</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+              Mock Exams
+            </p>
+            <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">85</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">questions per exam</p>
+          </div>
         </div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
-          <p className="text-3xl font-black text-slate-900 dark:text-slate-50">85</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">question mock exams</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl bg-[#1E5EFF]/8 px-4 py-3 text-sm font-medium text-[#1E5EFF] dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]">
+            Practice
+          </div>
+          <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+            Flashcards
+          </div>
+          <div className="rounded-2xl bg-violet-50 px-4 py-3 text-sm font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+            AI Tutor
+          </div>
         </div>
-      </div>
+      </PreviewPage>
     ),
   },
   {
@@ -67,29 +116,47 @@ const premiumPreviewPanels = [
       "bg-[#1E5EFF]/10 text-[#1E5EFF] dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]",
     Icon: ClipboardCheck,
     content: (
-      <div className="mt-6 rounded-[1.4rem] bg-white p-5 shadow-sm dark:bg-slate-950">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-slate-900 dark:text-slate-100">Average mock score</span>
-          <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-            Keep practicing
-          </span>
-        </div>
-        <div className="mt-5">
-          <div className="h-4 rounded-full bg-slate-100 p-1 dark:bg-slate-900">
-            <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-500" />
+      <PreviewPage eyebrow="Mock Exams" pageTitle="Readiness Snapshot" status="Updated">
+        <div className="rounded-[1.4rem] border border-slate-200/80 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold text-slate-900 dark:text-slate-100">
+              Average mock score
+            </span>
+            <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+              Keep practicing
+            </span>
           </div>
-          <div className="mt-3 flex items-end justify-between">
-            <div>
-              <p className="text-4xl font-black text-slate-900 dark:text-slate-50">212</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">scaled average score</p>
+          <div className="mt-5">
+            <div className="h-4 rounded-full bg-white p-1 dark:bg-slate-950">
+              <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-500" />
             </div>
-            <div className="text-right text-sm text-slate-500 dark:text-slate-400">
-              <p>6 mock exams taken</p>
-              <p>2 passed, 4 to review</p>
+            <div className="mt-3 flex items-end justify-between">
+              <div>
+                <p className="text-4xl font-black text-slate-900 dark:text-slate-50">212</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">scaled average score</p>
+              </div>
+              <div className="text-right text-sm text-slate-500 dark:text-slate-400">
+                <p>6 mock exams taken</p>
+                <p>2 passed, 4 to review</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+              Passed
+            </p>
+            <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-300">2</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+              Need review
+            </p>
+            <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-300">4</p>
+          </div>
+        </div>
+      </PreviewPage>
     ),
   },
   {
@@ -100,18 +167,32 @@ const premiumPreviewPanels = [
       "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
     Icon: MessageSquareMore,
     content: (
-      <div className="mt-6 space-y-3 rounded-[1.4rem] bg-white p-5 shadow-sm dark:bg-slate-950">
-        <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-slate-100 px-4 py-3 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-          Why is differential reinforcement better than just saying “no”?
+      <PreviewPage eyebrow="AI Tutor" pageTitle="Study Support" status="Online">
+        <div className="space-y-3 rounded-[1.4rem] border border-slate-200/80 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-white px-4 py-3 text-sm text-slate-600 shadow-sm dark:bg-slate-950 dark:text-slate-300">
+            Why is differential reinforcement better than just saying “no”?
+          </div>
+          <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-[#1E5EFF] px-4 py-3 text-sm text-white shadow-sm">
+            Because it teaches what to do instead, not only what to stop. That makes the
+            replacement behavior easier to reinforce consistently.
+          </div>
+          <div className="flex items-center gap-2 pt-2 text-xs font-medium text-slate-400 dark:text-slate-500">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            Unlimited premium AI support
+          </div>
         </div>
-        <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-[#1E5EFF] px-4 py-3 text-sm text-white">
-          Because it teaches what to do instead, not only what to stop. That makes the replacement behavior easier to reinforce consistently.
+        <div className="mt-3 flex gap-3">
+          <div className="rounded-2xl bg-violet-50 px-4 py-3 text-sm font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+            RBT concepts
+          </div>
+          <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            Quick explanations
+          </div>
+          <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            Study prompts
+          </div>
         </div>
-        <div className="flex items-center gap-2 pt-2 text-xs font-medium text-slate-400 dark:text-slate-500">
-          <span className="h-2 w-2 rounded-full bg-emerald-400" />
-          Unlimited premium AI support
-        </div>
-      </div>
+      </PreviewPage>
     ),
   },
 ];
