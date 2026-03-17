@@ -38,7 +38,22 @@ import {
   isPremiumPlan,
 } from "../../src/lib/plan-access.js";
 
-const store = getStore("rbt-genius-data");
+function getDbStore() {
+  return getStore("rbt-genius-data");
+}
+
+async function withFreshStore(operation) {
+  try {
+    return await operation(getDbStore());
+  } catch (error) {
+    const message = String(error?.message || "");
+    if (!message.toLowerCase().includes("token expired")) {
+      throw error;
+    }
+
+    return operation(getDbStore());
+  }
+}
 
 function json(body, init = {}) {
   return new Response(JSON.stringify(body), {
@@ -54,13 +69,13 @@ function json(body, init = {}) {
 }
 
 async function readDb() {
-  const db = await store.get("db", { type: "json" });
+  const db = await withFreshStore((store) => store.get("db", { type: "json" }));
   if (db) {
     return normalizeDb(db);
   }
 
   const seed = buildSeedDb();
-  await store.setJSON("db", seed);
+  await withFreshStore((store) => store.setJSON("db", seed));
   return seed;
 }
 
@@ -69,7 +84,7 @@ async function writeDb(nextDb) {
     ...nextDb,
     updatedAt: new Date().toISOString(),
   });
-  await store.setJSON("db", payload);
+  await withFreshStore((store) => store.setJSON("db", payload));
   return payload;
 }
 
