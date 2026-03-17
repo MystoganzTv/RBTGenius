@@ -145,13 +145,12 @@ const flashcardScenarioSuffixes = [
 function buildQuestionVariant(seed, index, prefixes, suffixes, prefixId) {
   const prefix = prefixes[index % prefixes.length];
   const suffix = suffixes[index % suffixes.length];
-  const topicLabel = topicLabels[seed.topic] || seed.topic.replace(/_/g, " ");
   const variantNumber = index + 1;
 
   return {
     ...seed,
     id: `${prefixId}_${seed.id}_${variantNumber}`,
-    text: `${prefix} (${topicLabel} set ${variantNumber}) ${seed.text} ${suffix}`,
+    text: `${prefix} ${seed.text} ${suffix}`,
     original_id: seed.id,
   };
 }
