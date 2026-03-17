@@ -46,32 +46,44 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-emerald-500/14 text-emerald-300",
     Icon: Brain,
-    content: (
+    renderContent: (isDark) => (
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <div
+            className={`rounded-[1.4rem] border p-4 backdrop-blur-sm ${
+              isDark
+                ? "border-white/10 bg-white/5"
+                : "border-slate-200 bg-white/88 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.25)]"
+            }`}
+          >
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Question Bank
             </p>
-            <p className="mt-3 text-3xl font-black text-white">3000</p>
-            <p className="mt-1 text-sm text-slate-400">practice questions</p>
+            <p className={`mt-3 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>3000</p>
+            <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
           </div>
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <div
+            className={`rounded-[1.4rem] border p-4 backdrop-blur-sm ${
+              isDark
+                ? "border-white/10 bg-white/5"
+                : "border-slate-200 bg-white/88 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.25)]"
+            }`}
+          >
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Mock Exams
             </p>
-            <p className="mt-3 text-3xl font-black text-white">85</p>
-            <p className="mt-1 text-sm text-slate-400">questions per exam</p>
+            <p className={`mt-3 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>85</p>
+            <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>questions per exam</p>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[1.2rem] border border-[#2D6BFF]/30 bg-[#2D6BFF]/14 px-4 py-3 text-sm font-medium text-[#8EB0FF]">
+          <div className={`rounded-[1.2rem] border px-4 py-3 text-sm font-medium ${isDark ? "border-[#2D6BFF]/30 bg-[#2D6BFF]/14 text-[#8EB0FF]" : "border-[#2D6BFF]/18 bg-[#2D6BFF]/8 text-[#1E5EFF]"}`}>
             Practice
           </div>
-          <div className="rounded-[1.2rem] border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-300">
+          <div className={`rounded-[1.2rem] border px-4 py-3 text-sm font-medium ${isDark ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300" : "border-emerald-300/40 bg-emerald-50 text-emerald-700"}`}>
             Flashcards
           </div>
-          <div className="rounded-[1.2rem] border border-violet-400/20 bg-violet-500/10 px-4 py-3 text-sm font-medium text-violet-300">
+          <div className={`rounded-[1.2rem] border px-4 py-3 text-sm font-medium ${isDark ? "border-violet-400/20 bg-violet-500/10 text-violet-300" : "border-violet-300/40 bg-violet-50 text-violet-700"}`}>
             AI Tutor
           </div>
         </div>
@@ -85,25 +97,31 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-[#2D6BFF]/14 text-[#8EB0FF]",
     Icon: ClipboardCheck,
-    content: (
+    renderContent: (isDark) => (
       <div className="space-y-4">
-        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+        <div
+          className={`rounded-[1.4rem] border p-5 backdrop-blur-sm ${
+            isDark
+              ? "border-white/10 bg-white/5"
+              : "border-slate-200 bg-white/88 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.25)]"
+          }`}
+        >
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-white">Average mock score</span>
-            <span className="rounded-full bg-amber-500/16 px-3 py-1 font-semibold text-amber-300">
+            <span className={`font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>Average mock score</span>
+            <span className={`rounded-full px-3 py-1 font-semibold ${isDark ? "bg-amber-500/16 text-amber-300" : "bg-amber-100 text-amber-700"}`}>
               Keep practicing
             </span>
           </div>
           <div className="mt-5">
-            <div className="h-4 rounded-full bg-white/8 p-1">
+            <div className={`h-4 rounded-full p-1 ${isDark ? "bg-white/8" : "bg-slate-100"}`}>
               <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-400" />
             </div>
             <div className="mt-3 flex items-end justify-between gap-4">
               <div>
-                <p className="text-4xl font-black text-white">212</p>
-                <p className="text-sm text-slate-400">scaled average score</p>
+                <p className={`text-4xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>212</p>
+                <p className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>scaled average score</p>
               </div>
-              <div className="text-right text-sm text-slate-400">
+              <div className={`text-right text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                 <p>6 mock exams taken</p>
                 <p>2 passed, 4 to review</p>
               </div>
@@ -111,14 +129,14 @@ const premiumPreviewPanels = [
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-[1.2rem] border border-emerald-400/18 bg-emerald-500/8 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <div className={`rounded-[1.2rem] border px-4 py-3 ${isDark ? "border-emerald-400/18 bg-emerald-500/8" : "border-emerald-300/40 bg-emerald-50"}`}>
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Passed
             </p>
             <p className="mt-2 text-2xl font-black text-emerald-300">2</p>
           </div>
-          <div className="rounded-[1.2rem] border border-amber-400/18 bg-amber-500/8 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <div className={`rounded-[1.2rem] border px-4 py-3 ${isDark ? "border-amber-400/18 bg-amber-500/8" : "border-amber-300/40 bg-amber-50"}`}>
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.2em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Need review
             </p>
             <p className="mt-2 text-2xl font-black text-amber-300">4</p>
@@ -134,29 +152,35 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-violet-500/14 text-violet-300",
     Icon: MessageSquareMore,
-    content: (
+    renderContent: (isDark) => (
       <div className="space-y-4">
-        <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-          <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-white/8 px-4 py-3 text-sm text-slate-300">
+        <div
+          className={`space-y-3 rounded-[1.4rem] border p-5 backdrop-blur-sm ${
+            isDark
+              ? "border-white/10 bg-white/5"
+              : "border-slate-200 bg-white/88 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.25)]"
+          }`}
+        >
+          <div className={`max-w-[85%] rounded-2xl rounded-bl-md px-4 py-3 text-sm ${isDark ? "bg-white/8 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
             Why is differential reinforcement better than just saying “no”?
           </div>
           <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-[#2D6BFF] px-4 py-3 text-sm text-white">
             Because it teaches what to do instead, not only what to stop. That makes the
             replacement behavior easier to reinforce consistently.
           </div>
-          <div className="flex items-center gap-2 pt-2 text-xs font-medium text-slate-400">
+          <div className={`flex items-center gap-2 pt-2 text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             Unlimited premium AI support
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[1.2rem] border border-violet-400/20 bg-violet-500/10 px-4 py-3 text-sm font-medium text-violet-300">
+          <div className={`rounded-[1.2rem] border px-4 py-3 text-sm font-medium ${isDark ? "border-violet-400/20 bg-violet-500/10 text-violet-300" : "border-violet-300/40 bg-violet-50 text-violet-700"}`}>
             RBT concepts
           </div>
-          <div className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-300">
+          <div className={`rounded-[1.2rem] border px-4 py-3 text-sm font-medium ${isDark ? "border-white/10 bg-white/5 text-slate-300" : "border-slate-200 bg-white text-slate-600"}`}>
             Quick explanations
           </div>
-          <div className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-300">
+          <div className={`rounded-[1.2rem] border px-4 py-3 text-sm font-medium ${isDark ? "border-white/10 bg-white/5 text-slate-300" : "border-slate-200 bg-white text-slate-600"}`}>
             Study prompts
           </div>
         </div>
@@ -271,16 +295,16 @@ export default function Landing() {
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_32%,rgba(45,107,255,0.12),transparent_24%),radial-gradient(circle_at_28%_78%,rgba(139,92,246,0.1),transparent_24%)] blur-2xl" />
             <div className="relative mx-auto min-h-[460px] max-w-[33rem]">
               {premiumPreviewPanels.map(
-                ({ label, title, subtitle, accentClassName, Icon, content }, index) => {
+                ({ label, title, subtitle, accentClassName, Icon, renderContent }, index) => {
                   const order =
                     (index - activePreviewIndex + premiumPreviewPanels.length) %
                     premiumPreviewPanels.length;
                   const isFrontCard = order === 0;
 
                   const cardStyles = [
-                    "z-30 translate-y-4 rotate-[-5deg] scale-100 opacity-100 shadow-[0_40px_90px_-44px_rgba(15,23,42,0.52)]",
-                    "z-20 translate-x-12 translate-y-14 rotate-[6deg] scale-[0.96] opacity-[0.42] shadow-[0_34px_80px_-52px_rgba(15,23,42,0.28)]",
-                    "z-10 translate-x-24 translate-y-24 rotate-[-4deg] scale-[0.92] opacity-[0.22] shadow-[0_28px_60px_-54px_rgba(15,23,42,0.2)]",
+                    "z-30 translate-y-4 rotate-[-4deg] scale-100 opacity-100 shadow-[0_44px_100px_-46px_rgba(15,23,42,0.42)]",
+                    "z-20 translate-x-10 translate-y-14 rotate-[5deg] scale-[0.965] opacity-[0.54]",
+                    "z-10 translate-x-20 translate-y-24 rotate-[-3deg] scale-[0.93] opacity-[0.3]",
                   ];
 
                   return (
@@ -289,14 +313,18 @@ export default function Landing() {
                       type="button"
                       aria-label={`Show ${title} preview`}
                       onClick={() => setActivePreviewIndex(index)}
-                      className={`absolute left-0 top-0 w-full rounded-[2.2rem] border text-left text-white transition-all ${cardStyles[order]} ${
+                      className={`absolute left-0 top-0 w-full rounded-[2.2rem] border text-left transition-all will-change-transform ${cardStyles[order]} ${
                         isFrontCard
-                          ? "border-slate-200/18 bg-[linear-gradient(180deg,rgba(19,32,61,0.96),rgba(12,19,39,0.96))] backdrop-blur-xl"
-                          : "border-slate-300/12 bg-[linear-gradient(180deg,rgba(23,36,68,0.42),rgba(11,19,38,0.34))] backdrop-blur-sm"
+                          ? isDark
+                            ? "border-slate-200/18 bg-[linear-gradient(180deg,rgba(19,32,61,0.96),rgba(12,19,39,0.96))] text-white backdrop-blur-xl"
+                            : "border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] text-slate-900 shadow-[0_34px_90px_-50px_rgba(15,23,42,0.24)] backdrop-blur-xl"
+                          : isDark
+                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(23,36,68,0.42),rgba(11,19,38,0.34))] text-white backdrop-blur-sm"
+                            : "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.58),rgba(248,250,252,0.45))] text-slate-700 shadow-[0_24px_60px_-50px_rgba(15,23,42,0.14)] backdrop-blur-sm"
                       }`}
                       style={{
-                        transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
-                        transitionDuration: "1650ms",
+                        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                        transitionDuration: "2150ms",
                       }}
                     >
                       <div className="flex h-full flex-col p-6 pb-8">
@@ -308,44 +336,44 @@ export default function Landing() {
                               <Icon className="h-5 w-5" />
                             </div>
                             <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500/90">
+                              <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
                                 {label}
                               </p>
-                              <p className="text-sm font-semibold text-white">
+                              <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
                                 {title}
                               </p>
-                              <p className="max-w-md text-sm text-slate-300">
+                              <p className={`max-w-md text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}>
                                 {subtitle}
                               </p>
                             </div>
                           </div>
-                          <span className="rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
                             {order === 0 ? "Now" : order === 1 ? "Next" : "Then"}
                           </span>
                         </div>
 
                         <div className="mt-4 flex-1">
                           {isFrontCard ? (
-                            content
+                            renderContent(isDark)
                           ) : (
                             <div className="space-y-4">
-                              <div className="rounded-[1.55rem] border border-white/8 bg-white/[0.03] p-5">
+                              <div className={`rounded-[1.55rem] border p-5 ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200/80 bg-white/65"}`}>
                                 <div className="flex items-center justify-between">
-                                  <div className="h-3 w-28 rounded-full bg-white/10" />
-                                  <div className="h-8 w-24 rounded-full border border-white/10 bg-white/[0.03]" />
+                                  <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+                                  <div className={`h-8 w-24 rounded-full border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
                                 </div>
                                 <div className="mt-4 space-y-3">
-                                  <div className="h-12 rounded-[1.2rem] bg-white/[0.06]" />
+                                  <div className={`h-12 rounded-[1.2rem] ${isDark ? "bg-white/[0.06]" : "bg-slate-100"}`} />
                                   <div className="grid gap-3 sm:grid-cols-2">
-                                    <div className="h-24 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
-                                    <div className="h-24 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
+                                    <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
+                                    <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
                                   </div>
                                 </div>
                               </div>
                               <div className="grid gap-3 sm:grid-cols-3">
-                                <div className="h-16 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
-                                <div className="h-16 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
-                                <div className="h-16 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
+                                <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
+                                <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
+                                <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
                               </div>
                             </div>
                           )}
