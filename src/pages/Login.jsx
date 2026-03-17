@@ -40,6 +40,17 @@ const OAUTH_OPTIONS = [
   },
 ];
 
+const providerButtonStyles = {
+  google:
+    "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
+  apple:
+    "border-black bg-black text-white hover:bg-black/90 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100",
+  github:
+    "border-slate-900 bg-slate-900 text-white hover:bg-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
+  microsoft:
+    "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
+};
+
 function normalizeRedirectPath(value) {
   if (!value) {
     return createPageUrl("Dashboard");
@@ -90,9 +101,13 @@ export default function Login() {
 
   useEffect(() => {
     let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, 2500);
 
     api
-      .getAuthProviders()
+      .getAuthProviders({ signal: controller.signal })
       .then((data) => {
         if (isMounted) {
           setAuthProviders(data?.providers || []);
@@ -107,10 +122,13 @@ export default function Login() {
         if (isMounted) {
           setIsLoadingProviders(false);
         }
+        window.clearTimeout(timeoutId);
       });
 
     return () => {
       isMounted = false;
+      controller.abort();
+      window.clearTimeout(timeoutId);
     };
   }, []);
 
@@ -230,17 +248,19 @@ export default function Login() {
             </div>
             <div className="mb-6 space-y-3">
               {availableProviders.map(({ id, label, Icon }) => (
-              <Button
-                key={id}
-                type="button"
-                variant="outline"
-                disabled={isSubmitting}
-                onClick={() => handleProviderAuth(id)}
-                className="w-full justify-start gap-3 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </Button>
+                <Button
+                  key={id}
+                  type="button"
+                  variant="outline"
+                  disabled={isSubmitting}
+                  onClick={() => handleProviderAuth(id)}
+                  className={`h-14 w-full justify-start gap-4 rounded-2xl border px-5 text-base font-semibold shadow-[0_14px_35px_-25px_rgba(15,23,42,0.45)] ${providerButtonStyles[id] || providerButtonStyles.google}`}
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  {label}
+                </Button>
               ))}
             </div>
 
@@ -251,7 +271,7 @@ export default function Login() {
             </div>
           </>
         ) : isLoadingProviders ? (
-          <div className="mb-6 flex items-center justify-center py-2 text-sm text-slate-400 dark:text-slate-500">
+          <div className="mb-4 flex items-center justify-center py-1 text-sm text-slate-400 dark:text-slate-500">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Loading sign-in options...
           </div>
@@ -265,6 +285,9 @@ export default function Login() {
 
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="space-y-4">
+              <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                Manual login
+              </p>
               <Input
                 type="email"
                 placeholder="Email"
@@ -300,6 +323,9 @@ export default function Login() {
 
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="space-y-4">
+              <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                Manual registration
+              </p>
               <Input
                 placeholder="Full name"
                 value={registerForm.full_name}
@@ -353,10 +379,6 @@ export default function Login() {
             {errorMessage}
           </div>
         ) : null}
-
-        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Demo account: <strong>demo@rbtgenius.app</strong> / <strong>demo123456</strong>
-        </div>
 
         <div className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
           <Link to="/" className="text-[#1E5EFF] hover:underline">

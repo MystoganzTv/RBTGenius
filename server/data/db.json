@@ -1,14 +1,5 @@
 {
-  "users": [
-    {
-      "id": "user-demo",
-      "token": "demo-student-token",
-      "full_name": "Alex Carter",
-      "email": "alex.carter@example.com",
-      "role": "student",
-      "plan": "free"
-    }
-  ],
+  "users": [],
   "attempts": [],
   "mockExams": [],
   "payments": [],

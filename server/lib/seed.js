@@ -1,7 +1,8 @@
-import { defaultUser } from "../../src/lib/backend-core.js";
-import { DEMO_CREDENTIALS, createSessionToken, hashPassword } from "./auth.js";
+import { defaultUser, DEMO_USER_ID } from "../../src/lib/backend-core.js";
+import { createSessionToken } from "./auth.js";
 
 const LEGACY_DEMO_EMAIL = "alex.carter@example.com";
+const LEGACY_DEMO_EMAILS = [LEGACY_DEMO_EMAIL, "demo@rbtgenius.app"];
 export const ADMIN_EMAILS = ["enrique.padron853@gmail.com"];
 
 export function resolveUserRole(email, fallbackRole = "student") {
@@ -9,20 +10,9 @@ export function resolveUserRole(email, fallbackRole = "student") {
   return ADMIN_EMAILS.includes(normalizedEmail) ? "admin" : fallbackRole;
 }
 
-function buildSeedUser() {
-  const credentials = hashPassword(DEMO_CREDENTIALS.password);
-
-  return {
-    ...defaultUser,
-    token: createSessionToken(),
-    password_hash: credentials.hash,
-    password_salt: credentials.salt,
-  };
-}
-
 export function buildSeedDb() {
   return {
-    users: [buildSeedUser()],
+    users: [],
     attempts: [],
     mockExams: [],
     payments: [],
@@ -44,50 +34,30 @@ export function normalizeDb(db) {
   return {
     ...seedDb,
     ...db,
-    users: Array.isArray(db.users) && db.users.length > 0
-      ? db.users.map((user) => {
-          const isLegacyDemoUser =
-            user.id === defaultUser.id ||
-            String(user.email || "").toLowerCase() === LEGACY_DEMO_EMAIL ||
-            user.token === "demo-student-token";
-          const normalizedUser = isLegacyDemoUser
-            ? {
-                ...user,
-                id: defaultUser.id,
-                full_name: defaultUser.full_name,
-                email: defaultUser.email,
-                role: resolveUserRole(user.email, user.role || defaultUser.role),
-                plan: user.plan || defaultUser.plan,
-              }
-            : user;
+    users:
+      Array.isArray(db.users) && db.users.length > 0
+        ? db.users
+            .filter((user) => {
+              const normalizedEmail = String(user.email || "").toLowerCase();
+              const isLegacyDemoUser =
+                user.id === DEMO_USER_ID ||
+                LEGACY_DEMO_EMAILS.includes(normalizedEmail) ||
+                user.token === "demo-student-token";
 
-          if (normalizedUser.password_hash && normalizedUser.password_salt) {
-            return {
-              ...normalizedUser,
-              role: resolveUserRole(normalizedUser.email, normalizedUser.role || "student"),
-              auth_provider: normalizedUser.auth_provider || "password",
+              return !isLegacyDemoUser;
+            })
+            .map((user) => ({
+              ...user,
+              token: user.token || createSessionToken(),
+              role: resolveUserRole(user.email, user.role || defaultUser.role),
+              plan: user.plan || defaultUser.plan,
+              auth_provider: user.auth_provider || "password",
               oauth_accounts:
-                normalizedUser.oauth_accounts && typeof normalizedUser.oauth_accounts === "object"
-                  ? normalizedUser.oauth_accounts
+                user.oauth_accounts && typeof user.oauth_accounts === "object"
+                  ? user.oauth_accounts
                   : {},
-            };
-          }
-
-          const credentials = hashPassword(DEMO_CREDENTIALS.password);
-          return {
-            ...normalizedUser,
-            role: resolveUserRole(normalizedUser.email, normalizedUser.role || "student"),
-            auth_provider: normalizedUser.auth_provider || "password",
-            oauth_accounts:
-              normalizedUser.oauth_accounts && typeof normalizedUser.oauth_accounts === "object"
-                ? normalizedUser.oauth_accounts
-                : {},
-            token: normalizedUser.token || createSessionToken(),
-            password_hash: credentials.hash,
-            password_salt: credentials.salt,
-          };
-        })
-      : seedDb.users,
+            }))
+        : seedDb.users,
     attempts: Array.isArray(db.attempts) ? db.attempts : [],
     mockExams: Array.isArray(db.mockExams) ? db.mockExams : [],
     payments: Array.isArray(db.payments) ? db.payments : [],

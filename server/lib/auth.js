@@ -1,10 +1,5 @@
 import crypto from "node:crypto";
 
-export const DEMO_CREDENTIALS = {
-  email: "demo@rbtgenius.app",
-  password: "demo123456",
-};
-
 export function createSessionToken() {
   return crypto.randomBytes(24).toString("hex");
 }

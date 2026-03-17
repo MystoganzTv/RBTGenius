@@ -3,10 +3,10 @@ import { TOTAL_PRACTICE_QUESTIONS, topicLabels } from "./question-bank.js";
 export const DEMO_USER_ID = "user-demo";
 
 export const defaultUser = {
-  id: DEMO_USER_ID,
+  id: "user-default",
   token: null,
-  full_name: "Demo Student",
-  email: "demo@rbtgenius.app",
+  full_name: "Student",
+  email: "",
   role: "student",
   plan: "free",
 };

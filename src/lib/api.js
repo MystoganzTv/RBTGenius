@@ -59,8 +59,8 @@ export const api = {
   getPublicSettings() {
     return request("/api/public-settings");
   },
-  getAuthProviders() {
-    return request("/api/auth/providers");
+  getAuthProviders(options = {}) {
+    return request("/api/auth/providers", options);
   },
   register(payload) {
     return request("/api/auth/register", {
