@@ -38,74 +38,44 @@ const featureCards = [
   },
 ];
 
-function PreviewPage({ eyebrow, pageTitle, status, children }) {
-  return (
-    <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_18px_40px_-34px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950">
-      <div className="flex items-center justify-between border-b border-slate-200/80 bg-slate-50/90 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-rose-300 dark:bg-rose-500/60" />
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-300 dark:bg-amber-500/60" />
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-300 dark:bg-emerald-500/60" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-              {eyebrow}
-            </p>
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-              {pageTitle}
-            </p>
-          </div>
-        </div>
-        {status ? (
-          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-500">
-            {status}
-          </span>
-        ) : null}
-      </div>
-      <div className="p-4 pb-5">{children}</div>
-    </div>
-  );
-}
-
 const premiumPreviewPanels = [
   {
     label: "Premium Preview",
     title: "Smarter exam prep",
     subtitle: "Practice, flashcards, mock exams, and AI support in one place.",
     accentClassName:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+      "bg-emerald-500/14 text-emerald-300",
     Icon: Brain,
     content: (
-      <PreviewPage eyebrow="Dashboard" pageTitle="Study Overview" status="Live">
+      <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               Question Bank
             </p>
-            <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">3000</p>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">practice questions</p>
+            <p className="mt-3 text-3xl font-black text-white">3000</p>
+            <p className="mt-1 text-sm text-slate-400">practice questions</p>
           </div>
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               Mock Exams
             </p>
-            <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">85</p>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">questions per exam</p>
+            <p className="mt-3 text-3xl font-black text-white">85</p>
+            <p className="mt-1 text-sm text-slate-400">questions per exam</p>
           </div>
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-[#1E5EFF]/8 px-4 py-3 text-sm font-medium text-[#1E5EFF] dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-[1.2rem] border border-[#2D6BFF]/30 bg-[#2D6BFF]/14 px-4 py-3 text-sm font-medium text-[#8EB0FF]">
             Practice
           </div>
-          <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+          <div className="rounded-[1.2rem] border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-300">
             Flashcards
           </div>
-          <div className="rounded-2xl bg-violet-50 px-4 py-3 text-sm font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+          <div className="rounded-[1.2rem] border border-violet-400/20 bg-violet-500/10 px-4 py-3 text-sm font-medium text-violet-300">
             AI Tutor
           </div>
         </div>
-      </PreviewPage>
+      </div>
     ),
   },
   {
@@ -113,50 +83,48 @@ const premiumPreviewPanels = [
     title: "Mock exam confidence",
     subtitle: "Timed exams with clearer signals on whether you are ready to test.",
     accentClassName:
-      "bg-[#1E5EFF]/10 text-[#1E5EFF] dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]",
+      "bg-[#2D6BFF]/14 text-[#8EB0FF]",
     Icon: ClipboardCheck,
     content: (
-      <PreviewPage eyebrow="Mock Exams" pageTitle="Readiness Snapshot" status="Updated">
-        <div className="rounded-[1.4rem] border border-slate-200/80 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+      <div className="space-y-4">
+        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-slate-900 dark:text-slate-100">
-              Average mock score
-            </span>
-            <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+            <span className="font-semibold text-white">Average mock score</span>
+            <span className="rounded-full bg-amber-500/16 px-3 py-1 font-semibold text-amber-300">
               Keep practicing
             </span>
           </div>
           <div className="mt-5">
-            <div className="h-4 rounded-full bg-white p-1 dark:bg-slate-950">
-              <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-500" />
+            <div className="h-4 rounded-full bg-white/8 p-1">
+              <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-400" />
             </div>
-            <div className="mt-3 flex items-end justify-between">
+            <div className="mt-3 flex items-end justify-between gap-4">
               <div>
-                <p className="text-4xl font-black text-slate-900 dark:text-slate-50">212</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">scaled average score</p>
+                <p className="text-4xl font-black text-white">212</p>
+                <p className="text-sm text-slate-400">scaled average score</p>
               </div>
-              <div className="text-right text-sm text-slate-500 dark:text-slate-400">
+              <div className="text-right text-sm text-slate-400">
                 <p>6 mock exams taken</p>
                 <p>2 passed, 4 to review</p>
               </div>
             </div>
           </div>
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-[1.2rem] border border-emerald-400/18 bg-emerald-500/8 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
               Passed
             </p>
-            <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-300">2</p>
+            <p className="mt-2 text-2xl font-black text-emerald-300">2</p>
           </div>
-          <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+          <div className="rounded-[1.2rem] border border-amber-400/18 bg-amber-500/8 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
               Need review
             </p>
-            <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-300">4</p>
+            <p className="mt-2 text-2xl font-black text-amber-300">4</p>
           </div>
         </div>
-      </PreviewPage>
+      </div>
     ),
   },
   {
@@ -164,35 +132,35 @@ const premiumPreviewPanels = [
     title: "Ask the AI coach",
     subtitle: "Get quick explanations, study prompts, and targeted help when you get stuck.",
     accentClassName:
-      "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+      "bg-violet-500/14 text-violet-300",
     Icon: MessageSquareMore,
     content: (
-      <PreviewPage eyebrow="AI Tutor" pageTitle="Study Support" status="Online">
-        <div className="space-y-3 rounded-[1.4rem] border border-slate-200/80 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
-          <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-white px-4 py-3 text-sm text-slate-600 shadow-sm dark:bg-slate-950 dark:text-slate-300">
+      <div className="space-y-4">
+        <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+          <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-white/8 px-4 py-3 text-sm text-slate-300">
             Why is differential reinforcement better than just saying “no”?
           </div>
-          <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-[#1E5EFF] px-4 py-3 text-sm text-white shadow-sm">
+          <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-[#2D6BFF] px-4 py-3 text-sm text-white">
             Because it teaches what to do instead, not only what to stop. That makes the
             replacement behavior easier to reinforce consistently.
           </div>
-          <div className="flex items-center gap-2 pt-2 text-xs font-medium text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-2 pt-2 text-xs font-medium text-slate-400">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             Unlimited premium AI support
           </div>
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-violet-50 px-4 py-3 text-sm font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-[1.2rem] border border-violet-400/20 bg-violet-500/10 px-4 py-3 text-sm font-medium text-violet-300">
             RBT concepts
           </div>
-          <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <div className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-300">
             Quick explanations
           </div>
-          <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <div className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-300">
             Study prompts
           </div>
         </div>
-      </PreviewPage>
+      </div>
     ),
   },
 ];
@@ -299,8 +267,8 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative min-h-[500px] px-4 py-6">
-            <div className="pointer-events-none absolute inset-0 rounded-[2.4rem] bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.08),transparent_50%)] dark:bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.12),transparent_48%)]" />
+          <div className="relative min-h-[520px] overflow-hidden rounded-[2.6rem] border border-slate-200/80 bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.12),transparent_34%),linear-gradient(160deg,#0f172a_0%,#111b33_58%,#14213d_100%)] px-6 py-8 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] dark:border-slate-800">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(45,107,255,0.16),transparent_22%),radial-gradient(circle_at_15%_80%,rgba(139,92,246,0.12),transparent_24%)]" />
             <div className="relative min-h-[440px]">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, content }, index) => {
@@ -309,9 +277,9 @@ export default function Landing() {
                     premiumPreviewPanels.length;
 
                   const cardStyles = [
-                    "z-30 translate-y-0 rotate-0 scale-100 opacity-100 shadow-[0_40px_90px_-46px_rgba(15,23,42,0.34)]",
-                    "z-20 translate-x-4 translate-y-6 rotate-[1.8deg] scale-[0.965] opacity-[0.9] shadow-[0_30px_70px_-48px_rgba(15,23,42,0.22)]",
-                    "z-10 translate-x-8 translate-y-12 -rotate-[1.8deg] scale-[0.93] opacity-[0.72] shadow-[0_24px_60px_-52px_rgba(15,23,42,0.16)]",
+                    "z-30 translate-y-0 rotate-[-4deg] scale-100 opacity-100 shadow-[0_40px_90px_-46px_rgba(2,6,23,0.7)]",
+                    "z-20 translate-x-5 translate-y-8 rotate-[5deg] scale-[0.96] opacity-[0.72] shadow-[0_30px_70px_-48px_rgba(2,6,23,0.55)]",
+                    "z-10 translate-x-10 translate-y-16 rotate-[-3deg] scale-[0.92] opacity-[0.48] shadow-[0_24px_60px_-52px_rgba(2,6,23,0.45)]",
                   ];
 
                   return (
@@ -320,10 +288,10 @@ export default function Landing() {
                       type="button"
                       aria-label={`Show ${title} preview`}
                       onClick={() => setActivePreviewIndex(index)}
-                      className={`absolute inset-0 w-full rounded-[1.8rem] border border-slate-200/80 bg-white text-left transition-all dark:border-slate-800 dark:bg-slate-950 ${cardStyles[order]}`}
+                      className={`absolute inset-x-4 top-2 w-[calc(100%-2rem)] rounded-[2rem] border border-white/12 bg-slate-950/58 text-left text-white backdrop-blur-md transition-all ${cardStyles[order]}`}
                       style={{
                         transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
-                        transitionDuration: "1600ms",
+                        transitionDuration: "1800ms",
                       }}
                     >
                       <div className="flex h-full flex-col p-6 pb-8">
@@ -335,18 +303,18 @@ export default function Landing() {
                               <Icon className="h-5 w-5" />
                             </div>
                             <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
                                 {label}
                               </p>
-                              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                              <p className="text-sm font-semibold text-white">
                                 {title}
                               </p>
-                              <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+                              <p className="max-w-md text-sm text-slate-300">
                                 {subtitle}
                               </p>
                             </div>
                           </div>
-                          <span className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                          <span className="rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                             {order === 0 ? "Now" : order === 1 ? "Next" : "Then"}
                           </span>
                         </div>
@@ -358,7 +326,7 @@ export default function Landing() {
                 },
               )}
 
-              <div className="absolute -bottom-3 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/92 px-3 py-2 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/92">
+              <div className="absolute bottom-3 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/12 bg-slate-950/70 px-3 py-2 shadow-sm backdrop-blur">
                 {premiumPreviewPanels.map((panel, index) => (
                   <button
                     key={panel.title}
@@ -367,8 +335,8 @@ export default function Landing() {
                     onClick={() => setActivePreviewIndex(index)}
                     className={`h-2.5 rounded-full transition-all ${
                       index === activePreviewIndex
-                        ? "w-8 bg-[#1E5EFF]"
-                        : "w-2.5 bg-slate-300 dark:bg-slate-700"
+                        ? "w-8 bg-[#2D6BFF]"
+                        : "w-2.5 bg-slate-600"
                     }`}
                   />
                 ))}
