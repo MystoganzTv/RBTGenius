@@ -21,6 +21,7 @@ import { pagesConfig } from "./pages.config";
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : null;
+const PUBLIC_PAGES = new Set(["Pricing"]);
 
 function LayoutWrapper({ children, currentPageName }) {
   if (!Layout) {
@@ -73,6 +74,10 @@ function RootRoute() {
   const requestedPage = new URLSearchParams(location.search).get("page");
 
   if (!isAuthenticated) {
+    if (requestedPage && PUBLIC_PAGES.has(requestedPage)) {
+      return <QueryPageRenderer />;
+    }
+
     if (requestedPage) {
       return (
         <Navigate
@@ -91,6 +96,11 @@ function RootRoute() {
 function ProtectedLegacyRoute() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const { pageName } = useParams();
+
+  if (!isAuthenticated && PUBLIC_PAGES.has(pageName)) {
+    return <LegacyPageRenderer />;
+  }
 
   if (!isAuthenticated) {
     return (
@@ -113,14 +123,26 @@ function AuthenticatedApp() {
     isAuthenticated,
   } = useAuth();
   const location = useLocation();
+  const requestedPage = new URLSearchParams(location.search).get("page");
+  const legacyPageName = location.pathname.startsWith("/")
+    ? location.pathname.slice(1)
+    : location.pathname;
   const isLoginRoute = location.pathname === "/login";
   const isLandingRoute = location.pathname === "/" && !new URLSearchParams(location.search).get("page");
+  const isPublicRoute =
+    (location.pathname === "/" && PUBLIC_PAGES.has(requestedPage)) ||
+    PUBLIC_PAGES.has(legacyPageName);
 
   useEffect(() => {
-    if (authError?.type === "auth_required" && !isLoginRoute && !isLandingRoute) {
+    if (
+      authError?.type === "auth_required" &&
+      !isLoginRoute &&
+      !isLandingRoute &&
+      !isPublicRoute
+    ) {
       navigateToLogin();
     }
-  }, [authError?.type, isLandingRoute, isLoginRoute, navigateToLogin]);
+  }, [authError?.type, isLandingRoute, isLoginRoute, isPublicRoute, navigateToLogin]);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -134,7 +156,13 @@ function AuthenticatedApp() {
     return <UserNotRegisteredError />;
   }
 
-  if (authError?.type === "auth_required" && !isLoginRoute && !isLandingRoute && !isAuthenticated) {
+  if (
+    authError?.type === "auth_required" &&
+    !isLoginRoute &&
+    !isLandingRoute &&
+    !isPublicRoute &&
+    !isAuthenticated
+  ) {
     return null;
   }
 

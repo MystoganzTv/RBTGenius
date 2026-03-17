@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Brain,
+  Crown,
   Loader2,
   MessageSquare,
   Plus,
@@ -8,8 +10,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import MessageBubble from "@/components/chat/MessageBubble";
+import PremiumGate from "@/components/billing/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
 
 const suggestedTopics = [
@@ -25,7 +29,20 @@ export default function AITutor() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingConvos, setLoadingConvos] = useState(true);
+  const [entitlements, setEntitlements] = useState(null);
   const messagesEndRef = useRef(null);
+  const queryClient = useQueryClient();
+
+  const { data: profileData } = useQuery({
+    queryKey: ["profile-data"],
+    queryFn: api.getProfile,
+  });
+
+  useEffect(() => {
+    if (profileData?.entitlements) {
+      setEntitlements(profileData.entitlements);
+    }
+  }, [profileData]);
 
   const activeConversation = useMemo(
     () =>
@@ -41,14 +58,17 @@ export default function AITutor() {
 
     api
       .listTutorConversations()
-      .then((items) => {
+      .then((payload) => {
         if (cancelled) {
           return;
         }
 
-        const nextConversations = Array.isArray(items) ? items : [];
+        const nextConversations = Array.isArray(payload?.conversations)
+          ? payload.conversations
+          : [];
         setConversations(nextConversations);
         setActiveConversationId(nextConversations[0]?.id || null);
+        setEntitlements(payload?.entitlements || null);
         setLoadingConvos(false);
       })
       .catch(() => {
@@ -71,10 +91,18 @@ export default function AITutor() {
   }, [messages, loading]);
 
   const handleNewConversation = async () => {
-    const conversation = await api.createTutorConversation({ name: "New Chat" });
-    setConversations((current) => [conversation, ...current]);
-    setActiveConversationId(conversation.id);
-    setInput("");
+    try {
+      const payload = await api.createTutorConversation({ name: "New Chat" });
+      setConversations((current) => [payload.conversation, ...current]);
+      setActiveConversationId(payload.conversation.id);
+      setEntitlements(payload?.entitlements || entitlements);
+      setInput("");
+    } catch (error) {
+      toast({
+        title: "Unable to start a chat",
+        description: error.message || "Please try again.",
+      });
+    }
   };
 
   const handleSelectConversation = (conversationId) => {
@@ -89,21 +117,32 @@ export default function AITutor() {
 
     let conversationId = activeConversationId;
     if (!conversationId) {
-      const conversation = await api.createTutorConversation({
-        name: text.slice(0, 50),
-      });
-      setConversations((current) => [conversation, ...current]);
-      setActiveConversationId(conversation.id);
-      conversationId = conversation.id;
+      try {
+        const payload = await api.createTutorConversation({
+          name: text.slice(0, 50),
+        });
+        setConversations((current) => [payload.conversation, ...current]);
+        setActiveConversationId(payload.conversation.id);
+        setEntitlements(payload?.entitlements || entitlements);
+        conversationId = payload.conversation.id;
+      } catch (error) {
+        toast({
+          title: "Unable to start a chat",
+          description: error.message || "Please try again.",
+        });
+        return;
+      }
     }
 
     setInput("");
     setLoading(true);
 
     try {
-      const updatedConversation = await api.sendTutorMessage(conversationId, {
+      const payload = await api.sendTutorMessage(conversationId, {
         content: text,
       });
+      const updatedConversation = payload?.conversation;
+      setEntitlements(payload?.entitlements || entitlements);
 
       setConversations((current) => {
         const exists = current.some((conversation) => conversation.id === updatedConversation.id);
@@ -116,10 +155,30 @@ export default function AITutor() {
           conversation.id === updatedConversation.id ? updatedConversation : conversation,
         );
       });
+      queryClient.invalidateQueries({ queryKey: ["profile-data"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+    } catch (error) {
+      toast({
+        title:
+          error?.data?.code === "plan_limit_reached"
+            ? "Daily AI tutor limit reached"
+            : "Unable to send message",
+        description:
+          error?.data?.code === "plan_limit_reached"
+            ? "Free accounts include 5 AI tutor messages per day."
+            : error.message || "Please try again.",
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  if (!entitlements?.can_access_ai_tutor) {
+    return <PremiumGate feature="ai_tutor_limit" />;
+  }
+
+  const remainingMessages = entitlements?.usage?.tutor_messages_remaining;
+  const limitReached = remainingMessages === 0;
 
   return (
     <div className="mx-auto h-[calc(100vh-8rem)] max-w-7xl">
@@ -182,6 +241,12 @@ export default function AITutor() {
               </p>
             </div>
             <Sparkles className="ml-1 h-4 w-4 text-[#FFB800]" />
+            {remainingMessages !== null && remainingMessages !== undefined ? (
+              <div className="ml-auto inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 text-[11px] font-semibold text-[#C88700]">
+                <Crown className="h-3 w-3" />
+                {remainingMessages} free messages left today
+              </div>
+            ) : null}
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -243,12 +308,17 @@ export default function AITutor() {
               />
               <Button
                 type="submit"
-                disabled={!input.trim() || loading}
+                disabled={!input.trim() || loading || limitReached}
                 className="rounded-xl bg-[#1E5EFF] px-4 hover:bg-[#1E5EFF]/90"
               >
                 <Send className="h-4 w-4" />
               </Button>
             </form>
+            {limitReached ? (
+              <p className="mt-3 text-xs text-amber-600">
+                Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

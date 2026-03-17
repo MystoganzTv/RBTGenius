@@ -20,9 +20,9 @@ const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
   { name: "Practice", icon: HelpCircle, page: "Practice" },
   { name: "Flashcards", icon: Sparkles, page: "Flashcards" },
-  { name: "Mock Exams", icon: ClipboardCheck, page: "MockExams" },
+  { name: "Mock Exams", icon: ClipboardCheck, page: "MockExams", premium: true },
   { name: "AI Tutor", icon: Bot, page: "AITutor", badge: "AI" },
-  { name: "Analytics", icon: BarChart3, page: "Analytics" },
+  { name: "Analytics", icon: BarChart3, page: "Analytics", premium: true },
   { name: "Pricing", icon: CreditCard, page: "Pricing" },
 ];
 
@@ -30,7 +30,7 @@ const adminItems = [
   { name: "Members", icon: Shield, page: "AdminMembers", badge: "ADMIN" },
 ];
 
-export default function Sidebar({ currentPage, isAdmin = false }) {
+export default function Sidebar({ currentPage, isAdmin = false, plan = "free" }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -96,9 +96,16 @@ export default function Sidebar({ currentPage, isAdmin = false }) {
 
               {!collapsed ? <span>{item.name}</span> : null}
 
-              {!collapsed && item.badge ? (
-                <span className="ml-auto rounded-full bg-gradient-to-r from-[#1E5EFF] to-[#6366F1] px-2 py-0.5 text-[10px] font-bold text-white">
-                  {item.badge}
+              {!collapsed && (item.badge || (item.premium && plan === "free")) ? (
+                <span
+                  className={cn(
+                    "ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold text-white",
+                    item.badge
+                      ? "bg-gradient-to-r from-[#1E5EFF] to-[#6366F1]"
+                      : "bg-[#FFB800] text-slate-900",
+                  )}
+                >
+                  {item.badge || "PRO"}
                 </span>
               ) : null}
 

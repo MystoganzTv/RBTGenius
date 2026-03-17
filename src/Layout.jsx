@@ -27,11 +27,11 @@ export default function Layout({ children, currentPageName }) {
       ) : null}
 
       <div className="hidden lg:block">
-        <Sidebar currentPage={currentPageName} isAdmin={isAdmin} />
+        <Sidebar currentPage={currentPageName} isAdmin={isAdmin} plan={plan} />
       </div>
 
       <div className={sidebarOpen ? "lg:hidden block" : "hidden lg:hidden"}>
-        <Sidebar currentPage={currentPageName} isAdmin={isAdmin} />
+        <Sidebar currentPage={currentPageName} isAdmin={isAdmin} plan={plan} />
       </div>
 
       <div className="transition-all duration-300 lg:ml-[260px]">

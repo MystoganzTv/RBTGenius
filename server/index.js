@@ -15,6 +15,18 @@ import {
   normalizeRedirectPath,
 } from "./lib/oauth.js";
 import { resolveUserRole } from "./lib/seed.js";
+import {
+  confirmStripeCheckoutSession,
+  createStripeCheckoutSession,
+  createStripePortalSession,
+  getBillingConfig,
+} from "./lib/billing.js";
+import {
+  PLAN_IDS,
+  countTutorMessagesToday,
+  getEntitlements,
+  isPremiumPlan,
+} from "../src/lib/plan-access.js";
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
@@ -138,6 +150,62 @@ function createSafeUser(user) {
   return safeUser;
 }
 
+function buildUserAccessState(db, user) {
+  const progress = computeProgress(db, user.id);
+  const tutorMessagesToday = countTutorMessagesToday(db.tutorConversations[user.id] || []);
+  const entitlements = getEntitlements(user.plan, {
+    practiceQuestionsToday: progress.questions_today,
+    tutorMessagesToday,
+  });
+
+  return {
+    progress,
+    entitlements,
+    billing: getBillingConfig(),
+  };
+}
+
+function buildProfilePayload(db, user) {
+  const { progress, entitlements, billing } = buildUserAccessState(db, user);
+
+  return {
+    user: {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role,
+      plan: user.plan,
+    },
+    progress,
+    entitlements,
+    billing,
+    payments: db.payments.filter((payment) => payment.user_id === user.id),
+  };
+}
+
+function sendPremiumRequired(res, feature) {
+  res.status(403).json({
+    message: "Premium membership required",
+    code: "premium_required",
+    feature,
+  });
+}
+
+function sendPlanLimitReached(res, feature, limit, remaining) {
+  res.status(403).json({
+    message: "Daily plan limit reached",
+    code: "plan_limit_reached",
+    feature,
+    limit,
+    remaining,
+  });
+}
+
+function getCheckoutOrigin(req) {
+  const originHeader = req.body?.origin || req.headers.origin;
+  return normalizeOrigin(originHeader, getBackendOrigin(req));
+}
+
 function pruneOAuthStates(states = {}) {
   const now = Date.now();
   return Object.fromEntries(
@@ -256,6 +324,7 @@ app.get("/api/public-settings", (_req, res) => {
   res.json({
     auth_required: true,
     app_name: "RBT Genius",
+    billing: getBillingConfig(),
   });
 });
 
@@ -506,6 +575,22 @@ app.get("/api/question-attempts", requireUser, (req, res) => {
 });
 
 app.post("/api/question-attempts", requireUser, (req, res) => {
+  const db = readDb();
+  const { entitlements } = buildUserAccessState(db, req.currentUser);
+
+  if (
+    entitlements.practice_daily_limit !== null &&
+    entitlements.usage.practice_questions_remaining <= 0
+  ) {
+    sendPlanLimitReached(
+      res,
+      "practice_limit",
+      entitlements.practice_daily_limit,
+      entitlements.usage.practice_questions_remaining,
+    );
+    return;
+  }
+
   const payload = {
     id: createId("attempt"),
     user_id: req.currentUser.id,
@@ -518,15 +603,29 @@ app.post("/api/question-attempts", requireUser, (req, res) => {
     attempts: [payload, ...current.attempts],
   }));
 
-  res.status(201).json(payload);
+  const nextDb = readDb();
+  res.status(201).json({
+    ...payload,
+    entitlements: buildUserAccessState(nextDb, req.currentUser).entitlements,
+  });
 });
 
 app.get("/api/mock-exams", requireUser, (req, res) => {
+  if (!isPremiumPlan(req.currentUser.plan)) {
+    sendPremiumRequired(res, "mock_exams");
+    return;
+  }
+
   const db = readDb();
   res.json(db.mockExams.filter((exam) => exam.user_id === req.currentUser.id));
 });
 
 app.post("/api/mock-exams", requireUser, (req, res) => {
+  if (!isPremiumPlan(req.currentUser.plan)) {
+    sendPremiumRequired(res, "mock_exams");
+    return;
+  }
+
   const payload = {
     id: createId("mock_exam"),
     user_id: req.currentUser.id,
@@ -544,17 +643,25 @@ app.post("/api/mock-exams", requireUser, (req, res) => {
 
 app.get("/api/dashboard", requireUser, (req, res) => {
   const db = readDb();
+  const { progress, entitlements, billing } = buildUserAccessState(db, req.currentUser);
   res.json({
-    progress: computeProgress(db, req.currentUser.id),
+    progress,
+    entitlements,
+    billing,
     allQuestions: getQuestionBank("practice"),
     exams: db.mockExams.filter((exam) => exam.user_id === req.currentUser.id),
   });
 });
 
 app.get("/api/analytics", requireUser, (req, res) => {
+  if (!isPremiumPlan(req.currentUser.plan)) {
+    sendPremiumRequired(res, "analytics");
+    return;
+  }
+
   const db = readDb();
   res.json({
-    progress: computeProgress(db, req.currentUser.id),
+    progress: buildUserAccessState(db, req.currentUser).progress,
     attempts: db.attempts.filter((attempt) => attempt.user_id === req.currentUser.id),
     exams: db.mockExams.filter((exam) => exam.user_id === req.currentUser.id),
   });
@@ -562,17 +669,7 @@ app.get("/api/analytics", requireUser, (req, res) => {
 
 app.get("/api/profile", requireUser, (req, res) => {
   const db = readDb();
-  res.json({
-    user: {
-      id: req.currentUser.id,
-      full_name: req.currentUser.full_name,
-      email: req.currentUser.email,
-      role: req.currentUser.role,
-      plan: req.currentUser.plan,
-    },
-    progress: computeProgress(db, req.currentUser.id),
-    payments: db.payments.filter((payment) => payment.user_id === req.currentUser.id),
-  });
+  res.json(buildProfilePayload(db, req.currentUser));
 });
 
 app.patch("/api/profile", requireUser, (req, res) => {
@@ -598,6 +695,106 @@ app.patch("/api/profile", requireUser, (req, res) => {
 
   const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = updatedUser;
   res.json(safeUser);
+});
+
+app.post("/api/billing/checkout", requireUser, async (req, res) => {
+  const selectedPlan = req.body?.plan;
+
+  try {
+    const session = await createStripeCheckoutSession({
+      plan: selectedPlan,
+      user: req.currentUser,
+      origin: getCheckoutOrigin(req),
+    });
+
+    res.status(201).json(session);
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Unable to start checkout" });
+  }
+});
+
+app.post("/api/billing/confirm", requireUser, async (req, res) => {
+  const sessionId = String(req.body?.session_id || "").trim();
+
+  if (!sessionId) {
+    res.status(400).json({ message: "Checkout session is required" });
+    return;
+  }
+
+  try {
+    const checkout = await confirmStripeCheckoutSession(sessionId);
+    const ownsSession =
+      checkout.client_reference_id === req.currentUser.id ||
+      String(checkout.customer_email || "").toLowerCase() ===
+        String(req.currentUser.email || "").toLowerCase();
+
+    if (!ownsSession) {
+      res.status(403).json({ message: "This checkout session does not belong to you" });
+      return;
+    }
+
+    let updatedUser = null;
+
+    updateDb((current) => {
+      const existingPayment = current.payments.find(
+        (payment) => payment.stripe_session_id === checkout.session_id,
+      );
+
+      const nextPayment = {
+        id: existingPayment?.id || createId("payment"),
+        user_id: req.currentUser.id,
+        plan: checkout.plan,
+        amount: Number(((checkout.amount_total || 0) / 100).toFixed(2)),
+        currency: String(checkout.currency || "usd").toUpperCase(),
+        status: checkout.payment_status === "paid" ? "completed" : checkout.status,
+        payment_date: checkout.completed_at,
+        provider: "stripe",
+        stripe_session_id: checkout.session_id,
+        stripe_customer_id: checkout.customer_id,
+        stripe_subscription_id: checkout.subscription_id,
+      };
+
+      return {
+        ...current,
+        users: current.users.map((user) => {
+          if (user.id !== req.currentUser.id) {
+            return user;
+          }
+
+          updatedUser = {
+            ...user,
+            plan: checkout.plan,
+            stripe_customer_id: checkout.customer_id || user.stripe_customer_id || null,
+            stripe_subscription_id:
+              checkout.subscription_id || user.stripe_subscription_id || null,
+          };
+          return updatedUser;
+        }),
+        payments: existingPayment
+          ? current.payments.map((payment) =>
+              payment.stripe_session_id === checkout.session_id ? nextPayment : payment,
+            )
+          : [nextPayment, ...current.payments],
+      };
+    });
+
+    const db = readDb();
+    res.json(buildProfilePayload(db, updatedUser || req.currentUser));
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Unable to confirm checkout" });
+  }
+});
+
+app.post("/api/billing/portal", requireUser, async (req, res) => {
+  try {
+    const session = await createStripePortalSession({
+      customerId: req.currentUser.stripe_customer_id,
+      origin: getCheckoutOrigin(req),
+    });
+    res.json(session);
+  } catch (error) {
+    res.status(400).json({ message: error.message || "Unable to open billing portal" });
+  }
 });
 
 app.get("/api/admin/members", requireAdmin, (req, res) => {
@@ -672,7 +869,10 @@ app.patch("/api/admin/members/:memberId", requireAdmin, (req, res) => {
 
 app.get("/api/ai-tutor/conversations", requireUser, (req, res) => {
   const db = readDb();
-  res.json(db.tutorConversations[req.currentUser.id] || []);
+  res.json({
+    conversations: db.tutorConversations[req.currentUser.id] || [],
+    entitlements: buildUserAccessState(db, req.currentUser).entitlements,
+  });
 });
 
 app.post("/api/ai-tutor/conversations", requireUser, (req, res) => {
@@ -695,7 +895,11 @@ app.post("/api/ai-tutor/conversations", requireUser, (req, res) => {
     };
   });
 
-  res.status(201).json(conversation);
+  const db = readDb();
+  res.status(201).json({
+    conversation,
+    entitlements: buildUserAccessState(db, req.currentUser).entitlements,
+  });
 });
 
 app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (req, res) => {
@@ -707,15 +911,33 @@ app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (r
     return;
   }
 
+  const db = readDb();
+  const { entitlements } = buildUserAccessState(db, req.currentUser);
+
+  if (
+    entitlements.ai_tutor_daily_limit !== null &&
+    entitlements.usage.tutor_messages_remaining <= 0
+  ) {
+    sendPlanLimitReached(
+      res,
+      "ai_tutor_limit",
+      entitlements.ai_tutor_daily_limit,
+      entitlements.usage.tutor_messages_remaining,
+    );
+    return;
+  }
+
   const userMessage = {
     id: createId("msg"),
     role: "user",
     content,
+    created_at: new Date().toISOString(),
   };
   const assistantMessage = {
     id: createId("msg"),
     role: "assistant",
     content: createTutorReply(content),
+    created_at: new Date().toISOString(),
   };
 
   let updatedConversation = null;
@@ -755,7 +977,11 @@ app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (r
     return;
   }
 
-  res.status(201).json(updatedConversation);
+  const nextDb = readDb();
+  res.status(201).json({
+    conversation: updatedConversation,
+    entitlements: buildUserAccessState(nextDb, req.currentUser).entitlements,
+  });
 });
 
 app.listen(port, () => {

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar,
   CheckCircle2,
   Clock,
   CreditCard,
   Crown,
+  Loader2,
   Mail,
   Shield,
   User,
@@ -14,52 +16,37 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
+import {
+  FREE_DAILY_PRACTICE_LIMIT,
+  FREE_DAILY_TUTOR_LIMIT,
+  PLAN_CATALOG,
+  PLAN_IDS,
+  getPlanLabel,
+  isPremiumPlan,
+} from "@/lib/plan-access";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
-
-const fallbackUser = {
-  id: "user-demo",
-  full_name: "Alex Carter",
-  email: "alex.carter@example.com",
-  role: "student",
-};
-
-const fallbackProgress = {
-  plan: "free",
-  total_questions_completed: 148,
-  total_correct: 118,
-  study_streak_days: 6,
-  study_hours: 24,
-  readiness_score: 78,
-};
-
-const fallbackPayments = [];
+import { createPageUrl } from "@/utils";
 
 const planInfo = {
   free: {
     name: "Free",
     icon: User,
-    badgeClass: "bg-slate-100 text-slate-700",
+    badgeClass: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
   },
   premium_monthly: {
     name: "Premium Monthly",
     icon: Crown,
-    badgeClass: "bg-blue-100 text-blue-700",
+    badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200",
   },
   premium_yearly: {
     name: "Premium Yearly",
     icon: Crown,
-    badgeClass: "bg-violet-100 text-violet-700",
+    badgeClass: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200",
   },
 };
 
@@ -79,39 +66,30 @@ function formatPaymentDate(value) {
   }
 }
 
-function getNextBillingLabel(plan) {
-  if (plan === "premium_yearly") {
-    return "Mar 15, 2027";
-  }
-
-  if (plan === "premium_monthly") {
-    return "Apr 15, 2026";
-  }
-
-  return "No renewal scheduled";
-}
-
 export default function Profile() {
   const { user: authUser, login } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ full_name: "" });
   const queryClient = useQueryClient();
 
-  const { data: profileData } = useQuery({
+  const { data: profileData, refetch: refetchProfile } = useQuery({
     queryKey: ["profile-data"],
     queryFn: api.getProfile,
-    initialData: {
-      user: authUser || fallbackUser,
-      progress: fallbackProgress,
-      payments: fallbackPayments,
-    },
   });
 
-  const profileUser = profileData?.user || authUser || fallbackUser;
-  const progress = profileData?.progress || fallbackProgress;
-  const payments = profileData?.payments || fallbackPayments;
-  const currentUser = profileUser || authUser || fallbackUser;
-  const currentPlan = planInfo[progress?.plan || "free"] || planInfo.free;
+  const currentUser = profileData?.user || authUser;
+  const progress = profileData?.progress;
+  const payments = profileData?.payments || [];
+  const entitlements = profileData?.entitlements;
+  const billing = profileData?.billing || {
+    stripe_enabled: false,
+    checkout_enabled: {},
+    portal_enabled: false,
+  };
+  const currentPlanId = currentUser?.plan || PLAN_IDS.FREE;
+  const currentPlan = planInfo[currentPlanId] || planInfo.free;
   const CurrentPlanIcon = currentPlan.icon;
 
   useEffect(() => {
@@ -121,28 +99,89 @@ export default function Profile() {
   const updateProfileMutation = useMutation({
     mutationFn: api.updateProfile,
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["profile-data"], (current) => ({
-        ...(current || {}),
-        user: updatedUser,
-        progress: current?.progress || progress,
-        payments: current?.payments || payments,
-      }));
-      queryClient.invalidateQueries({ queryKey: ["profile-data"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+      queryClient.setQueryData(["profile-data"], (current) =>
+        current ? { ...current, user: updatedUser } : current,
+      );
       login(updatedUser);
       setEditMode(false);
+      toast({
+        title: "Profile updated",
+        description: "Your account details were saved.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to update profile",
+        description: error.message || "Please try again.",
+      });
     },
   });
 
-  const handleUpdateProfile = () => {
-    const fullName = formData.full_name.trim();
+  const checkoutMutation = useMutation({
+    mutationFn: (planId) => api.createCheckoutSession(planId),
+    onSuccess: (data) => {
+      if (data?.url) {
+        window.location.assign(data.url);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to start checkout",
+        description: error.message || "Please try again.",
+      });
+    },
+  });
 
-    if (!fullName) {
+  const portalMutation = useMutation({
+    mutationFn: api.createBillingPortal,
+    onSuccess: (data) => {
+      if (data?.url) {
+        window.location.assign(data.url);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to open billing portal",
+        description: error.message || "Please try again.",
+      });
+    },
+  });
+
+  const confirmMutation = useMutation({
+    mutationFn: (sessionId) => api.confirmCheckout(sessionId),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["profile-data"], data);
+      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
+      if (data?.user) {
+        login(data.user);
+      }
+      toast({
+        title: "Premium activated",
+        description: `Your account is now on ${getPlanLabel(data?.user?.plan)}.`,
+      });
+      navigate(createPageUrl("Profile"), { replace: true });
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to confirm checkout",
+        description: error.message || "Please try again.",
+      });
+      navigate(createPageUrl("Profile"), { replace: true });
+    },
+  });
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const sessionId = searchParams.get("session_id");
+    const checkoutState = searchParams.get("checkout");
+
+    if (checkoutState !== "success" || !sessionId || confirmMutation.isPending) {
       return;
     }
 
-    updateProfileMutation.mutate({ full_name: fullName });
-  };
+    confirmMutation.mutate(sessionId);
+  }, [confirmMutation, location.search]);
 
   const sortedPayments = useMemo(
     () =>
@@ -154,13 +193,24 @@ export default function Profile() {
     [payments],
   );
 
+  const premiumPlans = PLAN_CATALOG.filter((plan) => isPremiumPlan(plan.id));
+
+  const handleUpdateProfile = () => {
+    const fullName = formData.full_name.trim();
+    if (!fullName) {
+      return;
+    }
+
+    updateProfileMutation.mutate({ full_name: fullName });
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#0F172A]">My Profile</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Manage your account and membership.
+          <h1 className="text-2xl font-bold text-[#0F172A] dark:text-slate-50">My Profile</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Manage your account, usage, and membership.
           </p>
         </div>
       </div>
@@ -182,10 +232,10 @@ export default function Profile() {
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#0F172A]">
+                  <h2 className="text-xl font-bold text-[#0F172A] dark:text-slate-50">
                     {currentUser?.full_name || "User"}
                   </h2>
-                  <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
+                  <p className="mt-1 flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
                     <Mail className="h-3 w-3" />
                     {currentUser?.email}
                   </p>
@@ -200,7 +250,7 @@ export default function Profile() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Full Name
                 </label>
                 {editMode ? (
@@ -212,20 +262,24 @@ export default function Profile() {
                     className="mt-1"
                   />
                 ) : (
-                  <p className="mt-1 text-slate-600">
+                  <p className="mt-1 text-slate-600 dark:text-slate-300">
                     {currentUser?.full_name || "Not provided"}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700">Email</label>
-                <p className="mt-1 text-slate-600">{currentUser?.email}</p>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Email
+                </label>
+                <p className="mt-1 text-slate-600 dark:text-slate-300">{currentUser?.email}</p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700">Role</label>
-                <p className="mt-1 flex items-center gap-2 text-slate-600">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Role
+                </label>
+                <p className="mt-1 flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <Shield className="h-4 w-4" />
                   {currentUser?.role === "admin" ? "Administrator" : "User"}
                 </p>
@@ -236,12 +290,14 @@ export default function Profile() {
                   <div className="flex gap-2">
                     <Button
                       onClick={handleUpdateProfile}
-                      disabled={
-                        updateProfileMutation.isPending || !formData.full_name.trim()
-                      }
+                      disabled={updateProfileMutation.isPending || !formData.full_name.trim()}
                       className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
                     >
-                      Save Changes
+                      {updateProfileMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Save Changes"
+                      )}
                     </Button>
                     <Button onClick={() => setEditMode(false)} variant="outline">
                       Cancel
@@ -258,19 +314,19 @@ export default function Profile() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500">Questions Completed</p>
-              <p className="text-2xl font-bold text-[#0F172A]">
+              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">Questions Answered</p>
+              <p className="text-2xl font-bold text-[#0F172A] dark:text-slate-50">
                 {progress?.total_questions_completed || 0}
               </p>
             </Card>
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500">Study Streak</p>
+              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">Study Streak</p>
               <p className="text-2xl font-bold text-[#FFB800]">
                 {progress?.study_streak_days || 0} days
               </p>
             </Card>
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500">Study Hours</p>
+              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">Study Hours</p>
               <p className="text-2xl font-bold text-[#1E5EFF]">
                 {progress?.study_hours || 0}h
               </p>
@@ -282,93 +338,146 @@ export default function Profile() {
           <Card className="p-6">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <h3 className="mb-1 text-lg font-bold text-[#0F172A]">
+                <h3 className="mb-1 text-lg font-bold text-[#0F172A] dark:text-slate-50">
                   Current Plan
                 </h3>
-                <p className="text-sm text-slate-500">Manage your membership</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Your access and daily limits update automatically based on this plan.
+                </p>
               </div>
-              <Badge className="px-3 py-1 text-sm bg-[#1E5EFF]/10 text-[#1E5EFF]">
+              <Badge className="bg-[#1E5EFF]/10 px-3 py-1 text-sm text-[#1E5EFF]">
                 {currentPlan.name}
               </Badge>
             </div>
 
-            {progress?.plan === "free" ? (
-              <div className="py-8 text-center">
-                <Crown className="mx-auto mb-4 h-16 w-16 text-[#FFB800]" />
-                <h4 className="mb-2 text-xl font-bold text-[#0F172A]">
-                  Upgrade to Premium
-                </h4>
-                <p className="mb-6 text-slate-600">
-                  Unlock every feature and get access to 500+ practice questions.
-                </p>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
-                      View Premium Plans
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Choose Your Plan</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <PricingOption
-                        title="Premium Monthly"
-                        price="$19.99"
-                        period="month"
-                        features={[
-                          "500+ practice questions",
-                          "Unlimited flashcards",
-                          "Mock exams",
-                          "Advanced AI tutor",
-                        ]}
-                      />
-                      <PricingOption
-                        title="Premium Yearly"
-                        price="$149.99"
-                        period="year"
-                        savings="Save $90"
-                        features={[
-                          "Everything in Premium Monthly",
-                          "Continuous updates",
-                          "Priority support",
-                        ]}
-                        recommended
-                      />
+            {currentPlanId === PLAN_IDS.FREE ? (
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-slate-50">
+                    Free plan limits
+                  </h4>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        Practice today
+                      </p>
+                      <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-50">
+                        {entitlements?.usage?.practice_questions_today || 0}/{FREE_DAILY_PRACTICE_LIMIT}
+                      </p>
                     </div>
-                  </DialogContent>
-                </Dialog>
+                    <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                        AI tutor today
+                      </p>
+                      <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-50">
+                        {entitlements?.usage?.tutor_messages_today || 0}/{FREE_DAILY_TUTOR_LIMIT}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {premiumPlans.map((plan) => {
+                    const checkoutReady = billing.checkout_enabled?.[plan.id];
+                    const isLoading =
+                      checkoutMutation.isPending && checkoutMutation.variables === plan.id;
+
+                    return (
+                      <div
+                        key={plan.id}
+                        className="rounded-2xl border border-slate-200/80 bg-white p-5 dark:border-slate-800 dark:bg-slate-950"
+                      >
+                        <h4 className="text-lg font-bold text-slate-900 dark:text-slate-50">
+                          {plan.name}
+                        </h4>
+                        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                          {plan.description}
+                        </p>
+                        <p className="mt-4 text-3xl font-black text-slate-900 dark:text-slate-50">
+                          {plan.price}
+                          <span className="ml-2 text-sm font-medium text-slate-400">
+                            {plan.period}
+                          </span>
+                        </p>
+                        <Button
+                          className="mt-5 w-full rounded-2xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+                          disabled={!checkoutReady || isLoading}
+                          onClick={() => checkoutMutation.mutate(plan.id)}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : checkoutReady ? (
+                            plan.cta
+                          ) : (
+                            "Stripe setup pending"
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-lg bg-emerald-50 p-4">
+                <div className="flex items-center justify-between rounded-lg bg-emerald-50 p-4 dark:bg-emerald-500/10">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                    <span className="font-medium text-emerald-900">
-                      Active Membership
+                    <span className="font-medium text-emerald-800 dark:text-emerald-200">
+                      Premium is active
                     </span>
                   </div>
                   <Badge className="bg-emerald-600 text-white">Active</Badge>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-lg bg-slate-50 p-4">
-                    <p className="mb-1 text-xs text-slate-500">Next Payment</p>
-                    <p className="text-sm font-semibold text-slate-700">
-                      {getNextBillingLabel(progress?.plan)}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Practice access</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                      Unlimited
                     </p>
                   </div>
-                  <div className="rounded-lg bg-slate-50 p-4">
-                    <p className="mb-1 text-xs text-slate-500">Amount</p>
-                    <p className="text-sm font-semibold text-slate-700">
-                      {progress?.plan === "premium_monthly" ? "$19.99" : "$149.99"}
+                  <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">AI tutor</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-50">
+                      Unlimited
                     </p>
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full">
-                  Cancel Membership
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={() => portalMutation.mutate()}
+                    disabled={!billing.portal_enabled || portalMutation.isPending}
+                    className="rounded-2xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+                  >
+                    {portalMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Manage Billing"
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="rounded-2xl"
+                    onClick={() =>
+                      checkoutMutation.mutate(
+                        currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
+                          ? PLAN_IDS.PREMIUM_YEARLY
+                          : PLAN_IDS.PREMIUM_MONTHLY,
+                      )
+                    }
+                    disabled={
+                      checkoutMutation.isPending ||
+                      !billing.checkout_enabled?.[
+                        currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
+                          ? PLAN_IDS.PREMIUM_YEARLY
+                          : PLAN_IDS.PREMIUM_MONTHLY
+                      ]
+                    }
+                  >
+                    Switch Plan
+                  </Button>
+                </div>
               </div>
             )}
           </Card>
@@ -376,21 +485,26 @@ export default function Profile() {
 
         <TabsContent value="payments" className="space-y-6">
           <Card className="p-6">
-            <h3 className="mb-4 text-lg font-bold text-[#0F172A]">
-              Payment History
-            </h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-[#0F172A] dark:text-slate-50">
+                Payment History
+              </h3>
+              <Button variant="outline" size="sm" onClick={() => refetchProfile()}>
+                Refresh
+              </Button>
+            </div>
 
             {sortedPayments.length === 0 ? (
               <div className="py-12 text-center">
                 <CreditCard className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-                <p className="text-slate-500">No payments recorded.</p>
+                <p className="text-slate-500 dark:text-slate-400">No payments recorded.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {sortedPayments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-100 p-4 transition-colors hover:bg-slate-50"
+                    className="flex items-center justify-between rounded-lg border border-slate-100 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
                   >
                     <div className="flex items-center gap-4">
                       <div
@@ -401,40 +515,34 @@ export default function Profile() {
                           payment.status === "failed" && "bg-red-100",
                         )}
                       >
-                        {payment.status === "completed" && (
+                        {payment.status === "completed" ? (
                           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                        )}
-                        {payment.status === "pending" && (
+                        ) : payment.status === "pending" ? (
                           <Clock className="h-5 w-5 text-amber-600" />
-                        )}
-                        {payment.status === "failed" && (
+                        ) : (
                           <XCircle className="h-5 w-5 text-red-600" />
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-[#0F172A]">
-                          {payment.plan === "premium_monthly"
-                            ? "Premium Monthly"
-                            : "Premium Yearly"}
+                        <p className="font-medium text-[#0F172A] dark:text-slate-50">
+                          {payment.plan === PLAN_IDS.PREMIUM_YEARLY
+                            ? "Premium Yearly"
+                            : "Premium Monthly"}
                         </p>
-                        <p className="flex items-center gap-1 text-xs text-slate-500">
+                        <p className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                           <Calendar className="h-3 w-3" />
                           {formatPaymentDate(payment.payment_date)}
                         </p>
                       </div>
                     </div>
+
                     <div className="text-right">
-                      <p className="font-bold text-[#0F172A]">${payment.amount}</p>
-                      <Badge
-                        variant={payment.status === "completed" ? "default" : "outline"}
-                        className="text-xs"
-                      >
-                        {payment.status === "completed"
-                          ? "Completed"
-                          : payment.status === "pending"
-                            ? "Pending"
-                            : "Failed"}
-                      </Badge>
+                      <p className="font-bold text-[#0F172A] dark:text-slate-50">
+                        ${Number(payment.amount || 0).toFixed(2)}
+                      </p>
+                      <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                        {payment.status}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -443,54 +551,6 @@ export default function Profile() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function PricingOption({
-  title,
-  price,
-  period,
-  savings,
-  features,
-  recommended = false,
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-xl border-2 p-6",
-        recommended ? "border-[#1E5EFF] bg-[#1E5EFF]/5" : "border-slate-200",
-      )}
-    >
-      {recommended && (
-        <Badge className="mb-3 bg-[#FFB800] text-white">Recommended</Badge>
-      )}
-      <h4 className="mb-1 text-lg font-bold text-[#0F172A]">{title}</h4>
-      <div className="mb-4 flex items-baseline gap-1">
-        <span className="text-3xl font-bold text-[#0F172A]">{price}</span>
-        <span className="text-slate-500">/ {period}</span>
-        {savings && (
-          <Badge variant="outline" className="ml-2 text-emerald-600">
-            {savings}
-          </Badge>
-        )}
-      </div>
-      <ul className="mb-6 space-y-2">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-center gap-2 text-sm text-slate-700">
-            <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
-            {feature}
-          </li>
-        ))}
-      </ul>
-      <Button
-        className={cn(
-          "w-full",
-          recommended && "bg-[#1E5EFF] hover:bg-[#1E5EFF]/90",
-        )}
-      >
-        Select Plan
-      </Button>
     </div>
   );
 }

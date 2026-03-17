@@ -3,12 +3,15 @@ import {
   ArrowRight,
   Brain,
   ClipboardCheck,
+  Crown,
   GraduationCap,
   LayoutDashboard,
   Sparkles,
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ACCESS_COMPARISON } from "@/lib/plan-access";
+import { createPageUrl } from "@/utils";
 
 const featureCards = [
   {
@@ -132,6 +135,76 @@ export default function Landing() {
               <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{description}</p>
             </div>
           ))}
+        </section>
+
+        <section className="mt-16 rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-sm font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
+              <Crown className="h-4 w-4" />
+              Guest, Free, and Premium
+            </div>
+            <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">
+              See what changes when you upgrade.
+            </h2>
+            <p className="mt-3 text-base leading-7 text-slate-500 dark:text-slate-400">
+              Guests can explore the app, free members get daily guided practice, and Premium unlocks unlimited prep with full analytics and mock exams.
+            </p>
+          </div>
+
+          <div className="mt-8 overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Feature
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Guest
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Free
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Premium
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {ACCESS_COMPARISON.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 last:border-b-0 dark:border-slate-900"
+                  >
+                    <td className="px-4 py-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {row.label}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
+                      {row.guest}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
+                      {row.free}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-500 dark:text-slate-400">
+                      {row.premium}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/login?mode=register">
+              <Button className="rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90">
+                Start Free
+              </Button>
+            </Link>
+            <Link to={createPageUrl("Pricing")}>
+              <Button variant="outline" className="rounded-2xl px-6">
+                View Full Pricing
+              </Button>
+            </Link>
+          </div>
         </section>
       </main>
     </div>

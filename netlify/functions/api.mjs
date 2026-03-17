@@ -21,6 +21,17 @@ import {
   normalizeRedirectPath,
 } from "../../server/lib/oauth.js";
 import { buildSeedDb, normalizeDb, resolveUserRole } from "../../server/lib/seed.js";
+import {
+  confirmStripeCheckoutSession,
+  createStripeCheckoutSession,
+  createStripePortalSession,
+  getBillingConfig,
+} from "../../server/lib/billing.js";
+import {
+  countTutorMessagesToday,
+  getEntitlements,
+  isPremiumPlan,
+} from "../../src/lib/plan-access.js";
 
 const store = getStore("rbt-genius-data");
 
@@ -130,6 +141,64 @@ function createId(prefix) {
 function createSafeUser(user) {
   const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = user;
   return safeUser;
+}
+
+function buildUserAccessState(db, user) {
+  const progress = computeProgress(db, user.id);
+  const tutorMessagesToday = countTutorMessagesToday(db.tutorConversations[user.id] || []);
+  return {
+    progress,
+    entitlements: getEntitlements(user.plan, {
+      practiceQuestionsToday: progress.questions_today,
+      tutorMessagesToday,
+    }),
+    billing: getBillingConfig(),
+  };
+}
+
+function buildProfilePayload(db, user) {
+  const { progress, entitlements, billing } = buildUserAccessState(db, user);
+  return {
+    user: {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role,
+      plan: user.plan,
+    },
+    progress,
+    entitlements,
+    billing,
+    payments: db.payments.filter((payment) => payment.user_id === user.id),
+  };
+}
+
+function sendPremiumRequired(feature) {
+  return json(
+    {
+      message: "Premium membership required",
+      code: "premium_required",
+      feature,
+    },
+    { status: 403 },
+  );
+}
+
+function sendPlanLimitReached(feature, limit, remaining) {
+  return json(
+    {
+      message: "Daily plan limit reached",
+      code: "plan_limit_reached",
+      feature,
+      limit,
+      remaining,
+    },
+    { status: 403 },
+  );
+}
+
+function getCheckoutOrigin(request) {
+  return normalizeOrigin(request.headers.get("origin"), new URL(request.url).origin);
 }
 
 function pruneOAuthStates(states = {}) {
@@ -339,7 +408,11 @@ export default async (request) => {
   }
 
   if (apiPath === "/public-settings" && request.method === "GET") {
-    return json({ auth_required: true, app_name: "RBT Genius" });
+    return json({
+      auth_required: true,
+      app_name: "RBT Genius",
+      billing: getBillingConfig(),
+    });
   }
 
   if (apiPath === "/auth/providers" && request.method === "GET") {
@@ -620,6 +693,19 @@ export default async (request) => {
       return auth.error;
     }
 
+    const db = await readDb();
+    const { entitlements } = buildUserAccessState(db, auth.user);
+    if (
+      entitlements.practice_daily_limit !== null &&
+      entitlements.usage.practice_questions_remaining <= 0
+    ) {
+      return sendPlanLimitReached(
+        "practice_limit",
+        entitlements.practice_daily_limit,
+        entitlements.usage.practice_questions_remaining,
+      );
+    }
+
     const payload = {
       id: createId("attempt"),
       user_id: auth.user.id,
@@ -632,13 +718,24 @@ export default async (request) => {
       attempts: [payload, ...current.attempts],
     }));
 
-    return json(payload, { status: 201 });
+    const nextDb = await readDb();
+    return json(
+      {
+        ...payload,
+        entitlements: buildUserAccessState(nextDb, auth.user).entitlements,
+      },
+      { status: 201 },
+    );
   }
 
   if (apiPath === "/mock-exams" && request.method === "GET") {
     const auth = await requireUser(request);
     if (auth.error) {
       return auth.error;
+    }
+
+    if (!isPremiumPlan(auth.user.plan)) {
+      return sendPremiumRequired("mock_exams");
     }
 
     const db = await readDb();
@@ -649,6 +746,10 @@ export default async (request) => {
     const auth = await requireUser(request);
     if (auth.error) {
       return auth.error;
+    }
+
+    if (!isPremiumPlan(auth.user.plan)) {
+      return sendPremiumRequired("mock_exams");
     }
 
     const payload = {
@@ -673,8 +774,11 @@ export default async (request) => {
     }
 
     const db = await readDb();
+    const { progress, entitlements, billing } = buildUserAccessState(db, auth.user);
     return json({
-      progress: computeProgress(db, auth.user.id),
+      progress,
+      entitlements,
+      billing,
       allQuestions: getQuestionBank("practice"),
       exams: db.mockExams.filter((exam) => exam.user_id === auth.user.id),
     });
@@ -686,9 +790,13 @@ export default async (request) => {
       return auth.error;
     }
 
+    if (!isPremiumPlan(auth.user.plan)) {
+      return sendPremiumRequired("analytics");
+    }
+
     const db = await readDb();
     return json({
-      progress: computeProgress(db, auth.user.id),
+      progress: buildUserAccessState(db, auth.user).progress,
       attempts: db.attempts.filter((attempt) => attempt.user_id === auth.user.id),
       exams: db.mockExams.filter((exam) => exam.user_id === auth.user.id),
     });
@@ -701,17 +809,7 @@ export default async (request) => {
     }
 
     const db = await readDb();
-    return json({
-      user: {
-        id: auth.user.id,
-        full_name: auth.user.full_name,
-        email: auth.user.email,
-        role: auth.user.role,
-        plan: auth.user.plan,
-      },
-      progress: computeProgress(db, auth.user.id),
-      payments: db.payments.filter((payment) => payment.user_id === auth.user.id),
-    });
+    return json(buildProfilePayload(db, auth.user));
   }
 
   if (apiPath === "/profile" && request.method === "PATCH") {
@@ -743,6 +841,120 @@ export default async (request) => {
     const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
       updatedUser;
     return json(safeUser);
+  }
+
+  if (apiPath === "/billing/checkout" && request.method === "POST") {
+    const auth = await requireUser(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    try {
+      const body = await request.json();
+      const session = await createStripeCheckoutSession({
+        plan: body?.plan,
+        user: auth.user,
+        origin: getCheckoutOrigin(request),
+      });
+      return json(session, { status: 201 });
+    } catch (error) {
+      return json({ message: error.message || "Unable to start checkout" }, { status: 400 });
+    }
+  }
+
+  if (apiPath === "/billing/confirm" && request.method === "POST") {
+    const auth = await requireUser(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    try {
+      const body = await request.json();
+      const sessionId = String(body?.session_id || "").trim();
+      if (!sessionId) {
+        return json({ message: "Checkout session is required" }, { status: 400 });
+      }
+
+      const checkout = await confirmStripeCheckoutSession(sessionId);
+      const ownsSession =
+        checkout.client_reference_id === auth.user.id ||
+        String(checkout.customer_email || "").toLowerCase() ===
+          String(auth.user.email || "").toLowerCase();
+
+      if (!ownsSession) {
+        return json(
+          { message: "This checkout session does not belong to you" },
+          { status: 403 },
+        );
+      }
+
+      let updatedUser = null;
+
+      await updateDb((current) => {
+        const existingPayment = current.payments.find(
+          (payment) => payment.stripe_session_id === checkout.session_id,
+        );
+
+        const nextPayment = {
+          id: existingPayment?.id || createId("payment"),
+          user_id: auth.user.id,
+          plan: checkout.plan,
+          amount: Number(((checkout.amount_total || 0) / 100).toFixed(2)),
+          currency: String(checkout.currency || "usd").toUpperCase(),
+          status: checkout.payment_status === "paid" ? "completed" : checkout.status,
+          payment_date: checkout.completed_at,
+          provider: "stripe",
+          stripe_session_id: checkout.session_id,
+          stripe_customer_id: checkout.customer_id,
+          stripe_subscription_id: checkout.subscription_id,
+        };
+
+        return {
+          ...current,
+          users: current.users.map((user) => {
+            if (user.id !== auth.user.id) {
+              return user;
+            }
+
+            updatedUser = {
+              ...user,
+              plan: checkout.plan,
+              stripe_customer_id: checkout.customer_id || user.stripe_customer_id || null,
+              stripe_subscription_id:
+                checkout.subscription_id || user.stripe_subscription_id || null,
+            };
+            return updatedUser;
+          }),
+          payments: existingPayment
+            ? current.payments.map((payment) =>
+                payment.stripe_session_id === checkout.session_id ? nextPayment : payment,
+              )
+            : [nextPayment, ...current.payments],
+        };
+      });
+
+      const db = await readDb();
+      return json(buildProfilePayload(db, updatedUser || auth.user));
+    } catch (error) {
+      return json({ message: error.message || "Unable to confirm checkout" }, { status: 400 });
+    }
+  }
+
+  if (apiPath === "/billing/portal" && request.method === "POST") {
+    const auth = await requireUser(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    try {
+      const session = await createStripePortalSession({
+        customerId: auth.user.stripe_customer_id,
+        origin: getCheckoutOrigin(request),
+      });
+      return json(session);
+    } catch (error) {
+      return json({ message: error.message || "Unable to open billing portal" }, { status: 400 });
+    }
   }
 
   if (apiPath === "/admin/members" && request.method === "GET") {
@@ -831,7 +1043,10 @@ export default async (request) => {
     }
 
     const db = await readDb();
-    return json(db.tutorConversations[auth.user.id] || []);
+    return json({
+      conversations: db.tutorConversations[auth.user.id] || [],
+      entitlements: buildUserAccessState(db, auth.user).entitlements,
+    });
   }
 
   if (apiPath === "/ai-tutor/conversations" && request.method === "POST") {
@@ -860,7 +1075,14 @@ export default async (request) => {
       };
     });
 
-    return json(conversation, { status: 201 });
+    const db = await readDb();
+    return json(
+      {
+        conversation,
+        entitlements: buildUserAccessState(db, auth.user).entitlements,
+      },
+      { status: 201 },
+    );
   }
 
   const tutorMatch = apiPath.match(/^\/ai-tutor\/conversations\/([^/]+)\/messages$/);
@@ -875,16 +1097,31 @@ export default async (request) => {
       return json({ message: "Message content is required" }, { status: 400 });
     }
 
+    const db = await readDb();
+    const { entitlements } = buildUserAccessState(db, auth.user);
+    if (
+      entitlements.ai_tutor_daily_limit !== null &&
+      entitlements.usage.tutor_messages_remaining <= 0
+    ) {
+      return sendPlanLimitReached(
+        "ai_tutor_limit",
+        entitlements.ai_tutor_daily_limit,
+        entitlements.usage.tutor_messages_remaining,
+      );
+    }
+
     const conversationId = tutorMatch[1];
     const userMessage = {
       id: createId("msg"),
       role: "user",
       content,
+      created_at: new Date().toISOString(),
     };
     const assistantMessage = {
       id: createId("msg"),
       role: "assistant",
       content: createTutorReply(content),
+      created_at: new Date().toISOString(),
     };
 
     let updatedConversation = null;
@@ -923,7 +1160,14 @@ export default async (request) => {
       return json({ message: "Conversation not found" }, { status: 404 });
     }
 
-    return json(updatedConversation, { status: 201 });
+    const nextDb = await readDb();
+    return json(
+      {
+        conversation: updatedConversation,
+        entitlements: buildUserAccessState(nextDb, auth.user).entitlements,
+      },
+      { status: 201 },
+    );
   }
 
   return json({ message: "Not found" }, { status: 404 });

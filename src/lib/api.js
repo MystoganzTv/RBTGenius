@@ -132,6 +132,31 @@ export const api = {
       body: payload,
     });
   },
+  createCheckoutSession(plan, origin) {
+    return request("/api/billing/checkout", {
+      method: "POST",
+      body: {
+        plan,
+        origin:
+          origin || (typeof window !== "undefined" ? window.location.origin : undefined),
+      },
+    });
+  },
+  confirmCheckout(sessionId) {
+    return request("/api/billing/confirm", {
+      method: "POST",
+      body: { session_id: sessionId },
+    });
+  },
+  createBillingPortal(origin) {
+    return request("/api/billing/portal", {
+      method: "POST",
+      body: {
+        origin:
+          origin || (typeof window !== "undefined" ? window.location.origin : undefined),
+      },
+    });
+  },
   listAdminMembers() {
     return request("/api/admin/members");
   },

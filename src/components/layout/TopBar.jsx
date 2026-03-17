@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
+import { isPremiumPlan } from "@/lib/plan-access";
 import { createPageUrl } from "@/utils";
 
 const planLabels = {
@@ -96,7 +97,8 @@ export default function TopBar({
             </Link>
             <Link to={createPageUrl("Pricing")}>
               <DropdownMenuItem className="rounded-lg text-[#FFB800]">
-                <Crown className="mr-2 h-4 w-4" /> Upgrade to Pro
+                <Crown className="mr-2 h-4 w-4" />{" "}
+                {isPremiumPlan(plan) ? "Manage Plan" : "Upgrade to Premium"}
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />

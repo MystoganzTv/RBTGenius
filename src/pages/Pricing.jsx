@@ -1,84 +1,183 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Check,
-  X,
-  Crown,
-  Sparkles,
-  GraduationCap,
   ArrowLeft,
+  Check,
+  Crown,
+  GraduationCap,
+  Loader2,
+  Sparkles,
+  X,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
+import {
+  ACCESS_COMPARISON,
+  PLAN_CATALOG,
+  PLAN_IDS,
+  isPremiumPlan,
+} from "@/lib/plan-access";
+import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
+import { createPageUrl } from "@/utils";
 
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Get started with basic RBT prep",
-    features: [
-      { text: "2 study files per week", included: true },
-      { text: "10 practice questions daily", included: true },
-      { text: "Basic progress tracking", included: true },
-      { text: "5 AI tutor questions daily", included: true },
-      { text: "Full mock exams", included: false },
-      { text: "Advanced analytics", included: false },
-      { text: "Community features", included: false },
-      { text: "Unlimited access", included: false },
-    ],
-    cta: "Start Free",
-    popular: false,
-    style: "border-slate-200",
-  },
-  {
-    name: "Premium Monthly",
-    price: "$29",
-    period: "/month",
-    description: "Full access to pass your RBT exam",
-    features: [
-      { text: "Unlimited study files", included: true },
-      { text: "Unlimited practice questions", included: true },
-      { text: "Full progress analytics", included: true },
-      { text: "Unlimited AI tutor", included: true },
-      { text: "Full mock exams", included: true },
-      { text: "Domain mastery tracking", included: true },
-      { text: "Community access", included: true },
-      { text: "Pass guarantee", included: true },
-    ],
-    cta: "Start Free Trial",
-    popular: true,
-    style: "border-[#1E5EFF] shadow-xl shadow-[#1E5EFF]/10",
-  },
-  {
-    name: "Premium Yearly",
-    price: "$199",
-    period: "/year",
-    description: "Best value - save 43%",
-    features: [
-      { text: "Everything in Premium Monthly", included: true },
-      { text: "Save $149 per year", included: true },
-      { text: "Priority AI tutor access", included: true },
-      { text: "Exclusive study materials", included: true },
-      { text: "Full mock exams", included: true },
-      { text: "Domain mastery tracking", included: true },
-      { text: "Community access", included: true },
-      { text: "Pass guarantee + refund", included: true },
-    ],
-    cta: "Start Free Trial",
-    popular: false,
-    style: "border-[#FFB800]/30",
-    badge: "Best Value",
-  },
-];
+const planFeatureMap = {
+  [PLAN_IDS.FREE]: [
+    "Create an account and sync progress",
+    "10 answered practice questions each day",
+    "5 AI tutor messages each day",
+    "Flashcards and dashboard included",
+    "No mock exams",
+    "No analytics",
+  ],
+  [PLAN_IDS.PREMIUM_MONTHLY]: [
+    "Unlimited practice from the 3000-question bank",
+    "Unlimited AI tutor conversations",
+    "Full mock exams",
+    "Full analytics and readiness tracking",
+    "Manage billing with Stripe",
+  ],
+  [PLAN_IDS.PREMIUM_YEARLY]: [
+    "Everything in Premium Monthly",
+    "Lower yearly cost than paying month to month",
+    "Unlimited practice and AI tutor",
+    "Full mock exams and analytics",
+    "Manage billing with Stripe",
+  ],
+};
+
+function getBillingAvailability(publicSettings, profileData) {
+  return profileData?.billing || publicSettings?.billing || {
+    stripe_enabled: false,
+    checkout_enabled: {},
+    portal_enabled: false,
+  };
+}
+
+function getActionLabel(planId, currentPlan, isAuthenticated) {
+  if (planId === PLAN_IDS.FREE) {
+    return isAuthenticated ? "Keep Free Plan" : "Create Free Account";
+  }
+
+  if (currentPlan === planId) {
+    return "Current Plan";
+  }
+
+  return planId === PLAN_IDS.PREMIUM_YEARLY ? "Upgrade Yearly" : "Upgrade Monthly";
+}
 
 export default function Pricing() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+
+  const { data: publicSettings } = useQuery({
+    queryKey: ["public-settings"],
+    queryFn: api.getPublicSettings,
+  });
+
+  const { data: profileData, refetch: refetchProfile } = useQuery({
+    queryKey: ["profile-data"],
+    queryFn: api.getProfile,
+    enabled: isAuthenticated,
+  });
+
+  const currentPlan = profileData?.user?.plan || user?.plan || PLAN_IDS.FREE;
+  const billing = getBillingAvailability(publicSettings, profileData);
+
+  const checkoutMutation = useMutation({
+    mutationFn: (planId) => api.createCheckoutSession(planId),
+    onSuccess: (data) => {
+      if (data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+
+      toast({
+        title: "Checkout unavailable",
+        description: "Stripe did not return a checkout link.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to start checkout",
+        description: error.message || "Please try again in a moment.",
+      });
+    },
+  });
+
+  const portalMutation = useMutation({
+    mutationFn: () => api.createBillingPortal(),
+    onSuccess: (data) => {
+      if (data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
+
+      toast({
+        title: "Billing portal unavailable",
+        description: "Stripe did not return a billing portal link.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to open billing portal",
+        description: error.message || "Please try again in a moment.",
+      });
+    },
+  });
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const checkoutStatus = searchParams.get("checkout");
+
+    if (checkoutStatus === "cancelled") {
+      toast({
+        title: "Checkout cancelled",
+        description: "Your plan was not changed.",
+      });
+      navigate(createPageUrl("Pricing"), { replace: true });
+    }
+  }, [location.search, navigate]);
+
+  const comparisonRows = useMemo(() => ACCESS_COMPARISON, []);
+
+  const handlePlanAction = (planId) => {
+    if (planId === PLAN_IDS.FREE) {
+      if (isAuthenticated) {
+        navigate(createPageUrl("Dashboard"));
+        return;
+      }
+
+      navigate("/login?mode=register");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      navigate(`/login?mode=register&redirectTo=${encodeURIComponent(createPageUrl("Pricing"))}`);
+      return;
+    }
+
+    if (currentPlan === planId) {
+      if (isPremiumPlan(currentPlan)) {
+        portalMutation.mutate();
+      }
+      return;
+    }
+
+    checkoutMutation.mutate(planId);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8FAFC] to-white dark:from-slate-950 dark:to-slate-900">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2.5">
+        <Link
+          to={isAuthenticated ? createPageUrl("Dashboard") : "/"}
+          className="flex items-center gap-2.5"
+        >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1E5EFF]">
             <GraduationCap className="h-5 w-5 text-white" />
           </div>
@@ -88,97 +187,191 @@ export default function Pricing() {
             <Sparkles className="-mt-1 h-3.5 w-3.5 text-[#FFB800]" />
           </div>
         </Link>
-        <Link to={createPageUrl("Dashboard")}>
-          <Button variant="ghost" className="gap-2 rounded-xl text-sm text-slate-500 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100">
+        <Link to={isAuthenticated ? createPageUrl("Dashboard") : "/"}>
+          <Button variant="ghost" className="gap-2 rounded-xl text-sm text-slate-500">
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            {isAuthenticated ? "Back to Dashboard" : "Back to Home"}
           </Button>
         </Link>
       </nav>
 
-      <div className="px-6 pb-16 pt-12 text-center">
+      <div className="px-6 pb-12 pt-12 text-center">
         <Badge className="mb-4 border-[#FFB800]/20 bg-[#FFB800]/10 text-[#FFB800]">
           <Crown className="mr-1 h-3 w-3" />
-          Pricing Plans
+          Plans and Access
         </Badge>
         <h1 className="mt-2 text-4xl font-bold text-[#0F172A] dark:text-slate-50 md:text-5xl">
-          Invest in Your <span className="text-[#1E5EFF]">RBT Career</span>
+          Pick the level of support that fits your study pace.
         </h1>
-        <p className="mx-auto mt-4 max-w-lg text-slate-500 dark:text-slate-400">
-          Choose the plan that fits your study needs. Upgrade anytime.
+        <p className="mx-auto mt-4 max-w-2xl text-slate-500 dark:text-slate-400">
+          Guests can explore the landing page, free members get guided daily practice,
+          and Premium unlocks the full RBT Genius experience with Stripe checkout.
         </p>
+        {isAuthenticated ? (
+          <p className="mx-auto mt-4 inline-flex rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]">
+            Current plan: {profileData?.user?.plan === PLAN_IDS.PREMIUM_YEARLY
+              ? "Premium Yearly"
+              : profileData?.user?.plan === PLAN_IDS.PREMIUM_MONTHLY
+                ? "Premium Monthly"
+                : "Free"}
+          </p>
+        ) : null}
       </div>
 
-      <div className="mx-auto max-w-5xl px-6 pb-24">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={cn(
-                "relative rounded-2xl border-2 bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-950/90",
-                plan.style,
-              )}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="px-3 py-1 text-xs text-white shadow-lg shadow-[#1E5EFF]/20">
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-[#FFB800] px-3 py-1 text-xs text-white shadow-lg shadow-[#FFB800]/20">
-                    {plan.badge}
-                  </Badge>
-                </div>
-              )}
+      <div className="mx-auto max-w-6xl px-6 pb-12">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {PLAN_CATALOG.map((plan) => {
+            const isCurrent = isAuthenticated && currentPlan === plan.id;
+            const checkoutReady =
+              plan.id === PLAN_IDS.FREE || billing.checkout_enabled?.[plan.id];
+            const loading =
+              checkoutMutation.isPending && checkoutMutation.variables === plan.id;
 
-              <div className="mb-6">
-                <h3 className="font-semibold text-[#0F172A] dark:text-slate-50">{plan.name}</h3>
-                <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">{plan.description}</p>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-[#0F172A] dark:text-slate-50">{plan.price}</span>
-                  <span className="text-sm text-slate-400 dark:text-slate-500">{plan.period}</span>
-                </div>
-              </div>
-
-              <Button
+            return (
+              <div
+                key={plan.id}
                 className={cn(
-                  "mb-6 w-full rounded-xl",
+                  "relative rounded-3xl border bg-white p-7 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.3)] transition-all dark:bg-slate-950",
                   plan.popular
-                    ? "bg-[#1E5EFF] shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90"
-                    : plan.badge
-                      ? "bg-[#FFB800] text-[#0F172A] shadow-lg shadow-[#FFB800]/20 hover:bg-[#FFB800]/90"
-                      : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200",
+                    ? "border-[#1E5EFF]/35"
+                    : "border-slate-200/80 dark:border-slate-800",
                 )}
               >
-                {plan.cta}
-              </Button>
+                {plan.badge ? (
+                  <div className="absolute -top-3 left-6">
+                    <Badge className="bg-[#1E5EFF] px-3 py-1 text-xs text-white">
+                      {plan.badge}
+                    </Badge>
+                  </div>
+                ) : null}
 
-              <div className="space-y-3">
-                {plan.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2.5">
-                    {feature.included ? (
-                      <Check className="h-4 w-4 flex-shrink-0 text-emerald-500" />
-                    ) : (
-                      <X className="h-4 w-4 flex-shrink-0 text-slate-300" />
-                    )}
-                    <span
-                      className={cn(
-                        "text-sm",
-                        feature.included
-                          ? "text-slate-600 dark:text-slate-300"
-                          : "text-slate-400 dark:text-slate-600",
-                      )}
-                    >
-                      {feature.text}
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                    {plan.name}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    {plan.description}
+                  </p>
+                  <div className="mt-5">
+                    <span className="text-4xl font-black text-slate-900 dark:text-slate-50">
+                      {plan.price}
+                    </span>
+                    <span className="ml-2 text-sm text-slate-400 dark:text-slate-500">
+                      {plan.period}
                     </span>
                   </div>
-                ))}
+                </div>
+
+                <Button
+                  onClick={() => handlePlanAction(plan.id)}
+                  disabled={
+                    loading ||
+                    portalMutation.isPending ||
+                    (isCurrent && isPremiumPlan(plan.id) && !billing.portal_enabled) ||
+                    (plan.id !== PLAN_IDS.FREE && !checkoutReady && !isCurrent)
+                  }
+                  className={cn(
+                    "mb-6 w-full rounded-2xl",
+                    plan.id === PLAN_IDS.FREE
+                      ? "bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+                      : "bg-[#1E5EFF] hover:bg-[#1E5EFF]/90",
+                  )}
+                >
+                  {loading || portalMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isCurrent && isPremiumPlan(plan.id) ? (
+                    "Manage Billing"
+                  ) : isCurrent ? (
+                    "Current Plan"
+                  ) : !checkoutReady && plan.id !== PLAN_IDS.FREE ? (
+                    "Stripe setup pending"
+                  ) : (
+                    getActionLabel(plan.id, currentPlan, isAuthenticated)
+                  )}
+                </Button>
+
+                <div className="space-y-3">
+                  {planFeatureMap[plan.id].map((feature) => (
+                    <div key={feature} className="flex items-start gap-2.5">
+                      <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
+                      <span className="text-sm text-slate-600 dark:text-slate-300">
+                        {feature}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {isCurrent ? (
+                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                    You are currently on this plan.
+                  </div>
+                ) : null}
               </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_24px_80px_-48px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950">
+          <div className="border-b border-slate-200/80 px-6 py-5 dark:border-slate-800">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+              Guest vs Free vs Premium
+            </h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              A quick view of what someone sees before registering, after creating a free account,
+              and after upgrading.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-slate-200/80 dark:border-slate-800">
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Feature
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Guest
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Free
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    Premium
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-slate-100 last:border-b-0 dark:border-slate-900"
+                  >
+                    <td className="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {row.label}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                      {row.guest}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                      {row.free}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                      {row.premium}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {!billing.stripe_enabled ? (
+            <div className="flex items-center gap-3 border-t border-slate-200/80 bg-amber-50/70 px-6 py-4 text-sm text-amber-700 dark:border-slate-800 dark:bg-amber-500/10 dark:text-amber-300">
+              <X className="h-4 w-4 flex-shrink-0" />
+              Stripe has not been configured with live price IDs yet, so premium checkout buttons stay disabled until those env vars are added.
             </div>
-          ))}
+          ) : null}
         </div>
       </div>
     </div>

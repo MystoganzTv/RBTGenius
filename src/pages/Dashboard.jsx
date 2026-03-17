@@ -86,7 +86,7 @@ export default function Dashboard() {
   const totalQuestionsAvailable =
     progress?.total_questions_available || allQuestions.length || 3000;
   const bankCoverage = progress?.bank_coverage_percent || 0;
-  const accuracy = progress?.accuracy_rate || 0;
+  const accuracy = progress?.raw_accuracy || 0;
   const recentAccuracy = progress?.recent_accuracy || 0;
   const streak = progress?.study_streak_days || 0;
   const readiness = progress?.readiness_score || 0;
@@ -174,7 +174,9 @@ export default function Dashboard() {
           value={`${accuracy}%`}
           subtitle={
             totalQuestions > 0
-              ? `${progress?.total_correct || 0} correct out of ${totalQuestions} answered`
+              ? totalQuestions < 25
+                ? `${progress?.total_correct || 0} correct out of ${totalQuestions} answered · early sample`
+                : `${progress?.total_correct || 0} correct out of ${totalQuestions} answered`
               : "No answered questions yet"
           }
           icon={Target}

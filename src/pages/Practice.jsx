@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Crown,
   Flag,
   HelpCircle,
   ListChecks,
@@ -26,7 +27,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { toast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
+import {
+  FREE_DAILY_PRACTICE_LIMIT,
+  isPremiumPlan,
+} from "@/lib/plan-access";
 import { practiceBankOptions, topicLabels } from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
 
@@ -64,10 +70,6 @@ function matchesReviewFilter(question, responses, reviewFilter) {
   }
 
   return true;
-}
-
-async function storeAttempt(attempt) {
-  return api.createAttempt(attempt);
 }
 
 function QuestionNavigator({
@@ -172,7 +174,19 @@ export default function Practice() {
   const [started, setStarted] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   const [sessionHydrated, setSessionHydrated] = useState(false);
+  const [entitlements, setEntitlements] = useState(null);
   const queryClient = useQueryClient();
+
+  const { data: profileData } = useQuery({
+    queryKey: ["profile-data"],
+    queryFn: api.getProfile,
+  });
+
+  useEffect(() => {
+    if (profileData?.entitlements) {
+      setEntitlements(profileData.entitlements);
+    }
+  }, [profileData]);
 
   const { data: allQuestions = [], isLoading } = useQuery({
     queryKey: ["practice-questions", questionSeed],
@@ -186,10 +200,24 @@ export default function Practice() {
   });
 
   const attemptMutation = useMutation({
-    mutationFn: storeAttempt,
-    onSuccess: () => {
+    mutationFn: api.createAttempt,
+    onSuccess: (payload) => {
+      setEntitlements(payload?.entitlements || entitlements);
+      queryClient.invalidateQueries({ queryKey: ["profile-data"] });
       queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+    },
+    onError: (error) => {
+      toast({
+        title:
+          error?.data?.code === "plan_limit_reached"
+            ? "Daily practice limit reached"
+            : "Unable to save your answer",
+        description:
+          error?.data?.code === "plan_limit_reached"
+            ? `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day.`
+            : error.message || "Please try again.",
+      });
     },
   });
 
@@ -201,8 +229,7 @@ export default function Practice() {
   const baseFilteredQuestions = useMemo(
     () =>
       allQuestions.filter((question) => {
-        const topicMatch =
-          topicFilter === "all" || question.topic === topicFilter;
+        const topicMatch = topicFilter === "all" || question.topic === topicFilter;
         const difficultyMatch =
           difficultyFilter === "all" || question.difficulty === difficultyFilter;
         const bankMatch = bankFilter === "all" || question.bank_id === bankFilter;
@@ -244,6 +271,8 @@ export default function Practice() {
   }).length;
   const accuracy =
     answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+  const practiceRemaining = entitlements?.usage?.practice_questions_remaining;
+  const practiceLimitReached = practiceRemaining === 0;
   const isComplete =
     started &&
     baseFilteredQuestions.length > 0 &&
@@ -344,6 +373,14 @@ export default function Practice() {
       return;
     }
 
+    if (practiceLimitReached) {
+      toast({
+        title: "Daily practice limit reached",
+        description: `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day.`,
+      });
+      return;
+    }
+
     setResponses((current) => ({
       ...current,
       [currentQuestion.id]: {
@@ -402,7 +439,7 @@ export default function Practice() {
             Practice Questions
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Choose your topic and difficulty to start practicing.
+            Choose your topic, bank, and difficulty to start practicing.
           </p>
         </div>
 
@@ -450,10 +487,7 @@ export default function Practice() {
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Difficulty
               </label>
-              <Select
-                value={difficultyFilter}
-                onValueChange={setDifficultyFilter}
-              >
+              <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
                 <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="All Levels" />
                 </SelectTrigger>
@@ -468,7 +502,9 @@ export default function Practice() {
           </div>
 
           <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700 dark:text-slate-200">
-            Your practice session now runs against a 3,000-question randomized bank with grouped practice pools.
+            {isPremiumPlan(entitlements?.plan)
+              ? "Premium unlocks unlimited answers across the full 3,000-question randomized bank."
+              : `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the same 3,000-question bank.`}
           </div>
 
           <Button
@@ -501,13 +537,9 @@ export default function Practice() {
         <div className="rounded-2xl border border-slate-100 bg-white p-12 dark:border-slate-800 dark:bg-slate-950">
           <HelpCircle className="mx-auto mb-3 h-12 w-12 text-slate-300" />
           <p className="font-medium text-slate-500 dark:text-slate-400">
-            No questions available for this filter
+            No questions available for this filter.
           </p>
-          <Button
-            variant="outline"
-            className="mt-4 rounded-xl"
-            onClick={endSession}
-          >
+          <Button variant="outline" className="mt-4 rounded-xl" onClick={endSession}>
             Change Filters
           </Button>
         </div>
@@ -606,11 +638,19 @@ export default function Practice() {
               Session-only stats. Your dashboard tracks the bigger picture separately.
             </p>
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            {bankFilter === "all"
-              ? `${practiceBankOptions.length} banks selected`
-              : practiceBankOptions.find((bank) => bank.id === bankFilter)?.label ||
-                bankFilter}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span>
+              {bankFilter === "all"
+                ? `${practiceBankOptions.length} banks selected`
+                : practiceBankOptions.find((bank) => bank.id === bankFilter)?.label ||
+                  bankFilter}
+            </span>
+            {practiceRemaining !== null && practiceRemaining !== undefined ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 font-semibold text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
+                <Crown className="h-3 w-3" />
+                {practiceRemaining} free answers left today
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -681,6 +721,12 @@ export default function Practice() {
           ))}
         </div>
       </div>
+
+      {practiceLimitReached ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          You reached today&apos;s free practice limit. You can keep reviewing these questions, or upgrade for unlimited answers.
+        </div>
+      ) : null}
 
       <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
         <div

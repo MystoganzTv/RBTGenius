@@ -9,9 +9,12 @@ import {
   Trophy,
   XCircle,
 } from "lucide-react";
+import PremiumGate from "@/components/billing/PremiumGate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { isPremiumPlan } from "@/lib/plan-access";
+import { toast } from "@/components/ui/use-toast";
 import { topicLabels } from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +36,13 @@ export default function MockExams() {
   const queryClient = useQueryClient();
   const finishExamRef = useRef(null);
 
+  const { data: profileData } = useQuery({
+    queryKey: ["profile-data"],
+    queryFn: api.getProfile,
+  });
+
+  const entitlements = profileData?.entitlements;
+
   const { data: questions = [], isLoading } = useQuery({
     queryKey: ["mock-exam-questions", examSeed],
     queryFn: () =>
@@ -48,6 +58,19 @@ export default function MockExams() {
     mutationFn: saveMockExamResult,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+    },
+    onError: (error) => {
+      toast({
+        title:
+          error?.data?.code === "premium_required"
+            ? "Premium required"
+            : "Unable to save exam",
+        description:
+          error?.data?.code === "premium_required"
+            ? "Mock exams are part of Premium."
+            : error.message || "Please try again.",
+      });
     },
   });
 
@@ -136,6 +159,30 @@ export default function MockExams() {
   };
 
   const currentQuestion = questions[currentIndex] || null;
+
+  if (!entitlements) {
+    return (
+      <div className="mx-auto max-w-3xl py-12 text-center">
+        <div className="animate-pulse">
+          <div className="mx-auto mb-4 h-6 w-1/3 rounded bg-slate-100" />
+          <div className="mx-auto h-4 w-1/4 rounded bg-slate-50" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isPremiumPlan(entitlements.plan)) {
+    return (
+      <PremiumGate
+        feature="mock_exams"
+        bullets={[
+          "Full 85-question timed mock exams",
+          "Saved exam history and score trends",
+          "Domain breakdown after each completed exam",
+        ]}
+      />
+    );
+  }
 
   if (examState === "idle") {
     return (
