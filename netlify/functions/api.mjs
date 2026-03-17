@@ -1094,6 +1094,51 @@ export default async (request) => {
     });
   }
 
+  if (/^\/admin\/members\/[^/]+$/.test(apiPath) && request.method === "DELETE") {
+    const auth = await requireAdmin(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    const memberId = apiPath.split("/")[3];
+
+    if (auth.user.id === memberId) {
+      return json({ message: "You cannot delete your own admin account." }, { status: 400 });
+    }
+
+    let deletedUser = null;
+
+    await updateDb((current) => {
+      deletedUser = current.users.find((user) => user.id === memberId) || null;
+
+      if (!deletedUser) {
+        return current;
+      }
+
+      const nextPracticeSessions = { ...current.practiceSessions };
+      delete nextPracticeSessions[memberId];
+
+      const nextTutorConversations = { ...current.tutorConversations };
+      delete nextTutorConversations[memberId];
+
+      return {
+        ...current,
+        users: current.users.filter((user) => user.id !== memberId),
+        attempts: current.attempts.filter((attempt) => attempt.user_id !== memberId),
+        mockExams: current.mockExams.filter((exam) => exam.user_id !== memberId),
+        payments: current.payments.filter((payment) => payment.user_id !== memberId),
+        practiceSessions: nextPracticeSessions,
+        tutorConversations: nextTutorConversations,
+      };
+    });
+
+    if (!deletedUser) {
+      return json({ message: "Member not found" }, { status: 404 });
+    }
+
+    return new Response(null, { status: 204 });
+  }
+
   if (apiPath === "/ai-tutor/conversations" && request.method === "GET") {
     const auth = await requireUser(request);
     if (auth.error) {

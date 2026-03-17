@@ -916,6 +916,48 @@ app.patch("/api/admin/members/:memberId", requireAdmin, (req, res) => {
   });
 });
 
+app.delete("/api/admin/members/:memberId", requireAdmin, (req, res) => {
+  const { memberId } = req.params;
+
+  if (req.currentUser.id === memberId) {
+    res.status(400).json({ message: "You cannot delete your own admin account." });
+    return;
+  }
+
+  let deletedUser = null;
+
+  updateDb((current) => {
+    deletedUser = current.users.find((user) => user.id === memberId) || null;
+
+    if (!deletedUser) {
+      return current;
+    }
+
+    const nextPracticeSessions = { ...current.practiceSessions };
+    delete nextPracticeSessions[memberId];
+
+    const nextTutorConversations = { ...current.tutorConversations };
+    delete nextTutorConversations[memberId];
+
+    return {
+      ...current,
+      users: current.users.filter((user) => user.id !== memberId),
+      attempts: current.attempts.filter((attempt) => attempt.user_id !== memberId),
+      mockExams: current.mockExams.filter((exam) => exam.user_id !== memberId),
+      payments: current.payments.filter((payment) => payment.user_id !== memberId),
+      practiceSessions: nextPracticeSessions,
+      tutorConversations: nextTutorConversations,
+    };
+  });
+
+  if (!deletedUser) {
+    res.status(404).json({ message: "Member not found" });
+    return;
+  }
+
+  res.status(204).end();
+});
+
 app.get("/api/ai-tutor/conversations", requireUser, (req, res) => {
   const db = readDb();
   res.json({

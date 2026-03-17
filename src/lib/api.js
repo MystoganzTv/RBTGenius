@@ -166,6 +166,11 @@ export const api = {
       body: payload,
     });
   },
+  deleteAdminMember(memberId) {
+    return request(`/api/admin/members/${memberId}`, {
+      method: "DELETE",
+    });
+  },
   listTutorConversations() {
     return request("/api/ai-tutor/conversations");
   },

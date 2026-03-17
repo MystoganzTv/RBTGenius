@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crown, Shield, Users } from "lucide-react";
+import { Crown, Shield, Trash2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -83,6 +83,13 @@ export default function AdminMembers() {
     },
   });
 
+  const deleteMemberMutation = useMutation({
+    mutationFn: (memberId) => api.deleteAdminMember(memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-members"] });
+    },
+  });
+
   const filteredMembers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
@@ -126,6 +133,24 @@ export default function AdminMembers() {
         role: draft.role,
       },
     });
+
+    setDrafts((current) => {
+      const nextDrafts = { ...current };
+      delete nextDrafts[member.id];
+      return nextDrafts;
+    });
+  };
+
+  const handleDelete = async (member) => {
+    const confirmed = window.confirm(
+      `Delete ${member.full_name} (${member.email})? This will remove their profile, attempts, mock exams, payments, sessions, and tutor conversations.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    await deleteMemberMutation.mutateAsync(member.id);
 
     setDrafts((current) => {
       const nextDrafts = { ...current };
@@ -230,6 +255,7 @@ export default function AdminMembers() {
           filteredMembers.map((member) => {
             const draft = getDraft(member);
             const hasChanges = draft.plan !== member.plan || draft.role !== member.role;
+            const isCurrentAdmin = member.id === user?.id;
 
             return (
               <Card key={member.id} className="p-5">
@@ -266,7 +292,7 @@ export default function AdminMembers() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[220px_180px_auto] xl:min-w-[520px]">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[220px_180px_auto_auto] xl:min-w-[640px]">
                     <Select
                       value={draft.plan}
                       onValueChange={(value) => updateDraft(member.id, { plan: value })}
@@ -301,10 +327,25 @@ export default function AdminMembers() {
 
                     <Button
                       onClick={() => handleSave(member)}
-                      disabled={!hasChanges || updateMemberMutation.isPending}
+                      disabled={
+                        !hasChanges ||
+                        updateMemberMutation.isPending ||
+                        deleteMemberMutation.isPending
+                      }
                       className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
                     >
                       Save
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleDelete(member)}
+                      disabled={isCurrentAdmin || deleteMemberMutation.isPending}
+                      className="border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/40"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </div>
