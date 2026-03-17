@@ -193,10 +193,33 @@ export default function Landing() {
   const { isDark, toggleTheme } = useTheme();
   const { isAuthenticated } = useAuth();
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
+  const [outgoingPreviewIndex, setOutgoingPreviewIndex] = useState(null);
+  const outgoingPanel =
+    outgoingPreviewIndex !== null ? premiumPreviewPanels[outgoingPreviewIndex] : null;
+
+  const rotatePreview = (nextIndex) => {
+    setActivePreviewIndex((current) => {
+      const resolvedNext =
+        typeof nextIndex === "number"
+          ? nextIndex % premiumPreviewPanels.length
+          : (current + 1) % premiumPreviewPanels.length;
+
+      if (resolvedNext === current) {
+        return current;
+      }
+
+      setOutgoingPreviewIndex(current);
+      window.setTimeout(() => {
+        setOutgoingPreviewIndex((previous) => (previous === current ? null : previous));
+      }, 3200);
+
+      return resolvedNext;
+    });
+  };
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setActivePreviewIndex((current) => (current + 1) % premiumPreviewPanels.length);
+      rotatePreview();
     }, 6400);
 
     return () => window.clearInterval(intervalId);
@@ -296,6 +319,10 @@ export default function Landing() {
             <div className="relative mx-auto min-h-[460px] max-w-[33rem]">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, renderContent }, index) => {
+                  if (index === outgoingPreviewIndex) {
+                    return null;
+                  }
+
                   const order =
                     (index - activePreviewIndex + premiumPreviewPanels.length) %
                     premiumPreviewPanels.length;
@@ -312,7 +339,7 @@ export default function Landing() {
                       key={title}
                       type="button"
                       aria-label={`Show ${title} preview`}
-                      onClick={() => setActivePreviewIndex(index)}
+                      onClick={() => rotatePreview(index)}
                       className={`absolute left-0 top-0 w-full rounded-[2.2rem] border text-left transition-all will-change-transform ${cardStyles[order]} ${
                         isFrontCard
                           ? isDark
@@ -324,7 +351,7 @@ export default function Landing() {
                       }`}
                       style={{
                         transitionTimingFunction: "cubic-bezier(0.19, 1, 0.22, 1)",
-                        transitionDuration: "3400ms",
+                        transitionDuration: "3000ms",
                       }}
                     >
                       <div
@@ -392,6 +419,51 @@ export default function Landing() {
                   );
                 },
               )}
+
+              {outgoingPanel ? (
+                <div
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute left-0 top-0 z-40 w-full rounded-[2.2rem] border text-left ${
+                    isDark
+                      ? "border-slate-200/18 bg-[linear-gradient(180deg,rgba(19,32,61,0.96),rgba(12,19,39,0.96))] text-white backdrop-blur-xl"
+                      : "border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] text-slate-900 shadow-[0_34px_90px_-50px_rgba(15,23,42,0.24)] backdrop-blur-xl"
+                  }`}
+                  style={{
+                    animation:
+                      "landing-preview-orbit-exit 3200ms cubic-bezier(0.19, 1, 0.22, 1) forwards",
+                  }}
+                >
+                  <div className="flex h-full flex-col p-6 pb-8">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-2xl ${outgoingPanel.accentClassName}`}
+                        >
+                          <outgoingPanel.Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
+                            {outgoingPanel.label}
+                          </p>
+                          <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
+                            {outgoingPanel.title}
+                          </p>
+                          <p className={`max-w-md text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+                            {outgoingPanel.subtitle}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
+                        Moving
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex-1">
+                      {outgoingPanel.renderContent(isDark)}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
