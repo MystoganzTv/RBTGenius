@@ -63,7 +63,7 @@ function PreviewPage({ eyebrow, pageTitle, status, children }) {
           </span>
         ) : null}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-4 pb-5">{children}</div>
     </div>
   );
 }
@@ -181,7 +181,7 @@ const premiumPreviewPanels = [
             Unlimited premium AI support
           </div>
         </div>
-        <div className="mt-3 flex gap-3">
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl bg-violet-50 px-4 py-3 text-sm font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
             RBT concepts
           </div>
@@ -299,9 +299,9 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative min-h-[430px] px-4 py-6">
+          <div className="relative min-h-[500px] px-4 py-6">
             <div className="pointer-events-none absolute inset-0 rounded-[2.4rem] bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.08),transparent_50%)] dark:bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.12),transparent_48%)]" />
-            <div className="relative min-h-[390px]">
+            <div className="relative min-h-[440px]">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, content }, index) => {
                   const order =
@@ -326,7 +326,7 @@ export default function Landing() {
                         transitionDuration: "1600ms",
                       }}
                     >
-                      <div className="flex h-full flex-col p-6">
+                      <div className="flex h-full flex-col p-6 pb-8">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-center gap-3">
                             <div
@@ -358,7 +358,7 @@ export default function Landing() {
                 },
               )}
 
-              <div className="absolute bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/92 px-3 py-2 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/92">
+              <div className="absolute -bottom-3 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/92 px-3 py-2 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/92">
                 {premiumPreviewPanels.map((panel, index) => (
                   <button
                     key={panel.title}
