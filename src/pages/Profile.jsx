@@ -23,12 +23,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
-
-const PROFILE_STORAGE_KEY = "rbt_genius_profile_user";
-const PROGRESS_STORAGE_KEY = "rbt_genius_user_progress";
-const PAYMENTS_STORAGE_KEY = "rbt_genius_payments";
 
 const fallbackUser = {
   id: "user-demo",
@@ -66,32 +63,6 @@ const planInfo = {
   },
 };
 
-function readLocalJson(key, fallback) {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) {
-      return fallback;
-    }
-
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeLocalJson(key, value) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(key, JSON.stringify(value));
-}
-
 function formatPaymentDate(value) {
   if (!value) {
     return "Pendiente";
@@ -120,44 +91,25 @@ function getNextBillingLabel(plan) {
   return "Sin renovación";
 }
 
-async function loadProfileUser(authUser) {
-  const storedUser = readLocalJson(PROFILE_STORAGE_KEY, null);
-  return storedUser || authUser || fallbackUser;
-}
-
-async function loadProgress() {
-  return readLocalJson(PROGRESS_STORAGE_KEY, fallbackProgress) || fallbackProgress;
-}
-
-async function loadPayments() {
-  const payments = readLocalJson(PAYMENTS_STORAGE_KEY, fallbackPayments);
-  return Array.isArray(payments) ? payments : fallbackPayments;
-}
-
 export default function Profile() {
   const { user: authUser, login } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ full_name: "" });
   const queryClient = useQueryClient();
 
-  const { data: profileUser } = useQuery({
-    queryKey: ["profile-user", authUser?.email, authUser?.full_name, authUser?.role],
-    queryFn: () => loadProfileUser(authUser),
-    initialData: authUser || fallbackUser,
+  const { data: profileData } = useQuery({
+    queryKey: ["profile-data"],
+    queryFn: api.getProfile,
+    initialData: {
+      user: authUser || fallbackUser,
+      progress: fallbackProgress,
+      payments: fallbackPayments,
+    },
   });
 
-  const { data: progress } = useQuery({
-    queryKey: ["profile-progress"],
-    queryFn: loadProgress,
-    initialData: fallbackProgress,
-  });
-
-  const { data: payments = [] } = useQuery({
-    queryKey: ["profile-payments"],
-    queryFn: loadPayments,
-    initialData: fallbackPayments,
-  });
-
+  const profileUser = profileData?.user || authUser || fallbackUser;
+  const progress = profileData?.progress || fallbackProgress;
+  const payments = profileData?.payments || fallbackPayments;
   const currentUser = profileUser || authUser || fallbackUser;
   const currentPlan = planInfo[progress?.plan || "free"] || planInfo.free;
   const CurrentPlanIcon = currentPlan.icon;
@@ -167,21 +119,15 @@ export default function Profile() {
   }, [currentUser?.full_name]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data) => {
-      const updatedUser = {
-        ...currentUser,
-        ...data,
-      };
-
-      writeLocalJson(PROFILE_STORAGE_KEY, updatedUser);
-      return updatedUser;
-    },
+    mutationFn: api.updateProfile,
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(
-        ["profile-user", authUser?.email, authUser?.full_name, authUser?.role],
-        updatedUser,
-      );
-      queryClient.invalidateQueries({ queryKey: ["profile-user"] });
+      queryClient.setQueryData(["profile-data"], (current) => ({
+        ...(current || {}),
+        user: updatedUser,
+        progress: current?.progress || progress,
+        payments: current?.payments || payments,
+      }));
+      queryClient.invalidateQueries({ queryKey: ["profile-data"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
       login(updatedUser);
       setEditMode(false);

@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "user-demo",
+      "token": "demo-student-token",
+      "full_name": "Alex Carter",
+      "email": "alex.carter@example.com",
+      "role": "student",
+      "plan": "free"
+    }
+  ],
+  "attempts": [],
+  "mockExams": [],
+  "payments": [],
+  "practiceSessions": {},
+  "tutorConversations": {},
+  "customQuestions": [],
+  "createdAt": "2026-03-16T23:48:44.104Z",
+  "updatedAt": "2026-03-16T23:48:44.104Z"
+}

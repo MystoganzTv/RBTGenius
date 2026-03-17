@@ -10,9 +10,7 @@ import {
 import MessageBubble from "@/components/chat/MessageBubble";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-const STORAGE_KEY = "rbt_genius_ai_tutor_conversations";
-const ACTIVE_STORAGE_KEY = "rbt_genius_ai_tutor_active";
+import { api } from "@/lib/api";
 
 const suggestedTopics = [
   "What is discrete trial training?",
@@ -21,109 +19,6 @@ const suggestedTopics = [
   "What is a functional behavior assessment?",
 ];
 
-function createId(prefix) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function createConversation(name = "New Chat") {
-  return {
-    id: createId("convo"),
-    metadata: { name },
-    messages: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-}
-
-function readStoredConversations() {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistConversations(conversations) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-}
-
-function persistActiveConversation(activeId) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (activeId) {
-    window.localStorage.setItem(ACTIVE_STORAGE_KEY, activeId);
-    return;
-  }
-
-  window.localStorage.removeItem(ACTIVE_STORAGE_KEY);
-}
-
-function getStoredActiveConversationId() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return window.localStorage.getItem(ACTIVE_STORAGE_KEY);
-}
-
-function createTutorReply(text) {
-  const normalized = text.toLowerCase();
-
-  if (normalized.includes("discrete trial")) {
-    return {
-      role: "assistant",
-      content:
-        "Discrete trial training is a structured teaching method with a clear instruction, learner response, and consequence. It works well for breaking skills into smaller teachable parts.",
-    };
-  }
-
-  if (normalized.includes("positive reinforcement")) {
-    return {
-      role: "assistant",
-      content:
-        "Positive reinforcement means adding something valuable right after a behavior so that behavior is more likely to happen again. A simple example is praising a learner immediately after a correct response.",
-    };
-  }
-
-  if (normalized.includes("functional behavior assessment")) {
-    return {
-      role: "assistant",
-      content:
-        "A functional behavior assessment helps identify why a behavior happens by looking at antecedents, behavior, and consequences. The goal is to understand function before choosing an intervention.",
-    };
-  }
-
-  if (
-    normalized.includes("rbt exam") ||
-    normalized.includes("exam tips") ||
-    normalized.includes("study")
-  ) {
-    return {
-      role: "assistant",
-      content:
-        "A strong RBT study session usually combines short concept review, practice questions, and explanation of missed answers. Focus on reinforcement, prompting, data collection, ethics, and behavior reduction vocabulary.",
-    };
-  }
-
-  return {
-    role: "assistant",
-    content:
-      "This AI Tutor page is set up as a local boilerplate for now. We can connect it later to a real AI endpoint, but the UI, conversation flow, and history handling are already in place.",
-  };
-}
-
 export default function AITutor() {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
@@ -131,7 +26,6 @@ export default function AITutor() {
   const [loading, setLoading] = useState(false);
   const [loadingConvos, setLoadingConvos] = useState(true);
   const messagesEndRef = useRef(null);
-  const replyTimeoutRef = useRef(null);
 
   const activeConversation = useMemo(
     () =>
@@ -143,56 +37,41 @@ export default function AITutor() {
   const messages = activeConversation?.messages || [];
 
   useEffect(() => {
-    const storedConversations = readStoredConversations();
-    const storedActiveId = getStoredActiveConversationId();
+    let cancelled = false;
 
-    setConversations(storedConversations);
-    setActiveConversationId(
-      storedConversations.some((conversation) => conversation.id === storedActiveId)
-        ? storedActiveId
-        : storedConversations[0]?.id || null,
-    );
-    setLoadingConvos(false);
+    api
+      .listTutorConversations()
+      .then((items) => {
+        if (cancelled) {
+          return;
+        }
+
+        const nextConversations = Array.isArray(items) ? items : [];
+        setConversations(nextConversations);
+        setActiveConversationId(nextConversations[0]?.id || null);
+        setLoadingConvos(false);
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setConversations([]);
+        setActiveConversationId(null);
+        setLoadingConvos(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
-
-  useEffect(() => {
-    if (loadingConvos) {
-      return;
-    }
-
-    persistConversations(conversations);
-  }, [conversations, loadingConvos]);
-
-  useEffect(() => {
-    if (loadingConvos) {
-      return;
-    }
-
-    persistActiveConversation(activeConversationId);
-  }, [activeConversationId, loadingConvos]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  useEffect(() => {
-    return () => {
-      if (replyTimeoutRef.current) {
-        clearTimeout(replyTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const updateConversation = (conversationId, updater) => {
-    setConversations((current) =>
-      current.map((conversation) =>
-        conversation.id === conversationId ? updater(conversation) : conversation,
-      ),
-    );
-  };
-
-  const handleNewConversation = () => {
-    const conversation = createConversation();
+  const handleNewConversation = async () => {
+    const conversation = await api.createTutorConversation({ name: "New Chat" });
     setConversations((current) => [conversation, ...current]);
     setActiveConversationId(conversation.id);
     setInput("");
@@ -202,60 +81,44 @@ export default function AITutor() {
     setActiveConversationId(conversationId);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = input.trim();
     if (!text || loading) {
       return;
     }
 
     let conversationId = activeConversationId;
-
     if (!conversationId) {
-      const conversation = createConversation(text.slice(0, 50));
+      const conversation = await api.createTutorConversation({
+        name: text.slice(0, 50),
+      });
       setConversations((current) => [conversation, ...current]);
       setActiveConversationId(conversation.id);
       conversationId = conversation.id;
     }
 
-    const userMessage = {
-      id: createId("msg"),
-      role: "user",
-      content: text,
-    };
-
     setInput("");
     setLoading(true);
 
-    updateConversation(conversationId, (conversation) => ({
-      ...conversation,
-      metadata: {
-        ...conversation.metadata,
-        name:
-          conversation.metadata?.name === "New Chat" || !conversation.metadata?.name
-            ? text.slice(0, 50)
-            : conversation.metadata.name,
-      },
-      messages: [...(conversation.messages || []), userMessage],
-      updatedAt: new Date().toISOString(),
-    }));
+    try {
+      const updatedConversation = await api.sendTutorMessage(conversationId, {
+        content: text,
+      });
 
-    if (replyTimeoutRef.current) {
-      clearTimeout(replyTimeoutRef.current);
-    }
+      setConversations((current) => {
+        const exists = current.some((conversation) => conversation.id === updatedConversation.id);
 
-    replyTimeoutRef.current = setTimeout(() => {
-      const assistantMessage = {
-        id: createId("msg"),
-        ...createTutorReply(text),
-      };
+        if (!exists) {
+          return [updatedConversation, ...current];
+        }
 
-      updateConversation(conversationId, (conversation) => ({
-        ...conversation,
-        messages: [...(conversation.messages || []), assistantMessage],
-        updatedAt: new Date().toISOString(),
-      }));
+        return current.map((conversation) =>
+          conversation.id === updatedConversation.id ? updatedConversation : conversation,
+        );
+      });
+    } finally {
       setLoading(false);
-    }, 700);
+    }
   };
 
   return (
@@ -328,10 +191,11 @@ export default function AITutor() {
                   <Brain className="h-8 w-8 text-[#1E5EFF]" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">
-                  Hello! I'm your AI Tutor
+                  Hello! I&apos;m your AI Tutor
                 </h3>
                 <p className="mt-1 max-w-sm text-sm text-slate-400">
-                  Ask me about ABA concepts, RBT exam prep, or study strategies.
+                  Ask me anything about ABA concepts, RBT exam prep, or study
+                  strategies.
                 </p>
 
                 <div className="mt-6 grid max-w-md grid-cols-2 gap-2">
@@ -340,7 +204,7 @@ export default function AITutor() {
                       key={topic}
                       type="button"
                       onClick={() => setInput(topic)}
-                      className="rounded-xl border border-slate-200 p-3 text-left text-xs text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/[0.03]"
+                      className="rounded-xl border border-slate-200 p-3 text-left text-xs text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5"
                     >
                       {topic}
                     </button>
@@ -348,27 +212,18 @@ export default function AITutor() {
                 </div>
               </div>
             ) : (
-              <>
-                {messages.map((message, index) => (
-                  <MessageBubble
-                    key={message.id || `${message.role}-${index}`}
-                    message={message}
-                  />
-                ))}
-                {loading ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Thinking...
-                  </div>
-                ) : null}
-              </>
+              messages.map((message) => (
+                <MessageBubble key={message.id} message={message} />
+              ))
             )}
-            {messages.length === 0 && loading ? (
+
+            {loading ? (
               <div className="flex items-center gap-2 text-sm text-slate-400">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Thinking...
               </div>
             ) : null}
+
             <div ref={messagesEndRef} />
           </div>
 

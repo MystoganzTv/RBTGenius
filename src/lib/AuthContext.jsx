@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { DEFAULT_AUTH_TOKEN } from "@/lib/api";
 import { appParams } from "@/lib/app-params";
 
 const AuthContext = createContext(null);
@@ -51,14 +52,20 @@ function getStoredAuthToken() {
   }
 
   if (!storage) {
-    return null;
+    return DEFAULT_AUTH_TOKEN;
   }
 
-  return (
+  const token =
     storage.getItem(AUTH_STORAGE_KEY) ||
     storage.getItem("access_token") ||
-    storage.getItem("token")
-  );
+    storage.getItem("token") ||
+    DEFAULT_AUTH_TOKEN;
+
+  if (token) {
+    persistAuthToken(token);
+  }
+
+  return token;
 }
 
 async function requestJson(url, options = {}, fetchImpl = fetch) {
@@ -145,9 +152,9 @@ export function AuthProvider({
 
   const resolvedEndpoints = useMemo(
     () => ({
-      me: endpoints.me || null,
-      publicSettings: endpoints.publicSettings || null,
-      logout: endpoints.logout || null,
+      me: endpoints.me || "/api/auth/me",
+      publicSettings: endpoints.publicSettings || "/api/public-settings",
+      logout: endpoints.logout || "/api/auth/logout",
     }),
     [endpoints.logout, endpoints.me, endpoints.publicSettings],
   );

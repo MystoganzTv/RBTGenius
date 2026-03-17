@@ -15,6 +15,7 @@ import ReadinessGauge from "@/components/dashboard/ReadinessGauge";
 import StatCard from "@/components/dashboard/StatCard";
 import StreakCard from "@/components/dashboard/StreakCard";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 
@@ -33,11 +34,9 @@ const fallbackProgress = {
   },
 };
 
-const fallbackQuestions = Array.from({ length: 320 }, (_, index) => ({
+const fallbackQuestions = Array.from({ length: 500 }, (_, index) => ({
   id: `question-${index + 1}`,
 }));
-
-const PROGRESS_STORAGE_KEY = "rbt_genius_user_progress";
 
 const planStyles = {
   free: {
@@ -57,37 +56,8 @@ const planStyles = {
   },
 };
 
-function readLocalJson(key, fallback) {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) {
-      return fallback;
-    }
-
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function getStoredPlan() {
-  const progress = readLocalJson(PROGRESS_STORAGE_KEY, fallbackProgress);
-  return progress?.plan || "free";
-}
-
 async function loadDashboardData() {
-  const progress = readLocalJson("rbt_genius_user_progress", fallbackProgress);
-  const allQuestions = readLocalJson("rbt_genius_questions", fallbackQuestions);
-
-  return {
-    progress: progress || fallbackProgress,
-    allQuestions: Array.isArray(allQuestions) ? allQuestions : fallbackQuestions,
-  };
+  return api.getDashboard();
 }
 
 export default function Dashboard() {
@@ -110,7 +80,7 @@ export default function Dashboard() {
 
   const firstName =
     user?.full_name?.split(" ")[0] || user?.name?.split(" ")[0] || null;
-  const plan = getStoredPlan();
+  const plan = user?.plan || progress?.plan || "free";
   const activePlan = planStyles[plan] || planStyles.free;
 
   const badges = [

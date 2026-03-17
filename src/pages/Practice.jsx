@@ -25,136 +25,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { api } from "@/lib/api";
+import { topicLabels } from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
-
-const QUESTIONS_STORAGE_KEY = "rbt_genius_questions";
-const ATTEMPTS_STORAGE_KEY = "rbt_genius_question_attempts";
-const PRACTICE_SESSION_STORAGE_KEY = "rbt_genius_practice_session";
-
-const topicLabels = {
-  measurement: "Measurement",
-  assessment: "Assessment",
-  skill_acquisition: "Skill Acquisition",
-  behavior_reduction: "Behavior Reduction",
-  documentation: "Documentation",
-  professional_conduct: "Professional Conduct",
-};
-
-const PRACTICE_BANK_SIZE = 500;
-
-const fallbackQuestions = [
-  {
-    id: "q1",
-    text: "What is the main purpose of positive reinforcement?",
-    topic: "measurement",
-    difficulty: "beginner",
-    correct_answer: "B",
-    explanation:
-      "Positive reinforcement increases the future likelihood of a behavior by adding something valuable after it occurs.",
-    options: [
-      { label: "A", text: "To decrease future behavior" },
-      { label: "B", text: "To increase future behavior" },
-      { label: "C", text: "To ignore problem behavior" },
-      { label: "D", text: "To remove a demand" },
-    ],
-  },
-  {
-    id: "q2",
-    text: "Which part of the ABC sequence happens right before the behavior?",
-    topic: "assessment",
-    difficulty: "beginner",
-    correct_answer: "A",
-    explanation:
-      "The antecedent is what occurs before the behavior and can signal or trigger it.",
-    options: [
-      { label: "A", text: "Antecedent" },
-      { label: "B", text: "Consequence" },
-      { label: "C", text: "Function" },
-      { label: "D", text: "Data point" },
-    ],
-  },
-  {
-    id: "q3",
-    text: "Prompt fading is used primarily to:",
-    topic: "skill_acquisition",
-    difficulty: "intermediate",
-    correct_answer: "C",
-    explanation:
-      "Prompt fading helps transfer stimulus control from the prompt to the natural cue so the learner becomes more independent.",
-    options: [
-      { label: "A", text: "Increase punishment intensity" },
-      { label: "B", text: "Reduce reinforcement" },
-      { label: "C", text: "Promote independent responding" },
-      { label: "D", text: "Remove target behaviors" },
-    ],
-  },
-  {
-    id: "q4",
-    text: "A replacement behavior should ideally:",
-    topic: "behavior_reduction",
-    difficulty: "intermediate",
-    correct_answer: "D",
-    explanation:
-      "A replacement behavior should be functionally equivalent and easier or more efficient for the learner to use.",
-    options: [
-      { label: "A", text: "Be harder than the problem behavior" },
-      { label: "B", text: "Require more time and effort" },
-      { label: "C", text: "Look exactly the same as the problem behavior" },
-      { label: "D", text: "Serve the same function in a better way" },
-    ],
-  },
-  {
-    id: "q5",
-    text: "Why is accurate data collection important for an RBT?",
-    topic: "documentation",
-    difficulty: "beginner",
-    correct_answer: "B",
-    explanation:
-      "Reliable data helps supervisors make informed treatment decisions and track progress objectively.",
-    options: [
-      { label: "A", text: "It replaces parent communication" },
-      { label: "B", text: "It supports clinical decision making" },
-      { label: "C", text: "It eliminates the need for supervision" },
-      { label: "D", text: "It guarantees treatment success" },
-    ],
-  },
-  {
-    id: "q6",
-    text: "If an RBT is asked to work outside their scope, the best response is to:",
-    topic: "professional_conduct",
-    difficulty: "advanced",
-    correct_answer: "A",
-    explanation:
-      "RBTs should stay within their role and consult the supervisor when asked to do something outside their competence or authorization.",
-    options: [
-      { label: "A", text: "Contact the supervisor for guidance" },
-      { label: "B", text: "Guess and do the task anyway" },
-      { label: "C", text: "Ignore the request silently" },
-      { label: "D", text: "Change the treatment plan independently" },
-    ],
-  },
-];
-
-const scenarioPrefixes = [
-  "During a clinic session,",
-  "During home-based therapy,",
-  "While collecting data,",
-  "When supporting a skill acquisition program,",
-  "During supervision review,",
-  "In a community outing,",
-  "While implementing the treatment plan,",
-  "At the start of session,",
-  "During a transition between activities,",
-  "While preparing session notes,",
-];
-
-const scenarioSuffixes = [
-  "Choose the best response.",
-  "Identify the most appropriate action.",
-  "Select the option most aligned with RBT practice.",
-  "Pick the answer that best matches ABA principles.",
-  "Choose the response that protects treatment integrity.",
-];
 
 const reviewFilters = [
   { id: "all", label: "All" },
@@ -162,62 +35,6 @@ const reviewFilters = [
   { id: "flagged", label: "Flagged" },
   { id: "unanswered", label: "Unanswered" },
 ];
-
-function buildPracticeQuestionBank(size = PRACTICE_BANK_SIZE) {
-  return Array.from({ length: size }, (_, index) => {
-    const seed = fallbackQuestions[index % fallbackQuestions.length];
-    const prefix = scenarioPrefixes[index % scenarioPrefixes.length];
-    const suffix = scenarioSuffixes[index % scenarioSuffixes.length];
-    const topicLabel =
-      topicLabels[seed.topic] || seed.topic.replace(/_/g, " ");
-    const variantNumber = index + 1;
-
-    return {
-      ...seed,
-      id: `practice_${seed.id}_${variantNumber}`,
-      text: `${prefix} (${topicLabel} set ${variantNumber}) ${seed.text} ${suffix}`,
-      original_id: seed.id,
-    };
-  });
-}
-
-function readLocalJson(key, fallback) {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) {
-      return fallback;
-    }
-
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeLocalJson(key, value) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(key, JSON.stringify(value));
-}
-
-function removeLocalItem(key) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.removeItem(key);
-}
-
-function loadSavedPracticeSession() {
-  return readLocalJson(PRACTICE_SESSION_STORAGE_KEY, null);
-}
 
 function getResponseState(questionId, responses) {
   return responses?.[questionId] || {};
@@ -249,30 +66,11 @@ function matchesReviewFilter(question, responses, reviewFilter) {
 }
 
 async function loadPracticeQuestions() {
-  const generatedFallbackQuestions = buildPracticeQuestionBank();
-  const questions = readLocalJson(QUESTIONS_STORAGE_KEY, generatedFallbackQuestions);
-
-  if (Array.isArray(questions) && questions.length >= PRACTICE_BANK_SIZE) {
-    return questions;
-  }
-
-  writeLocalJson(QUESTIONS_STORAGE_KEY, generatedFallbackQuestions);
-  return generatedFallbackQuestions;
+  return api.listQuestions({ mode: "practice" });
 }
 
 async function storeAttempt(attempt) {
-  const currentAttempts = readLocalJson(ATTEMPTS_STORAGE_KEY, []);
-  const nextAttempts = [
-    {
-      id: `attempt_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      created_at: new Date().toISOString(),
-      ...attempt,
-    },
-    ...currentAttempts,
-  ];
-
-  writeLocalJson(ATTEMPTS_STORAGE_KEY, nextAttempts);
-  return nextAttempts;
+  return api.createAttempt(attempt);
 }
 
 function QuestionNavigator({
@@ -367,22 +165,14 @@ function QuestionNavigator({
 }
 
 export default function Practice() {
-  const savedSession = loadSavedPracticeSession();
-  const [topicFilter, setTopicFilter] = useState(
-    () => savedSession?.topicFilter || "all",
-  );
-  const [difficultyFilter, setDifficultyFilter] = useState(
-    () => savedSession?.difficultyFilter || "all",
-  );
-  const [reviewFilter, setReviewFilter] = useState(
-    () => savedSession?.reviewFilter || "all",
-  );
-  const [currentQuestionId, setCurrentQuestionId] = useState(
-    () => savedSession?.currentQuestionId || null,
-  );
-  const [responses, setResponses] = useState(() => savedSession?.responses || {});
-  const [started, setStarted] = useState(() => Boolean(savedSession?.started));
+  const [topicFilter, setTopicFilter] = useState("all");
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [reviewFilter, setReviewFilter] = useState("all");
+  const [currentQuestionId, setCurrentQuestionId] = useState(null);
+  const [responses, setResponses] = useState({});
+  const [started, setStarted] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [sessionHydrated, setSessionHydrated] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: allQuestions = [], isLoading } = useQuery({
@@ -398,6 +188,11 @@ export default function Practice() {
       queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
     },
+  });
+
+  const { data: savedSession } = useQuery({
+    queryKey: ["practice-session"],
+    queryFn: api.getPracticeSession,
   });
 
   const baseFilteredQuestions = useMemo(
@@ -451,11 +246,28 @@ export default function Practice() {
     answeredCount >= baseFilteredQuestions.length;
 
   useEffect(() => {
-    if (!started) {
+    if (sessionHydrated) {
       return;
     }
 
-    writeLocalJson(PRACTICE_SESSION_STORAGE_KEY, {
+    if (savedSession) {
+      setTopicFilter(savedSession.topicFilter || "all");
+      setDifficultyFilter(savedSession.difficultyFilter || "all");
+      setReviewFilter(savedSession.reviewFilter || "all");
+      setCurrentQuestionId(savedSession.currentQuestionId || null);
+      setResponses(savedSession.responses || {});
+      setStarted(Boolean(savedSession.started));
+    }
+
+    setSessionHydrated(true);
+  }, [savedSession, sessionHydrated]);
+
+  useEffect(() => {
+    if (!sessionHydrated || !started) {
+      return;
+    }
+
+    api.savePracticeSession({
       started,
       topicFilter,
       difficultyFilter,
@@ -468,6 +280,7 @@ export default function Practice() {
     difficultyFilter,
     responses,
     reviewFilter,
+    sessionHydrated,
     started,
     topicFilter,
   ]);
@@ -486,7 +299,8 @@ export default function Practice() {
     setResponses({});
     setCurrentQuestionId(null);
     setReviewFilter("all");
-    removeLocalItem(PRACTICE_SESSION_STORAGE_KEY);
+    queryClient.setQueryData(["practice-session"], null);
+    api.clearPracticeSession();
   };
 
   const startSession = () => {
@@ -623,7 +437,7 @@ export default function Practice() {
           </div>
 
           <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700 dark:text-slate-200">
-            The local bank is ready with up to {PRACTICE_BANK_SIZE} practice questions.
+            Your practice session now runs against the server-backed question bank.
           </div>
 
           <Button

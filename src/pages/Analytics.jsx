@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { Award, BookOpen, Brain, Clock, Target } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
+import { api } from "@/lib/api";
 
 const topicLabels = {
   measurement: "Measurement",
@@ -69,34 +70,8 @@ const fallbackExams = [
   { score: 82 },
 ];
 
-function readLocalJson(key, fallback) {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) {
-      return fallback;
-    }
-
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 async function loadAnalyticsData() {
-  const progress = readLocalJson("rbt_genius_user_progress", fallbackProgress);
-  const attempts = readLocalJson("rbt_genius_question_attempts", fallbackAttempts);
-  const exams = readLocalJson("rbt_genius_mock_exams", fallbackExams);
-
-  return {
-    progress,
-    attempts: Array.isArray(attempts) ? attempts : fallbackAttempts,
-    exams: Array.isArray(exams) ? exams : fallbackExams,
-  };
+  return api.getAnalytics();
 }
 
 export default function Analytics() {

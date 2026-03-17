@@ -11,177 +11,19 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
+import { topicLabels } from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
 
 const TOTAL_QUESTIONS = 85;
 const EXAM_DURATION_MINUTES = 90;
 const PASS_SCORE = 80;
-const QUESTIONS_STORAGE_KEY = "rbt_genius_questions";
-const EXAMS_STORAGE_KEY = "rbt_genius_mock_exams";
-
-const topicLabels = {
-  measurement: "Measurement",
-  assessment: "Assessment",
-  skill_acquisition: "Skill Acquisition",
-  behavior_reduction: "Behavior Reduction",
-  documentation: "Documentation",
-  professional_conduct: "Professional Conduct",
-};
-
-const baseQuestionBank = [
-  {
-    id: "q1",
-    text: "What is the main purpose of positive reinforcement?",
-    topic: "measurement",
-    difficulty: "beginner",
-    correct_answer: "B",
-    explanation:
-      "Positive reinforcement increases the future likelihood of a behavior by adding something valuable after it occurs.",
-    options: [
-      { label: "A", text: "To decrease future behavior" },
-      { label: "B", text: "To increase future behavior" },
-      { label: "C", text: "To ignore problem behavior" },
-      { label: "D", text: "To remove a demand" },
-    ],
-  },
-  {
-    id: "q2",
-    text: "Which part of the ABC sequence happens right before the behavior?",
-    topic: "assessment",
-    difficulty: "beginner",
-    correct_answer: "A",
-    explanation:
-      "The antecedent is what occurs before the behavior and can signal or trigger it.",
-    options: [
-      { label: "A", text: "Antecedent" },
-      { label: "B", text: "Consequence" },
-      { label: "C", text: "Function" },
-      { label: "D", text: "Data point" },
-    ],
-  },
-  {
-    id: "q3",
-    text: "Prompt fading is used primarily to:",
-    topic: "skill_acquisition",
-    difficulty: "intermediate",
-    correct_answer: "C",
-    explanation:
-      "Prompt fading helps transfer stimulus control from the prompt to the natural cue so the learner becomes more independent.",
-    options: [
-      { label: "A", text: "Increase punishment intensity" },
-      { label: "B", text: "Reduce reinforcement" },
-      { label: "C", text: "Promote independent responding" },
-      { label: "D", text: "Remove target behaviors" },
-    ],
-  },
-  {
-    id: "q4",
-    text: "A replacement behavior should ideally:",
-    topic: "behavior_reduction",
-    difficulty: "intermediate",
-    correct_answer: "D",
-    explanation:
-      "A replacement behavior should be functionally equivalent and easier or more efficient for the learner to use.",
-    options: [
-      { label: "A", text: "Be harder than the problem behavior" },
-      { label: "B", text: "Require more time and effort" },
-      { label: "C", text: "Look exactly the same as the problem behavior" },
-      { label: "D", text: "Serve the same function in a better way" },
-    ],
-  },
-  {
-    id: "q5",
-    text: "Why is accurate data collection important for an RBT?",
-    topic: "documentation",
-    difficulty: "beginner",
-    correct_answer: "B",
-    explanation:
-      "Reliable data helps supervisors make informed treatment decisions and track progress objectively.",
-    options: [
-      { label: "A", text: "It replaces parent communication" },
-      { label: "B", text: "It supports clinical decision making" },
-      { label: "C", text: "It eliminates the need for supervision" },
-      { label: "D", text: "It guarantees treatment success" },
-    ],
-  },
-  {
-    id: "q6",
-    text: "If an RBT is asked to work outside their scope, the best response is to:",
-    topic: "professional_conduct",
-    difficulty: "advanced",
-    correct_answer: "A",
-    explanation:
-      "RBTs should stay within their role and consult the supervisor when asked to do something outside their competence or authorization.",
-    options: [
-      { label: "A", text: "Contact the supervisor for guidance" },
-      { label: "B", text: "Guess and do the task anyway" },
-      { label: "C", text: "Ignore the request silently" },
-      { label: "D", text: "Change the treatment plan independently" },
-    ],
-  },
-];
-
-function readLocalJson(key, fallback) {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) {
-      return fallback;
-    }
-
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeLocalJson(key, value) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(key, JSON.stringify(value));
-}
-
-function buildQuestionSet(sourceQuestions) {
-  const pool =
-    Array.isArray(sourceQuestions) && sourceQuestions.length > 0
-      ? sourceQuestions
-      : baseQuestionBank;
-
-  return Array.from({ length: TOTAL_QUESTIONS }, (_, index) => {
-    const question = pool[index % pool.length];
-
-    return {
-      ...question,
-      id: `${question.id}_mock_${index + 1}`,
-      original_id: question.id,
-    };
-  });
-}
-
 async function loadMockExamQuestions() {
-  const storedQuestions = readLocalJson(QUESTIONS_STORAGE_KEY, baseQuestionBank);
-  return buildQuestionSet(storedQuestions);
+  return api.listQuestions({ mode: "mock", limit: TOTAL_QUESTIONS });
 }
 
 async function saveMockExamResult(result) {
-  const current = readLocalJson(EXAMS_STORAGE_KEY, []);
-  const next = [
-    {
-      id: `mock_exam_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      created_at: new Date().toISOString(),
-      ...result,
-    },
-    ...current,
-  ];
-
-  writeLocalJson(EXAMS_STORAGE_KEY, next);
-  return next;
+  return api.createMockExam(result);
 }
 
 export default function MockExams() {
