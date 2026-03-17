@@ -5,8 +5,9 @@ export const PLAN_IDS = {
   PREMIUM_YEARLY: "premium_yearly",
 };
 
-export const FREE_DAILY_PRACTICE_LIMIT = 10;
+export const FREE_DAILY_PRACTICE_LIMIT = 15;
 export const FREE_DAILY_TUTOR_LIMIT = 5;
+export const FREE_FLASHCARD_LIMIT = 15;
 
 export const PREMIUM_PLAN_IDS = [
   PLAN_IDS.PREMIUM_MONTHLY,
@@ -67,6 +68,13 @@ export const ACCESS_COMPARISON = [
     guest: "Preview only",
     free: `${FREE_DAILY_PRACTICE_LIMIT} answered per day`,
     premium: "Unlimited from the 3000-question bank",
+  },
+  {
+    id: "flashcards",
+    label: "Flashcards",
+    guest: "Preview only",
+    free: `${FREE_FLASHCARD_LIMIT} cards per session`,
+    premium: "Unlimited flashcard review",
   },
   {
     id: "ai_tutor",
@@ -218,6 +226,12 @@ export function getGateCopy(feature) {
         title: "Daily AI tutor limit reached",
         description:
           "Free accounts include a small daily AI tutor allowance. Upgrade for unlimited study conversations.",
+      };
+    case "flashcards_limit":
+      return {
+        title: "Free flashcard limit reached",
+        description:
+          "Free accounts can review a smaller flashcard set. Upgrade to unlock the full flashcard bank.",
       };
     default:
       return {

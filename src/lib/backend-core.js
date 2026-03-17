@@ -59,6 +59,9 @@ function formatUniqueStudyDays(attempts) {
 
 export function computeProgress(db, userId) {
   const attempts = db.attempts.filter((attempt) => attempt.user_id === userId);
+  const practiceAttempts = attempts.filter(
+    (attempt) => !attempt.source || attempt.source === "practice",
+  );
   const exams = db.mockExams.filter((exam) => exam.user_id === userId);
   const user = db.users.find((entry) => entry.id === userId) || defaultUser;
   const recentAttempts = [...attempts]
@@ -177,7 +180,7 @@ export function computeProgress(db, userId) {
     plan: user.plan || "free",
     domain_mastery: domainMastery,
     domain_attempt_counts: domainAttemptCounts,
-    questions_today: attempts.filter(
+    questions_today: practiceAttempts.filter(
       (attempt) => attempt.created_at?.slice(0, 10) === new Date().toISOString().slice(0, 10),
     ).length,
     last_question_date: lastStudyDate,

@@ -12,6 +12,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -21,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import { FREE_FLASHCARD_LIMIT, isPremiumPlan } from "@/lib/plan-access";
+import { createPageUrl } from "@/utils";
 
 async function loadQuestions() {
   return api.listQuestions({ mode: "flashcards" });
@@ -39,9 +49,15 @@ export default function Flashcards() {
   const [filterDifficulty, setFilterDifficulty] = useState("all");
   const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0 });
   const [cardHeight, setCardHeight] = useState(420);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const frontContentRef = useRef(null);
   const backContentRef = useRef(null);
   const queryClient = useQueryClient();
+
+  const { data: profileData } = useQuery({
+    queryKey: ["profile-data"],
+    queryFn: api.getProfile,
+  });
 
   const { data: allQuestions = [], isLoading } = useQuery({
     queryKey: ["flashcard-questions"],
@@ -57,17 +73,29 @@ export default function Flashcards() {
     },
   });
 
+  const isPremium = isPremiumPlan(profileData?.entitlements?.plan);
+  const availableQuestions = useMemo(
+    () => (isPremium ? allQuestions : allQuestions.slice(0, FREE_FLASHCARD_LIMIT)),
+    [allQuestions, isPremium],
+  );
+
   const filteredQuestions = useMemo(
     () =>
-      allQuestions.filter((question) => {
+      availableQuestions.filter((question) => {
         const topicMatch = filterTopic === "all" || question.topic === filterTopic;
         const difficultyMatch =
           filterDifficulty === "all" || question.difficulty === filterDifficulty;
 
         return topicMatch && difficultyMatch && !masteredCards.includes(question.id);
       }),
-    [allQuestions, filterDifficulty, filterTopic, masteredCards],
+    [availableQuestions, filterDifficulty, filterTopic, masteredCards],
   );
+  const reviewedCardIds = useMemo(
+    () => [...new Set([...masteredCards, ...reviewCards])],
+    [masteredCards, reviewCards],
+  );
+  const flashcardLimitReached =
+    !isPremium && availableQuestions.length > 0 && reviewedCardIds.length >= availableQuestions.length;
 
   const currentCard = filteredQuestions[currentIndex] || null;
 
@@ -117,6 +145,12 @@ export default function Flashcards() {
       return;
     }
 
+    if (flashcardLimitReached) {
+      setLimitDialogOpen(true);
+      return;
+    }
+
+    const nextReviewedCount = new Set([...reviewedCardIds, currentCard.id]).size;
     setMasteredCards((current) => [...current, currentCard.id]);
     setSessionStats((current) => ({
       ...current,
@@ -128,7 +162,13 @@ export default function Flashcards() {
       selected_answer: currentCard.correct_answer,
       is_correct: true,
       topic: currentCard.topic,
+      source: "flashcards",
     });
+
+    if (!isPremium && nextReviewedCount >= availableQuestions.length) {
+      setLimitDialogOpen(true);
+      return;
+    }
 
     nextCard();
   };
@@ -138,6 +178,12 @@ export default function Flashcards() {
       return;
     }
 
+    if (flashcardLimitReached) {
+      setLimitDialogOpen(true);
+      return;
+    }
+
+    const nextReviewedCount = new Set([...reviewedCardIds, currentCard.id]).size;
     setReviewCards((current) =>
       current.includes(currentCard.id) ? current : [...current, currentCard.id],
     );
@@ -151,7 +197,13 @@ export default function Flashcards() {
       selected_answer: "",
       is_correct: false,
       topic: currentCard.topic,
+      source: "flashcards",
     });
+
+    if (!isPremium && nextReviewedCount >= availableQuestions.length) {
+      setLimitDialogOpen(true);
+      return;
+    }
 
     nextCard();
   };
@@ -174,7 +226,9 @@ export default function Flashcards() {
   };
 
   const progress =
-    allQuestions.length > 0 ? (masteredCards.length / allQuestions.length) * 100 : 0;
+    availableQuestions.length > 0
+      ? (masteredCards.length / availableQuestions.length) * 100
+      : 0;
 
   if (isLoading) {
     return (
@@ -216,7 +270,7 @@ export default function Flashcards() {
             <div>
               <p className="text-xs text-slate-500">Total Cards</p>
               <p className="text-2xl font-bold text-slate-900">
-                {allQuestions.length}
+                {availableQuestions.length}
               </p>
             </div>
             <Zap className="h-8 w-8 text-[#1E5EFF]" />
@@ -268,6 +322,27 @@ export default function Flashcards() {
         </div>
         <Progress value={progress} className="h-2" />
       </Card>
+
+      {!isPremium ? (
+        <Card className="border-[#1E5EFF]/15 bg-[#1E5EFF]/5 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">
+                Free flashcards: {FREE_FLASHCARD_LIMIT} cards per session
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                Upgrade to Premium to unlock the full flashcard bank and keep reviewing without session limits.
+              </p>
+            </div>
+            <Button
+              className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+              onClick={() => window.location.assign(createPageUrl("Pricing"))}
+            >
+              Go Premium
+            </Button>
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="p-4">
         <div className="flex flex-wrap items-center gap-4">
@@ -414,16 +489,61 @@ export default function Flashcards() {
             Congratulations!
           </h2>
           <p className="mb-6 text-slate-600">
-            You have completed every card for these filters.
+            {isPremium
+              ? "You have completed every card for these filters."
+              : `You finished your ${FREE_FLASHCARD_LIMIT} free flashcards for this session.`}
           </p>
-          <Button
-            onClick={handleReset}
-            className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
-          >
-            Start New Session
-          </Button>
+          <div className="flex flex-col justify-center gap-3 sm:flex-row">
+            <Button
+              onClick={handleReset}
+              className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+            >
+              Start New Session
+            </Button>
+            {!isPremium ? (
+              <Button
+                variant="outline"
+                onClick={() => window.location.assign(createPageUrl("Pricing"))}
+              >
+                Upgrade to Premium
+              </Button>
+            ) : null}
+          </div>
         </Card>
       )}
+
+      <Dialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Free flashcard limit reached</DialogTitle>
+            <DialogDescription>
+              You have completed your {FREE_FLASHCARD_LIMIT} free flashcards for this session.
+              Upgrade to Premium to unlock the full flashcard bank.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            Premium removes flashcard session limits and also unlocks unlimited practice, full mock exams, and analytics.
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setLimitDialogOpen(false)}
+            >
+              Keep Reviewing
+            </Button>
+            <Button
+              className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+              onClick={() => {
+                setLimitDialogOpen(false);
+                window.location.assign(createPageUrl("Pricing"));
+              }}
+            >
+              Upgrade to Premium
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

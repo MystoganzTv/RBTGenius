@@ -27,6 +27,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
 import {
@@ -35,6 +43,7 @@ import {
 } from "@/lib/plan-access";
 import { practiceBankOptions, topicLabels } from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
+import { createPageUrl } from "@/utils";
 
 const reviewFilters = [
   { id: "all", label: "All" },
@@ -173,6 +182,7 @@ export default function Practice() {
   const [responses, setResponses] = useState({});
   const [started, setStarted] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
   const [sessionHydrated, setSessionHydrated] = useState(false);
   const [entitlements, setEntitlements] = useState(null);
   const queryClient = useQueryClient();
@@ -374,6 +384,7 @@ export default function Practice() {
     }
 
     if (practiceLimitReached) {
+      setLimitDialogOpen(true);
       toast({
         title: "Daily practice limit reached",
         description: `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day.`,
@@ -381,22 +392,36 @@ export default function Practice() {
       return;
     }
 
-    setResponses((current) => ({
-      ...current,
-      [currentQuestion.id]: {
-        ...current[currentQuestion.id],
-        selectedAnswer: answer,
-        submitted: true,
-        isCorrect,
-      },
-    }));
+    try {
+      const payload = await attemptMutation.mutateAsync({
+        question_id: currentQuestion.id,
+        selected_answer: answer,
+        is_correct: isCorrect,
+        topic: currentQuestion.topic,
+        source: "practice",
+      });
 
-    await attemptMutation.mutateAsync({
-      question_id: currentQuestion.id,
-      selected_answer: answer,
-      is_correct: isCorrect,
-      topic: currentQuestion.topic,
-    });
+      setResponses((current) => ({
+        ...current,
+        [currentQuestion.id]: {
+          ...current[currentQuestion.id],
+          selectedAnswer: answer,
+          submitted: true,
+          isCorrect,
+        },
+      }));
+
+      if (
+        !isPremiumPlan(payload?.entitlements?.plan) &&
+        payload?.entitlements?.usage?.practice_questions_remaining === 0
+      ) {
+        setLimitDialogOpen(true);
+      }
+    } catch (error) {
+      if (error?.data?.code === "plan_limit_reached") {
+        setLimitDialogOpen(true);
+      }
+    }
   };
 
   const handleNext = () => {
@@ -427,6 +452,15 @@ export default function Practice() {
   const currentResponse = currentQuestion
     ? getResponseState(currentQuestion.id, responses)
     : {};
+
+  const handleStartSession = () => {
+    if (!isPremiumPlan(entitlements?.plan) && practiceRemaining === 0) {
+      setLimitDialogOpen(true);
+      return;
+    }
+
+    startSession();
+  };
 
   if (!started) {
     return (
@@ -508,7 +542,7 @@ export default function Practice() {
           </div>
 
           <Button
-            onClick={startSession}
+            onClick={handleStartSession}
             className="w-full gap-2 rounded-xl py-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90"
             style={{ backgroundColor: "#1E5EFF" }}
           >
@@ -759,6 +793,35 @@ export default function Practice() {
         currentQuestionId={currentQuestionId}
         onSelectQuestion={setCurrentQuestionId}
       />
+
+      <Dialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Free practice limit reached</DialogTitle>
+            <DialogDescription>
+              You have used your {FREE_DAILY_PRACTICE_LIMIT} free practice answers for today.
+              Upgrade to Premium to keep answering without a daily cap.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            Premium gives you unlimited practice, full mock exams, and complete analytics.
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" className="rounded-xl" onClick={() => setLimitDialogOpen(false)}>
+              Keep Reviewing
+            </Button>
+            <Button
+              className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+              onClick={() => {
+                setLimitDialogOpen(false);
+                window.location.assign(createPageUrl("Pricing"));
+              }}
+            >
+              Upgrade to Premium
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
