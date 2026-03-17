@@ -197,7 +197,7 @@ export default function Landing() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setActivePreviewIndex((current) => (current + 1) % premiumPreviewPanels.length);
-    }, 5600);
+    }, 6400);
 
     return () => window.clearInterval(intervalId);
   }, []);
@@ -302,9 +302,9 @@ export default function Landing() {
                   const isFrontCard = order === 0;
 
                   const cardStyles = [
-                    "z-30 translate-x-0 translate-y-6 rotate-[-5deg] scale-100 opacity-100 shadow-[0_44px_100px_-46px_rgba(15,23,42,0.42)]",
-                    "z-20 translate-x-14 translate-y-2 rotate-[7deg] scale-[0.955] opacity-[0.46]",
-                    "z-10 translate-x-28 translate-y-14 rotate-[12deg] scale-[0.9] opacity-[0.2]",
+                    "z-30 translate-x-0 translate-y-8 rotate-[-5deg] scale-100 opacity-100 shadow-[0_44px_100px_-46px_rgba(15,23,42,0.42)]",
+                    "z-20 translate-x-12 translate-y-0 rotate-[6deg] scale-[0.965] opacity-[0.52]",
+                    "z-10 translate-x-24 translate-y-12 rotate-[11deg] scale-[0.92] opacity-[0.26]",
                   ];
 
                   return (
@@ -324,10 +324,19 @@ export default function Landing() {
                       }`}
                       style={{
                         transitionTimingFunction: "cubic-bezier(0.19, 1, 0.22, 1)",
-                        transitionDuration: "2800ms",
+                        transitionDuration: "3400ms",
                       }}
                     >
-                      <div className="flex h-full flex-col p-6 pb-8">
+                      <div
+                        className="flex h-full flex-col p-6 pb-8"
+                        style={{
+                          animation:
+                            order % 2 === 0
+                              ? `landing-preview-drift ${isFrontCard ? "8.5s" : "10.5s"} ease-in-out infinite`
+                              : `landing-preview-drift-alt ${isFrontCard ? "9.25s" : "11.25s"} ease-in-out infinite`,
+                          animationDelay: `${index * 0.45}s`,
+                        }}
+                      >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-center gap-3">
                             <div
