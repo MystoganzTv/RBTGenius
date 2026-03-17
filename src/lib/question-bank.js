@@ -156,7 +156,7 @@ function buildQuestionVariant(seed, index, prefixes, suffixes, prefixId) {
   };
 }
 
-export function buildPracticeQuestionBank(size = 500) {
+export function buildPracticeQuestionBank(size = 3000) {
   return Array.from({ length: size }, (_, index) =>
     buildQuestionVariant(
       baseQuestions[index % baseQuestions.length],
