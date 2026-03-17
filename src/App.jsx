@@ -69,6 +69,7 @@ function LegacyPageRenderer() {
 }
 
 function RootRoute() {
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const requestedPage = new URLSearchParams(location.search).get("page");
 
@@ -76,7 +77,7 @@ function RootRoute() {
     return <Landing />;
   }
 
-  if (PUBLIC_PAGES.has(requestedPage)) {
+  if (PUBLIC_PAGES.has(requestedPage) || isAuthenticated) {
     return <QueryPageRenderer />;
   }
 
