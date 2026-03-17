@@ -267,9 +267,9 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative min-h-[520px] overflow-hidden rounded-[2.6rem] border border-slate-200/80 bg-[radial-gradient(circle_at_top,rgba(30,94,255,0.12),transparent_34%),linear-gradient(160deg,#0f172a_0%,#111b33_58%,#14213d_100%)] px-6 py-8 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] dark:border-slate-800">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_75%_15%,rgba(45,107,255,0.16),transparent_22%),radial-gradient(circle_at_15%_80%,rgba(139,92,246,0.12),transparent_24%)]" />
-            <div className="relative min-h-[440px]">
+          <div className="relative min-h-[520px] px-2 py-6 lg:px-6">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_32%,rgba(45,107,255,0.12),transparent_24%),radial-gradient(circle_at_28%_78%,rgba(139,92,246,0.1),transparent_24%)] blur-2xl" />
+            <div className="relative mx-auto min-h-[460px] max-w-[33rem]">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, content }, index) => {
                   const order =
@@ -278,9 +278,9 @@ export default function Landing() {
                   const isFrontCard = order === 0;
 
                   const cardStyles = [
-                    "z-30 translate-y-0 rotate-[-4deg] scale-100 opacity-100 shadow-[0_40px_90px_-46px_rgba(2,6,23,0.7)]",
-                    "z-20 translate-x-5 translate-y-8 rotate-[5deg] scale-[0.96] opacity-[0.72] shadow-[0_30px_70px_-48px_rgba(2,6,23,0.55)]",
-                    "z-10 translate-x-10 translate-y-16 rotate-[-3deg] scale-[0.92] opacity-[0.48] shadow-[0_24px_60px_-52px_rgba(2,6,23,0.45)]",
+                    "z-30 translate-y-4 rotate-[-5deg] scale-100 opacity-100 shadow-[0_40px_90px_-44px_rgba(15,23,42,0.52)]",
+                    "z-20 translate-x-12 translate-y-14 rotate-[6deg] scale-[0.96] opacity-[0.42] shadow-[0_34px_80px_-52px_rgba(15,23,42,0.28)]",
+                    "z-10 translate-x-24 translate-y-24 rotate-[-4deg] scale-[0.92] opacity-[0.22] shadow-[0_28px_60px_-54px_rgba(15,23,42,0.2)]",
                   ];
 
                   return (
@@ -289,10 +289,14 @@ export default function Landing() {
                       type="button"
                       aria-label={`Show ${title} preview`}
                       onClick={() => setActivePreviewIndex(index)}
-                      className={`absolute inset-x-4 top-2 w-[calc(100%-2rem)] rounded-[2rem] border border-white/12 bg-slate-950/58 text-left text-white backdrop-blur-md transition-all ${cardStyles[order]}`}
+                      className={`absolute left-0 top-0 w-full rounded-[2.2rem] border text-left text-white transition-all ${cardStyles[order]} ${
+                        isFrontCard
+                          ? "border-slate-200/18 bg-[linear-gradient(180deg,rgba(19,32,61,0.96),rgba(12,19,39,0.96))] backdrop-blur-xl"
+                          : "border-slate-300/12 bg-[linear-gradient(180deg,rgba(23,36,68,0.42),rgba(11,19,38,0.34))] backdrop-blur-sm"
+                      }`}
                       style={{
                         transitionTimingFunction: "cubic-bezier(0.23, 1, 0.32, 1)",
-                        transitionDuration: "1800ms",
+                        transitionDuration: "1650ms",
                       }}
                     >
                       <div className="flex h-full flex-col p-6 pb-8">
@@ -304,7 +308,7 @@ export default function Landing() {
                               <Icon className="h-5 w-5" />
                             </div>
                             <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500/90">
                                 {label}
                               </p>
                               <p className="text-sm font-semibold text-white">
@@ -325,18 +329,23 @@ export default function Landing() {
                             content
                           ) : (
                             <div className="space-y-4">
-                              <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.04] p-5">
-                                <div className="h-3 w-28 rounded-full bg-white/12" />
-                                <div className="mt-4 h-10 rounded-2xl bg-white/8" />
-                                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                                  <div className="h-20 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
-                                  <div className="h-20 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
+                              <div className="rounded-[1.55rem] border border-white/8 bg-white/[0.03] p-5">
+                                <div className="flex items-center justify-between">
+                                  <div className="h-3 w-28 rounded-full bg-white/10" />
+                                  <div className="h-8 w-24 rounded-full border border-white/10 bg-white/[0.03]" />
+                                </div>
+                                <div className="mt-4 space-y-3">
+                                  <div className="h-12 rounded-[1.2rem] bg-white/[0.06]" />
+                                  <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="h-24 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
+                                    <div className="h-24 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
+                                  </div>
                                 </div>
                               </div>
                               <div className="grid gap-3 sm:grid-cols-3">
-                                <div className="h-14 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
-                                <div className="h-14 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
-                                <div className="h-14 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
+                                <div className="h-16 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
+                                <div className="h-16 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
+                                <div className="h-16 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
                               </div>
                             </div>
                           )}
@@ -347,7 +356,7 @@ export default function Landing() {
                 },
               )}
 
-              <div className="absolute bottom-3 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/12 bg-slate-950/70 px-3 py-2 shadow-sm backdrop-blur">
+              <div className="absolute bottom-0 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/12 dark:bg-slate-950/70">
                 {premiumPreviewPanels.map((panel, index) => (
                   <button
                     key={panel.title}
@@ -357,7 +366,7 @@ export default function Landing() {
                     className={`h-2.5 rounded-full transition-all ${
                       index === activePreviewIndex
                         ? "w-8 bg-[#2D6BFF]"
-                        : "w-2.5 bg-slate-600"
+                        : "w-2.5 bg-slate-300 dark:bg-slate-600"
                     }`}
                   />
                 ))}
