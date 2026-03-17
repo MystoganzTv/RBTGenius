@@ -56,6 +56,10 @@ import Analytics from "./pages/Analytics";
 import Flashcards from "./pages/Flashcards";
 import Profile from "./pages/Profile";
 import AdminMembers from "./pages/AdminMembers";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import Contact from "./pages/Contact";
 import __Layout from "./Layout.jsx";
 
 export const PAGES = {
@@ -68,6 +72,10 @@ export const PAGES = {
   Flashcards,
   Profile,
   AdminMembers,
+  TermsOfService,
+  PrivacyPolicy,
+  RefundPolicy,
+  Contact,
 };
 
 export const pagesConfig = {

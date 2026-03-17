@@ -12,6 +12,7 @@ import {
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PublicSiteFooter from "@/components/public/PublicSiteFooter";
 import { useTheme } from "@/hooks/use-theme";
 import { ACCESS_COMPARISON } from "@/lib/plan-access";
 import { useAuth } from "@/lib/AuthContext";
@@ -251,6 +252,7 @@ export default function Landing() {
           </div>
         </section>
       </main>
+      <PublicSiteFooter />
     </div>
   );
 }

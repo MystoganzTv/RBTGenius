@@ -21,7 +21,13 @@ import { pagesConfig } from "./pages.config";
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : null;
-const PUBLIC_PAGES = new Set(["Pricing"]);
+const PUBLIC_PAGES = new Set([
+  "Pricing",
+  "TermsOfService",
+  "PrivacyPolicy",
+  "RefundPolicy",
+  "Contact",
+]);
 
 function LayoutWrapper({ children, currentPageName }) {
   if (!Layout) {
@@ -46,6 +52,10 @@ function QueryPageRenderer() {
     return <PageNotFound />;
   }
 
+  if (PUBLIC_PAGES.has(pageKey)) {
+    return <PageComponent />;
+  }
+
   return (
     <LayoutWrapper currentPageName={pageKey}>
       <PageComponent />
@@ -59,6 +69,10 @@ function LegacyPageRenderer() {
 
   if (!PageComponent) {
     return <PageNotFound />;
+  }
+
+  if (PUBLIC_PAGES.has(pageName)) {
+    return <PageComponent />;
   }
 
   return (
