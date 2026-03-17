@@ -248,6 +248,10 @@ export default function Pricing() {
               plan.id === PLAN_IDS.FREE || billing.checkout_enabled?.[plan.id];
             const loading =
               checkoutMutation.isPending && checkoutMutation.variables === plan.id;
+            const topBadgeLabel = isCurrent ? "Current" : plan.badge;
+            const topBadgeClassName = isCurrent
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300"
+              : "bg-[#1E5EFF] text-white";
 
             return (
               <div
@@ -259,28 +263,21 @@ export default function Pricing() {
                     : "border-slate-200/80 dark:border-slate-800",
                 )}
               >
-                {plan.badge ? (
-                  <div className="absolute -top-3 left-6">
-                    <Badge className="bg-[#1E5EFF] px-3 py-1 text-xs text-white">
-                      {plan.badge}
+                <div className="mb-5 h-8">
+                  {topBadgeLabel ? (
+                    <Badge
+                      variant={isCurrent ? "outline" : undefined}
+                      className={cn("px-3 py-1 text-xs", topBadgeClassName)}
+                    >
+                      {topBadgeLabel}
                     </Badge>
-                  </div>
-                ) : null}
+                  ) : null}
+                </div>
 
-                <div className="mb-6 min-h-[180px]">
-                  <div className="flex items-start justify-between gap-3">
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
-                      {plan.name}
-                    </h2>
-                    {isCurrent ? (
-                      <Badge
-                        variant="outline"
-                        className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300"
-                      >
-                        Current
-                      </Badge>
-                    ) : null}
-                  </div>
+                <div className="mb-6 min-h-[196px]">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                    {plan.name}
+                  </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
                     {plan.description}
                   </p>
@@ -295,7 +292,9 @@ export default function Pricing() {
                       <p className="mt-2 text-sm font-medium text-emerald-600 dark:text-emerald-300">
                         10% less than paying monthly for a full year
                       </p>
-                    ) : null}
+                    ) : (
+                      <p className="invisible mt-2 text-sm font-medium">Spacer copy</p>
+                    )}
                   </div>
                 </div>
 
@@ -337,13 +336,13 @@ export default function Pricing() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-5 min-h-[24px] text-sm font-medium">
+                <div className="mt-5 min-h-[48px] text-sm font-medium">
                   {isCurrent ? (
-                    <span className="text-emerald-600 dark:text-emerald-300">
+                    <span className="block text-emerald-600 dark:text-emerald-300">
                       Your current billing plan.
                     </span>
                   ) : isPremiumPlan(currentPlan) && plan.id !== currentPlan ? (
-                    <span className="text-slate-400 dark:text-slate-500">
+                    <span className="block text-slate-400 dark:text-slate-500">
                       Switch plans anytime from billing.
                     </span>
                   ) : (
