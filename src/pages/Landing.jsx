@@ -197,7 +197,7 @@ export default function Landing() {
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setActivePreviewIndex((current) => (current + 1) % premiumPreviewPanels.length);
-    }, 4200);
+    }, 5600);
 
     return () => window.clearInterval(intervalId);
   }, []);
@@ -302,9 +302,9 @@ export default function Landing() {
                   const isFrontCard = order === 0;
 
                   const cardStyles = [
-                    "z-30 translate-y-4 rotate-[-4deg] scale-100 opacity-100 shadow-[0_44px_100px_-46px_rgba(15,23,42,0.42)]",
-                    "z-20 translate-x-10 translate-y-14 rotate-[5deg] scale-[0.965] opacity-[0.54]",
-                    "z-10 translate-x-20 translate-y-24 rotate-[-3deg] scale-[0.93] opacity-[0.3]",
+                    "z-30 translate-x-0 translate-y-6 rotate-[-5deg] scale-100 opacity-100 shadow-[0_44px_100px_-46px_rgba(15,23,42,0.42)]",
+                    "z-20 translate-x-14 translate-y-2 rotate-[7deg] scale-[0.955] opacity-[0.46]",
+                    "z-10 translate-x-28 translate-y-14 rotate-[12deg] scale-[0.9] opacity-[0.2]",
                   ];
 
                   return (
@@ -323,8 +323,8 @@ export default function Landing() {
                             : "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.58),rgba(248,250,252,0.45))] text-slate-700 shadow-[0_24px_60px_-50px_rgba(15,23,42,0.14)] backdrop-blur-sm"
                       }`}
                       style={{
-                        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
-                        transitionDuration: "2150ms",
+                        transitionTimingFunction: "cubic-bezier(0.19, 1, 0.22, 1)",
+                        transitionDuration: "2800ms",
                       }}
                     >
                       <div className="flex h-full flex-col p-6 pb-8">
@@ -383,22 +383,6 @@ export default function Landing() {
                   );
                 },
               )}
-
-              <div className="absolute bottom-0 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/12 dark:bg-slate-950/70">
-                {premiumPreviewPanels.map((panel, index) => (
-                  <button
-                    key={panel.title}
-                    type="button"
-                    aria-label={`Show ${panel.title} preview`}
-                    onClick={() => setActivePreviewIndex(index)}
-                    className={`h-2.5 rounded-full transition-all ${
-                      index === activePreviewIndex
-                        ? "w-8 bg-[#2D6BFF]"
-                        : "w-2.5 bg-slate-300 dark:bg-slate-600"
-                    }`}
-                  />
-                ))}
-              </div>
             </div>
           </div>
         </section>
