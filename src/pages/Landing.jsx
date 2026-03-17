@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -6,6 +7,7 @@ import {
   Crown,
   GraduationCap,
   LayoutDashboard,
+  MessageSquareMore,
   Moon,
   Sparkles,
   Sun,
@@ -36,9 +38,96 @@ const featureCards = [
   },
 ];
 
+const premiumPreviewPanels = [
+  {
+    label: "Premium Preview",
+    title: "Smarter exam prep",
+    subtitle: "Practice, flashcards, mock exams, and AI support in one place.",
+    accentClassName:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+    Icon: Brain,
+    content: (
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+          <p className="text-3xl font-black text-slate-900 dark:text-slate-50">3000</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">practice questions</p>
+        </div>
+        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
+          <p className="text-3xl font-black text-slate-900 dark:text-slate-50">85</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">question mock exams</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: "Premium Preview",
+    title: "Mock exam confidence",
+    subtitle: "Timed exams with clearer signals on whether you are ready to test.",
+    accentClassName:
+      "bg-[#1E5EFF]/10 text-[#1E5EFF] dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]",
+    Icon: ClipboardCheck,
+    content: (
+      <div className="mt-6 rounded-[1.4rem] bg-white p-5 shadow-sm dark:bg-slate-950">
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-semibold text-slate-900 dark:text-slate-100">Average mock score</span>
+          <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+            Keep practicing
+          </span>
+        </div>
+        <div className="mt-5">
+          <div className="h-4 rounded-full bg-slate-100 p-1 dark:bg-slate-900">
+            <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-500" />
+          </div>
+          <div className="mt-3 flex items-end justify-between">
+            <div>
+              <p className="text-4xl font-black text-slate-900 dark:text-slate-50">212</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">scaled average score</p>
+            </div>
+            <div className="text-right text-sm text-slate-500 dark:text-slate-400">
+              <p>6 mock exams taken</p>
+              <p>2 passed, 4 to review</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    label: "Premium Preview",
+    title: "Ask the AI coach",
+    subtitle: "Get quick explanations, study prompts, and targeted help when you get stuck.",
+    accentClassName:
+      "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+    Icon: MessageSquareMore,
+    content: (
+      <div className="mt-6 space-y-3 rounded-[1.4rem] bg-white p-5 shadow-sm dark:bg-slate-950">
+        <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-slate-100 px-4 py-3 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+          Why is differential reinforcement better than just saying “no”?
+        </div>
+        <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-[#1E5EFF] px-4 py-3 text-sm text-white">
+          Because it teaches what to do instead, not only what to stop. That makes the replacement behavior easier to reinforce consistently.
+        </div>
+        <div className="flex items-center gap-2 pt-2 text-xs font-medium text-slate-400 dark:text-slate-500">
+          <span className="h-2 w-2 rounded-full bg-emerald-400" />
+          Unlimited premium AI support
+        </div>
+      </div>
+    ),
+  },
+];
+
 export default function Landing() {
   const { isDark, toggleTheme } = useTheme();
   const { isAuthenticated } = useAuth();
+  const [activePreviewIndex, setActivePreviewIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setActivePreviewIndex((current) => (current + 1) % premiumPreviewPanels.length);
+    }, 4200);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-foreground dark:bg-background">
@@ -130,30 +219,73 @@ export default function Landing() {
           </div>
 
           <div className="rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950">
-            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                  <Brain className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Smarter exam prep
-                  </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Practice, flashcards, mock exams, and AI support in one place.
-                  </p>
-                </div>
+            <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+              <div
+                className="flex transition-transform duration-1000"
+                style={{
+                  transform: `translateX(-${activePreviewIndex * 100}%)`,
+                  transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
+              >
+                {premiumPreviewPanels.map(
+                  ({ label, title, subtitle, accentClassName, Icon, content }) => (
+                    <div key={title} className="w-full flex-shrink-0 p-6">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentClassName}`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+                              {label}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                              {title}
+                            </p>
+                            <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+                              {subtitle}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="hidden items-center gap-1.5 md:flex">
+                          {premiumPreviewPanels.map((panel, index) => (
+                            <button
+                              key={panel.title}
+                              type="button"
+                              aria-label={`Show ${panel.title} preview`}
+                              onClick={() => setActivePreviewIndex(index)}
+                              className={`h-2.5 rounded-full transition-all ${
+                                index === activePreviewIndex
+                                  ? "w-8 bg-[#1E5EFF]"
+                                  : "w-2.5 bg-slate-300 dark:bg-slate-700"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="min-h-[242px]">{content}</div>
+                    </div>
+                  ),
+                )}
               </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
-                  <p className="text-3xl font-black text-slate-900 dark:text-slate-50">3000</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">practice questions</p>
-                </div>
-                <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
-                  <p className="text-3xl font-black text-slate-900 dark:text-slate-50">85</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">question mock exams</p>
-                </div>
+              <div className="flex items-center justify-center gap-1.5 border-t border-slate-200/80 px-6 py-4 md:hidden dark:border-slate-800">
+                {premiumPreviewPanels.map((panel, index) => (
+                  <button
+                    key={panel.title}
+                    type="button"
+                    aria-label={`Show ${panel.title} preview`}
+                    onClick={() => setActivePreviewIndex(index)}
+                    className={`h-2.5 rounded-full transition-all ${
+                      index === activePreviewIndex
+                        ? "w-8 bg-[#1E5EFF]"
+                        : "w-2.5 bg-slate-300 dark:bg-slate-700"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </div>
