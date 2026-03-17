@@ -1,4 +1,4 @@
-import { topicLabels } from "./question-bank.js";
+import { TOTAL_PRACTICE_QUESTIONS, topicLabels } from "./question-bank.js";
 
 export const DEMO_USER_ID = "user-demo";
 
@@ -35,27 +35,16 @@ function formatUniqueStudyDays(attempts) {
   }
 
   const sorted = [...dateKeys].sort((left, right) => (left < right ? 1 : -1));
-  let streak = 0;
-  let cursor = new Date();
-  cursor.setHours(0, 0, 0, 0);
+  let consecutiveDays = 1;
+  let cursor = new Date(`${sorted[0]}T00:00:00`);
 
-  for (const dateKey of sorted) {
-    const currentKey = cursor.toISOString().slice(0, 10);
-    if (dateKey === currentKey) {
-      streak += 1;
-      cursor.setDate(cursor.getDate() - 1);
-      continue;
-    }
-
-    if (streak === 0) {
-      break;
-    }
-
+  for (const dateKey of sorted.slice(1)) {
     const expectedPrevious = new Date(cursor);
-    expectedPrevious.setDate(expectedPrevious.getDate() + 1);
+    expectedPrevious.setDate(expectedPrevious.getDate() - 1);
+
     if (dateKey === expectedPrevious.toISOString().slice(0, 10)) {
-      streak += 1;
-      cursor.setDate(cursor.getDate() - 1);
+      consecutiveDays += 1;
+      cursor = expectedPrevious;
       continue;
     }
 
@@ -63,7 +52,7 @@ function formatUniqueStudyDays(attempts) {
   }
 
   return {
-    streak: streak || 1,
+    streak: Math.max(0, consecutiveDays - 1),
     lastStudyDate: sorted[0],
   };
 }
@@ -138,10 +127,14 @@ export function computeProgress(db, userId) {
     readinessWeights += 0.15;
   }
 
-  const readinessScore =
+  const readinessBaseScore =
     readinessWeights > 0
       ? Math.min(100, Math.round(readinessWeightedTotal / readinessWeights))
       : 0;
+  const bankCoverage = Math.min(1, totalQuestionsCompleted / TOTAL_PRACTICE_QUESTIONS);
+  const examCoverageBoost = Math.min(0.35, exams.length * 0.08);
+  const readinessCeiling = Math.min(1, bankCoverage * 3 + examCoverageBoost);
+  const readinessScore = Math.round(readinessBaseScore * readinessCeiling);
 
   const readinessConfidence =
     exams.length > 0 || totalQuestionsCompleted >= 150
@@ -162,6 +155,8 @@ export function computeProgress(db, userId) {
 
   return {
     total_questions_completed: totalQuestionsCompleted,
+    total_questions_available: TOTAL_PRACTICE_QUESTIONS,
+    bank_coverage_percent: Math.round(bankCoverage * 100),
     total_correct: totalCorrect,
     accuracy_rate: accuracyRate,
     raw_accuracy: totalAccuracy,

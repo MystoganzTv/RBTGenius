@@ -1,4 +1,5 @@
 import { MIN_DOMAIN_ATTEMPTS } from "@/lib/backend-core";
+import { PRACTICE_TOPIC_TOTALS } from "@/lib/question-bank";
 
 const domains = [
   { key: "measurement", label: "Measurement", color: "#5E7CF7" },
@@ -19,7 +20,7 @@ export default function DomainProgress({ mastery = {}, attemptCounts = {} }) {
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Domain Mastery
+            Domain Performance
           </h3>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             Scores become reliable after at least {MIN_DOMAIN_ATTEMPTS} attempts per domain.
@@ -31,13 +32,14 @@ export default function DomainProgress({ mastery = {}, attemptCounts = {} }) {
         {domains.map((domain) => {
           const value = mastery[domain.key] || 0;
           const attempts = attemptCounts[domain.key] || 0;
+          const totalAvailable = PRACTICE_TOPIC_TOTALS[domain.key] || 0;
           const hasEnoughData = attempts >= MIN_DOMAIN_ATTEMPTS;
-          const displayValue = hasEnoughData
-            ? `${value}%`
-            : `${attempts}/${MIN_DOMAIN_ATTEMPTS}`;
+          const displayValue = hasEnoughData ? `${value}%` : "Not enough data";
           const progressWidth = hasEnoughData
             ? value
-            : Math.min(100, Math.round((attempts / MIN_DOMAIN_ATTEMPTS) * 100));
+            : totalAvailable > 0
+              ? Math.min(100, Math.round((attempts / totalAvailable) * 100))
+              : 0;
 
           return (
             <div key={domain.key}>
@@ -49,6 +51,11 @@ export default function DomainProgress({ mastery = {}, attemptCounts = {} }) {
                   {displayValue}
                 </span>
               </div>
+              {!hasEnoughData ? (
+                <p className="mb-1 text-[11px] text-slate-400 dark:text-slate-500">
+                  {attempts} of {totalAvailable} answered
+                </p>
+              ) : null}
 
               <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div

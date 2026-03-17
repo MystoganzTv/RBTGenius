@@ -72,8 +72,8 @@ export default function ReadinessGauge({ score = 0, questionCount = 0, examCount
         </span>
         <p className="mt-1 text-center text-xs text-slate-400 dark:text-slate-500">
           {hasStrongSignal
-            ? "Based on your practice performance"
-            : "Answer more questions for a more reliable readiness score"}
+            ? "Coverage-adjusted from your 3000-question bank"
+            : "Early estimate based on very limited bank coverage"}
         </p>
       </div>
     </div>

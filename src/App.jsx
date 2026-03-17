@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
   BrowserRouter as Router,
+  Navigate,
   Route,
   Routes,
   useLocation,
@@ -13,6 +14,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import PageNotFound from "@/lib/PageNotFound";
 import { queryClientInstance } from "@/lib/query-client";
+import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import { pagesConfig } from "./pages.config";
 
@@ -65,21 +67,60 @@ function LegacyPageRenderer() {
   );
 }
 
+function RootRoute() {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const requestedPage = new URLSearchParams(location.search).get("page");
+
+  if (!isAuthenticated) {
+    if (requestedPage) {
+      return (
+        <Navigate
+          to={`/login?redirectTo=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`}
+          replace
+        />
+      );
+    }
+
+    return <Landing />;
+  }
+
+  return <QueryPageRenderer />;
+}
+
+function ProtectedLegacyRoute() {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to={`/login?redirectTo=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`}
+        replace
+      />
+    );
+  }
+
+  return <LegacyPageRenderer />;
+}
+
 function AuthenticatedApp() {
   const {
     isLoadingAuth,
     isLoadingPublicSettings,
     authError,
     navigateToLogin,
+    isAuthenticated,
   } = useAuth();
   const location = useLocation();
   const isLoginRoute = location.pathname === "/login";
+  const isLandingRoute = location.pathname === "/" && !new URLSearchParams(location.search).get("page");
 
   useEffect(() => {
-    if (authError?.type === "auth_required" && !isLoginRoute) {
+    if (authError?.type === "auth_required" && !isLoginRoute && !isLandingRoute) {
       navigateToLogin();
     }
-  }, [authError?.type, isLoginRoute, navigateToLogin]);
+  }, [authError?.type, isLandingRoute, isLoginRoute, navigateToLogin]);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -93,15 +134,15 @@ function AuthenticatedApp() {
     return <UserNotRegisteredError />;
   }
 
-  if (authError?.type === "auth_required" && !isLoginRoute) {
+  if (authError?.type === "auth_required" && !isLoginRoute && !isLandingRoute && !isAuthenticated) {
     return null;
   }
 
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<QueryPageRenderer />} />
-      <Route path="/:pageName" element={<LegacyPageRenderer />} />
+      <Route path="/" element={<RootRoute />} />
+      <Route path="/:pageName" element={<ProtectedLegacyRoute />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

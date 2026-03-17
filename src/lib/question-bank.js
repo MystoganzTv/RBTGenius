@@ -7,6 +7,7 @@ export const topicLabels = {
   professional_conduct: "Professional Conduct",
 };
 
+export const TOTAL_PRACTICE_QUESTIONS = 3000;
 const PRACTICE_BANK_COUNT = 10;
 
 export const practiceBankOptions = Array.from(
@@ -21,6 +22,11 @@ export const practiceBankOptions = Array.from(
     };
   },
 );
+
+export const PRACTICE_TOPIC_TOTALS = Object.keys(topicLabels).reduce((result, key) => {
+  result[key] = 0;
+  return result;
+}, {});
 
 export const baseQuestions = [
   {
@@ -114,6 +120,13 @@ export const baseQuestions = [
     ],
   },
 ];
+
+for (let index = 0; index < TOTAL_PRACTICE_QUESTIONS; index += 1) {
+  const topic = baseQuestions[index % baseQuestions.length]?.topic;
+  if (topic) {
+    PRACTICE_TOPIC_TOTALS[topic] += 1;
+  }
+}
 
 const practiceScenarioPrefixes = [
   "During a clinic session,",
@@ -256,7 +269,7 @@ function buildQuestionVariant(
   };
 }
 
-export function buildPracticeQuestionBank(size = 3000, seed = "practice-default") {
+export function buildPracticeQuestionBank(size = TOTAL_PRACTICE_QUESTIONS, seed = "practice-default") {
   const generatedQuestions = Array.from({ length: size }, (_, index) =>
     buildQuestionVariant(
       baseQuestions[index % baseQuestions.length],

@@ -65,9 +65,13 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = useMemo(() => getRedirectPath(location.search), [location.search]);
+  const initialMode = useMemo(() => {
+    const searchParams = new URLSearchParams(location.search);
+    return searchParams.get("mode") === "register" ? "register" : "login";
+  }, [location.search]);
   const { user, isAuthenticated, login } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("login");
+  const [activeTab, setActiveTab] = useState(initialMode);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
     full_name: "",
@@ -114,6 +118,10 @@ export default function Login() {
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, navigate, redirectPath, user]);
+
+  useEffect(() => {
+    setActiveTab(initialMode);
+  }, [initialMode]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);

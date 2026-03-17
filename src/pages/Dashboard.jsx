@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   Brain,
-  Clock3,
+  BookOpenCheck,
   Flame,
   HelpCircle,
   Target,
@@ -83,10 +83,14 @@ export default function Dashboard() {
   const exams = data?.exams || [];
 
   const totalQuestions = progress?.total_questions_completed || 0;
+  const totalQuestionsAvailable =
+    progress?.total_questions_available || allQuestions.length || 3000;
+  const bankCoverage = progress?.bank_coverage_percent || 0;
   const accuracy = progress?.accuracy_rate || 0;
   const recentAccuracy = progress?.recent_accuracy || 0;
   const streak = progress?.study_streak_days || 0;
   const readiness = progress?.readiness_score || 0;
+  const questionsToday = progress?.questions_today || 0;
   const studyHours = progress?.study_hours || 0;
   const mockExamsTaken = progress?.total_mock_exams || exams.length || 0;
 
@@ -125,13 +129,20 @@ export default function Dashboard() {
             </h1>
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-500 dark:text-slate-300">
               {totalQuestions < 20 && exams.length === 0
-                ? `Your readiness score is still an early estimate. Keep practicing to make it more reliable.`
-                : `Exam readiness at ${readiness}% based on your overall progress and recent performance.`}
+                ? `You have covered ${bankCoverage}% of the full bank so far. Readiness will become more meaningful as coverage grows.`
+                : `Exam readiness at ${readiness}% based on your overall progress, accuracy, and bank coverage.`}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <div className="rounded-full border border-[#1E5EFF]/20 bg-[#1E5EFF]/10 px-5 py-3 text-base font-semibold text-[#1E5EFF] dark:border-[#1E5EFF]/30 dark:bg-[#1E5EFF]/15 dark:text-[#8EB0FF]">
-                Study streak {streak} days
+                {streak > 0
+                  ? `Study streak ${streak} days`
+                  : questionsToday > 0
+                    ? "First day in progress"
+                    : "Start your streak"}
+              </div>
+              <div className="rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+                {totalQuestions}/{totalQuestionsAvailable} answered
               </div>
               <div className={`rounded-full border px-5 py-3 text-base font-semibold ${activePlan.className}`}>
                 {activePlan.label}
@@ -152,38 +163,48 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Questions Done"
-          value={totalQuestions}
-          subtitle="Total completed"
+          title="Questions Answered"
+          value={`${totalQuestions}/${totalQuestionsAvailable}`}
+          subtitle="Across the full question bank"
           icon={HelpCircle}
           color="blue"
         />
         <StatCard
-          title="Accuracy Rate"
+          title="Answered Accuracy"
           value={`${accuracy}%`}
-          subtitle={totalQuestions > 0 ? `Recent form ${recentAccuracy}%` : "Overall accuracy"}
+          subtitle={
+            totalQuestions > 0
+              ? `${progress?.total_correct || 0} correct out of ${totalQuestions} answered`
+              : "No answered questions yet"
+          }
           icon={Target}
           color="green"
         />
         <StatCard
-          title="Study Streak"
-          value={`${streak} days`}
-          subtitle="Keep it going!"
-          icon={Flame}
-          color="gold"
+          title="Bank Coverage"
+          value={`${bankCoverage}%`}
+          subtitle={`${recentAccuracy}% recent form`}
+          icon={BookOpenCheck}
+          color="purple"
         />
         <StatCard
-          title="Study Hours"
-          value={`${studyHours}h`}
-          subtitle={`${mockExamsTaken} mock exams taken`}
-          icon={Clock3}
-          color="purple"
+          title="Study Streak"
+          value={streak > 0 ? `${streak} days` : questionsToday > 0 ? "Started" : "0 days"}
+          subtitle={
+            streak > 0
+              ? "Consecutive return days"
+              : questionsToday > 0
+                ? "Come back tomorrow to start your streak"
+                : "No streak yet"
+          }
+          icon={Flame}
+          color="gold"
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <StreakCard streak={streak} />
+          <StreakCard streak={streak} questionsToday={questionsToday} />
           <DomainProgress
             mastery={progress?.domain_mastery || {}}
             attemptCounts={progress?.domain_attempt_counts || {}}
@@ -276,29 +297,25 @@ export default function Dashboard() {
                   Questions Completed
                 </span>
                 <span className="text-sm font-semibold text-[#1E5EFF]">
-                  {totalQuestions}/{allQuestions.length}
+                  {totalQuestions}/{totalQuestionsAvailable}
                 </span>
               </div>
               <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-[#1E5EFF] to-[#6366F1] transition-all"
-                  style={{ width: `${completionRate}%` }}
+                  style={{ width: `${bankCoverage}%` }}
                 />
               </div>
               <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Pass Rate Needed</span>
-                <span className="text-sm font-semibold text-emerald-600">
-                  80%
+                <span className="text-xs text-slate-500 dark:text-slate-400">Mock Exams Taken</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {mockExamsTaken}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Your Current</span>
-                <span
-                  className={`text-sm font-semibold ${
-                    accuracy >= 80 ? "text-emerald-600" : "text-amber-600"
-                  }`}
-                >
-                  {accuracy}%
+                <span className="text-xs text-slate-500 dark:text-slate-400">Study Hours</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {studyHours}h
                 </span>
               </div>
             </div>

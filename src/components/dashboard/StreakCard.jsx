@@ -1,9 +1,12 @@
 import { Flame } from "lucide-react";
 
-export default function StreakCard({ streak = 0 }) {
+export default function StreakCard({ streak = 0, questionsToday = 0 }) {
   const days = ["M", "T", "W", "T", "F", "S", "S"];
   const today = new Date().getDay();
   const adjustedToday = today === 0 ? 6 : today - 1;
+  const hasStudiedToday = questionsToday > 0;
+  const streakLabel =
+    streak > 0 ? `${streak} days` : hasStudiedToday ? "Started today" : "No streak yet";
 
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
@@ -12,16 +15,18 @@ export default function StreakCard({ streak = 0 }) {
         <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 dark:border-slate-800 dark:bg-slate-900">
           <Flame className="h-3.5 w-3.5 text-orange-500 dark:text-orange-300" />
           <span className="text-xs font-bold text-orange-600 dark:text-orange-300">
-            {streak} days
+            {streakLabel}
           </span>
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-1">
         {days.map((day, index) => {
-          const isCompleted =
-            index <= adjustedToday && index >= adjustedToday - streak + 1;
-          const isToday = index === adjustedToday;
+          const distanceBack = (adjustedToday - index + 7) % 7;
+          const isToday = distanceBack === 0;
+          const isCompleted = hasStudiedToday
+            ? distanceBack >= 1 && distanceBack <= streak
+            : streak > 0 && distanceBack <= streak;
 
           return (
             <div key={`${day}-${index}`} className="flex flex-col items-center gap-2">
