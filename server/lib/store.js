@@ -53,20 +53,22 @@ export function getUserFromToken(token) {
   return db.users.find((user) => user.token === token) || null;
 }
 
-export function getQuestionBank(mode = "practice") {
+export function getQuestionBank(mode = "practice", options = {}) {
+  const { seed } = options;
+
   if (mode === "flashcards") {
-    return buildFlashcardBank();
+    return buildFlashcardBank(300, seed);
   }
 
   if (mode === "mock") {
-    return buildMockExamQuestionSet();
+    return buildMockExamQuestionSet(85, null, seed);
   }
 
   if (mode === "base") {
     return baseQuestions;
   }
 
-  return buildPracticeQuestionBank();
+  return buildPracticeQuestionBank(3000, seed);
 }
 
 export { computeProgress };

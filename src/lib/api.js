@@ -132,6 +132,15 @@ export const api = {
       body: payload,
     });
   },
+  listAdminMembers() {
+    return request("/api/admin/members");
+  },
+  updateAdminMember(memberId, payload) {
+    return request(`/api/admin/members/${memberId}`, {
+      method: "PATCH",
+      body: payload,
+    });
+  },
   listTutorConversations() {
     return request("/api/ai-tutor/conversations");
   },

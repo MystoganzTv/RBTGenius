@@ -91,7 +91,7 @@ export default function TopBar({
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
             <Link to={createPageUrl("Profile")}>
               <DropdownMenuItem className="rounded-lg">
-                <User className="mr-2 h-4 w-4" /> Perfil
+                <User className="mr-2 h-4 w-4" /> Profile
               </DropdownMenuItem>
             </Link>
             <Link to={createPageUrl("Pricing")}>
@@ -104,7 +104,7 @@ export default function TopBar({
               className="rounded-lg text-red-500"
               onClick={onLogout}
             >
-              <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesion
+              <LogOut className="mr-2 h-4 w-4" /> Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -2,6 +2,12 @@ import { defaultUser } from "../../src/lib/backend-core.js";
 import { DEMO_CREDENTIALS, createSessionToken, hashPassword } from "./auth.js";
 
 const LEGACY_DEMO_EMAIL = "alex.carter@example.com";
+export const ADMIN_EMAILS = ["enrique.padron853@gmail.com"];
+
+export function resolveUserRole(email, fallbackRole = "student") {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  return ADMIN_EMAILS.includes(normalizedEmail) ? "admin" : fallbackRole;
+}
 
 function buildSeedUser() {
   const credentials = hashPassword(DEMO_CREDENTIALS.password);
@@ -50,7 +56,7 @@ export function normalizeDb(db) {
                 id: defaultUser.id,
                 full_name: defaultUser.full_name,
                 email: defaultUser.email,
-                role: user.role || defaultUser.role,
+                role: resolveUserRole(user.email, user.role || defaultUser.role),
                 plan: user.plan || defaultUser.plan,
               }
             : user;
@@ -58,6 +64,7 @@ export function normalizeDb(db) {
           if (normalizedUser.password_hash && normalizedUser.password_salt) {
             return {
               ...normalizedUser,
+              role: resolveUserRole(normalizedUser.email, normalizedUser.role || "student"),
               auth_provider: normalizedUser.auth_provider || "password",
               oauth_accounts:
                 normalizedUser.oauth_accounts && typeof normalizedUser.oauth_accounts === "object"
@@ -69,6 +76,7 @@ export function normalizeDb(db) {
           const credentials = hashPassword(DEMO_CREDENTIALS.password);
           return {
             ...normalizedUser,
+            role: resolveUserRole(normalizedUser.email, normalizedUser.role || "student"),
             auth_provider: normalizedUser.auth_provider || "password",
             oauth_accounts:
               normalizedUser.oauth_accounts && typeof normalizedUser.oauth_accounts === "object"

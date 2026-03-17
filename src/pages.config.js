@@ -55,6 +55,7 @@ import Pricing from "./pages/Pricing";
 import Analytics from "./pages/Analytics";
 import Flashcards from "./pages/Flashcards";
 import Profile from "./pages/Profile";
+import AdminMembers from "./pages/AdminMembers";
 import __Layout from "./Layout.jsx";
 
 export const PAGES = {
@@ -66,6 +67,7 @@ export const PAGES = {
   Analytics,
   Flashcards,
   Profile,
+  AdminMembers,
 };
 
 export const pagesConfig = {

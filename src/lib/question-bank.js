@@ -7,6 +7,21 @@ export const topicLabels = {
   professional_conduct: "Professional Conduct",
 };
 
+const PRACTICE_BANK_COUNT = 10;
+
+export const practiceBankOptions = Array.from(
+  { length: PRACTICE_BANK_COUNT },
+  (_, index) => {
+    const bankNumber = index + 1;
+    const padded = String(bankNumber).padStart(2, "0");
+
+    return {
+      id: `bank-${padded}`,
+      label: `Bank ${padded}`,
+    };
+  },
+);
+
 export const baseQuestions = [
   {
     id: "q1",
@@ -142,33 +157,122 @@ const flashcardScenarioSuffixes = [
   "Pick the response that best supports treatment integrity.",
 ];
 
-function buildQuestionVariant(seed, index, prefixes, suffixes, prefixId) {
-  const prefix = prefixes[index % prefixes.length];
-  const suffix = suffixes[index % suffixes.length];
+function hashString(value) {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
+}
+
+function createRandom(seedValue) {
+  let seed = hashString(String(seedValue)) || 1;
+
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let result = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    result ^= result + Math.imul(result ^ (result >>> 7), 61 | result);
+    return ((result ^ (result >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleWithRandom(items, random) {
+  const nextItems = [...items];
+
+  for (let index = nextItems.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [nextItems[index], nextItems[swapIndex]] = [nextItems[swapIndex], nextItems[index]];
+  }
+
+  return nextItems;
+}
+
+function randomItem(items, random) {
+  return items[Math.floor(random() * items.length)];
+}
+
+function getPracticeBankMeta(index) {
+  const option = practiceBankOptions[index % practiceBankOptions.length];
+
+  return {
+    bank_id: option.id,
+    bank_label: option.label,
+    group_id: option.id,
+    group_label: option.label,
+  };
+}
+
+function remixOptions(options, correctAnswer, variantKey) {
+  const random = createRandom(`options:${variantKey}`);
+  const shuffled = shuffleWithRandom(options, random);
+  const answerLabels = ["A", "B", "C", "D"];
+  let nextCorrectAnswer = correctAnswer;
+
+  const nextOptions = shuffled.map((option, index) => {
+    const relabeledOption = {
+      ...option,
+      label: answerLabels[index],
+    };
+
+    if (option.label === correctAnswer) {
+      nextCorrectAnswer = relabeledOption.label;
+    }
+
+    return relabeledOption;
+  });
+
+  return {
+    options: nextOptions,
+    correct_answer: nextCorrectAnswer,
+  };
+}
+
+function buildQuestionVariant(
+  seed,
+  index,
+  prefixes,
+  suffixes,
+  prefixId,
+  metadata = {},
+) {
+  const variantKey = `${prefixId}:${seed.id}:${index + 1}`;
+  const textRandom = createRandom(`text:${variantKey}`);
+  const prefix = randomItem(prefixes, textRandom);
+  const suffix = randomItem(suffixes, textRandom);
   const variantNumber = index + 1;
+  const remixed = remixOptions(seed.options, seed.correct_answer, variantKey);
 
   return {
     ...seed,
+    ...remixed,
+    ...metadata,
     id: `${prefixId}_${seed.id}_${variantNumber}`,
     text: `${prefix} ${seed.text} ${suffix}`,
     original_id: seed.id,
   };
 }
 
-export function buildPracticeQuestionBank(size = 3000) {
-  return Array.from({ length: size }, (_, index) =>
+export function buildPracticeQuestionBank(size = 3000, seed = "practice-default") {
+  const generatedQuestions = Array.from({ length: size }, (_, index) =>
     buildQuestionVariant(
       baseQuestions[index % baseQuestions.length],
       index,
       practiceScenarioPrefixes,
       practiceScenarioSuffixes,
       "practice",
+      getPracticeBankMeta(index),
     ),
   );
+
+  return shuffleWithRandom(generatedQuestions, createRandom(`practice-order:${seed}:${size}`));
 }
 
-export function buildFlashcardBank(size = 300) {
-  return Array.from({ length: size }, (_, index) =>
+export function buildFlashcardBank(size = 300, seed = "flashcards-default") {
+  const generatedCards = Array.from({ length: size }, (_, index) =>
     buildQuestionVariant(
       baseQuestions[index % baseQuestions.length],
       index,
@@ -177,21 +281,64 @@ export function buildFlashcardBank(size = 300) {
       "flashcard",
     ),
   );
+
+  return shuffleWithRandom(generatedCards, createRandom(`flashcards-order:${seed}:${size}`));
 }
 
-export function buildMockExamQuestionSet(size = 85, sourceQuestions = null) {
+export function buildMockExamQuestionSet(
+  size = 85,
+  sourceQuestions = null,
+  seed = `mock-${Date.now()}`,
+) {
   const pool =
     Array.isArray(sourceQuestions) && sourceQuestions.length > 0
       ? sourceQuestions
-      : buildPracticeQuestionBank();
+      : buildPracticeQuestionBank(3000, `${seed}:source`);
 
-  return Array.from({ length: size }, (_, index) => {
-    const question = pool[index % pool.length];
+  const bankMap = new Map();
 
-    return {
-      ...question,
-      id: `${question.id}_mock_${index + 1}`,
-      original_id: question.original_id || question.id,
-    };
+  pool.forEach((question) => {
+    const bankId = question.bank_id || "bank-01";
+    const bankQuestions = bankMap.get(bankId) || [];
+    bankQuestions.push(question);
+    bankMap.set(bankId, bankQuestions);
   });
+
+  const bankIds = shuffleWithRandom([...bankMap.keys()], createRandom(`mock-banks:${seed}`));
+  const shuffledBanks = new Map(
+    [...bankMap.entries()].map(([bankId, bankQuestions]) => [
+      bankId,
+      shuffleWithRandom(bankQuestions, createRandom(`mock-bank:${seed}:${bankId}`)),
+    ]),
+  );
+
+  const selectedQuestions = [];
+  let cursor = 0;
+
+  while (selectedQuestions.length < size && bankIds.length > 0) {
+    const bankId = bankIds[cursor % bankIds.length];
+    const bankQuestions = shuffledBanks.get(bankId) || [];
+
+    if (bankQuestions.length > 0) {
+      selectedQuestions.push(bankQuestions.shift());
+      shuffledBanks.set(bankId, bankQuestions);
+    }
+
+    if (shuffledBanks.get(bankId)?.length === 0) {
+      const bankIndex = bankIds.indexOf(bankId);
+      if (bankIndex >= 0) {
+        bankIds.splice(bankIndex, 1);
+      }
+      cursor = 0;
+      continue;
+    }
+
+    cursor += 1;
+  }
+
+  return selectedQuestions.map((question, index) => ({
+    ...question,
+    id: `${question.id}_mock_${index + 1}`,
+    original_id: question.original_id || question.id,
+  }));
 }

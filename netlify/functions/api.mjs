@@ -20,7 +20,7 @@ import {
   normalizeOrigin,
   normalizeRedirectPath,
 } from "../../server/lib/oauth.js";
-import { buildSeedDb, normalizeDb } from "../../server/lib/seed.js";
+import { buildSeedDb, normalizeDb, resolveUserRole } from "../../server/lib/seed.js";
 
 const store = getStore("rbt-genius-data");
 
@@ -63,31 +63,35 @@ async function updateDb(updater) {
   return writeDb(next);
 }
 
-function getQuestionBank(mode = "practice") {
+function getQuestionBank(mode = "practice", options = {}) {
+  const { seed } = options;
+
   if (mode === "flashcards") {
-    return buildFlashcardBank();
+    return buildFlashcardBank(300, seed);
   }
 
   if (mode === "mock") {
-    return buildMockExamQuestionSet();
+    return buildMockExamQuestionSet(85, null, seed);
   }
 
   if (mode === "base") {
     return baseQuestions;
   }
 
-  return buildPracticeQuestionBank();
+  return buildPracticeQuestionBank(3000, seed);
 }
 
 function applyQuestionFilters(questions, searchParams) {
   const topic = searchParams.get("topic") || "all";
   const difficulty = searchParams.get("difficulty") || "all";
+  const bank = searchParams.get("bank") || "all";
   const limit = Number(searchParams.get("limit") || 0);
 
   const filtered = questions.filter((question) => {
     const topicMatch = topic === "all" || question.topic === topic;
     const difficultyMatch = difficulty === "all" || question.difficulty === difficulty;
-    return topicMatch && difficultyMatch;
+    const bankMatch = bank === "all" || question.bank_id === bank;
+    return topicMatch && difficultyMatch && bankMatch;
   });
 
   return limit > 0 ? filtered.slice(0, limit) : filtered;
@@ -190,6 +194,7 @@ async function upsertOAuthUser(profile, providerId) {
             ...user,
             full_name: user.full_name || profile.name,
             token: sessionToken,
+            role: resolveUserRole(user.email, user.role || "student"),
             auth_provider: user.auth_provider || providerId,
             oauth_accounts: {
               ...(user.oauth_accounts || {}),
@@ -209,7 +214,7 @@ async function upsertOAuthUser(profile, providerId) {
             id: createId("user"),
             full_name: profile.name,
             email: profile.email,
-            role: "student",
+            role: resolveUserRole(profile.email),
             plan: "free",
             token: sessionToken,
             auth_provider: providerId,
@@ -272,6 +277,21 @@ async function requireUser(request) {
   }
 
   return { user };
+}
+
+async function requireAdmin(request) {
+  const auth = await requireUser(request);
+  if (auth.error) {
+    return auth;
+  }
+
+  if (auth.user?.role !== "admin") {
+    return {
+      error: json({ message: "Admin access required" }, { status: 403 }),
+    };
+  }
+
+  return auth;
 }
 
 function getApiPath(url) {
@@ -447,7 +467,7 @@ export default async (request) => {
       id: createId("user"),
       full_name: fullName,
       email,
-      role: "student",
+      role: resolveUserRole(email),
       plan: "free",
       token: createSessionToken(),
       auth_provider: "password",
@@ -492,6 +512,7 @@ export default async (request) => {
 
         updatedUser = {
           ...entry,
+          role: resolveUserRole(entry.email, entry.role || "student"),
           token: nextToken,
         };
         return updatedUser;
@@ -533,7 +554,7 @@ export default async (request) => {
 
   if (apiPath === "/questions" && request.method === "GET") {
     const mode = url.searchParams.get("mode") || "practice";
-    const questions = getQuestionBank(mode);
+    const questions = getQuestionBank(mode, { seed: url.searchParams.get("seed") });
     return json(applyQuestionFilters(questions, url.searchParams));
   }
 
@@ -711,7 +732,8 @@ export default async (request) => {
         updatedUser = {
           ...user,
           full_name: updates.full_name ?? user.full_name,
-          plan: updates.plan ?? user.plan,
+          role: resolveUserRole(user.email, user.role || "student"),
+          plan: user.plan,
         };
         return updatedUser;
       }),
@@ -720,6 +742,85 @@ export default async (request) => {
     const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
       updatedUser;
     return json(safeUser);
+  }
+
+  if (apiPath === "/admin/members" && request.method === "GET") {
+    const auth = await requireAdmin(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    const db = await readDb();
+    const members = db.users.map((user) => {
+      const progress = computeProgress(db, user.id);
+      const attemptsCount = db.attempts.filter((attempt) => attempt.user_id === user.id).length;
+      const examsCount = db.mockExams.filter((exam) => exam.user_id === user.id).length;
+
+      return {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        role: resolveUserRole(user.email, user.role || "student"),
+        plan: user.plan || "free",
+        study_streak_days: progress.study_streak_days,
+        readiness_score: progress.readiness_score,
+        total_questions_completed: progress.total_questions_completed,
+        attempts_count: attemptsCount,
+        exams_count: examsCount,
+        last_study_date: progress.last_study_date,
+      };
+    });
+
+    return json(members);
+  }
+
+  if (/^\/admin\/members\/[^/]+$/.test(apiPath) && request.method === "PATCH") {
+    const auth = await requireAdmin(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    const memberId = apiPath.split("/")[3];
+    const updates = await request.json();
+    let updatedUser = null;
+
+    await updateDb((current) => ({
+      ...current,
+      users: current.users.map((user) => {
+        if (user.id !== memberId) {
+          return user;
+        }
+
+        updatedUser = {
+          ...user,
+          full_name: updates.full_name ?? user.full_name,
+          role: resolveUserRole(
+            user.email,
+            updates.role === "admin" || updates.role === "student" ? updates.role : user.role,
+          ),
+          plan:
+            updates.plan === "premium_monthly" ||
+            updates.plan === "premium_yearly" ||
+            updates.plan === "free"
+              ? updates.plan
+              : user.plan,
+        };
+
+        return updatedUser;
+      }),
+    }));
+
+    if (!updatedUser) {
+      return json({ message: "Member not found" }, { status: 404 });
+    }
+
+    return json({
+      id: updatedUser.id,
+      full_name: updatedUser.full_name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      plan: updatedUser.plan,
+    });
   }
 
   if (apiPath === "/ai-tutor/conversations" && request.method === "GET") {

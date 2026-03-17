@@ -26,7 +26,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
-import { topicLabels } from "@/lib/question-bank";
+import { practiceBankOptions, topicLabels } from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
 
 const reviewFilters = [
@@ -63,10 +63,6 @@ function matchesReviewFilter(question, responses, reviewFilter) {
   }
 
   return true;
-}
-
-async function loadPracticeQuestions() {
-  return api.listQuestions({ mode: "practice" });
 }
 
 async function storeAttempt(attempt) {
@@ -167,8 +163,10 @@ function QuestionNavigator({
 export default function Practice() {
   const [topicFilter, setTopicFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [bankFilter, setBankFilter] = useState("all");
   const [reviewFilter, setReviewFilter] = useState("all");
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
+  const [questionSeed, setQuestionSeed] = useState(null);
   const [responses, setResponses] = useState({});
   const [started, setStarted] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
@@ -176,10 +174,14 @@ export default function Practice() {
   const queryClient = useQueryClient();
 
   const { data: allQuestions = [], isLoading } = useQuery({
-    queryKey: ["practice-questions"],
-    queryFn: loadPracticeQuestions,
+    queryKey: ["practice-questions", questionSeed],
+    queryFn: () =>
+      api.listQuestions({
+        mode: "practice",
+        seed: questionSeed,
+      }),
     initialData: [],
-    enabled: started,
+    enabled: started && Boolean(questionSeed),
   });
 
   const attemptMutation = useMutation({
@@ -202,10 +204,11 @@ export default function Practice() {
           topicFilter === "all" || question.topic === topicFilter;
         const difficultyMatch =
           difficultyFilter === "all" || question.difficulty === difficultyFilter;
+        const bankMatch = bankFilter === "all" || question.bank_id === bankFilter;
 
-        return topicMatch && difficultyMatch;
+        return topicMatch && difficultyMatch && bankMatch;
       }),
-    [allQuestions, difficultyFilter, topicFilter],
+    [allQuestions, bankFilter, difficultyFilter, topicFilter],
   );
 
   const questions = useMemo(
@@ -253,8 +256,10 @@ export default function Practice() {
     if (savedSession) {
       setTopicFilter(savedSession.topicFilter || "all");
       setDifficultyFilter(savedSession.difficultyFilter || "all");
+      setBankFilter(savedSession.bankFilter || "all");
       setReviewFilter(savedSession.reviewFilter || "all");
       setCurrentQuestionId(savedSession.currentQuestionId || null);
+      setQuestionSeed(savedSession.questionSeed || null);
       setResponses(savedSession.responses || {});
       setStarted(Boolean(savedSession.started));
     }
@@ -271,13 +276,17 @@ export default function Practice() {
       started,
       topicFilter,
       difficultyFilter,
+      bankFilter,
       reviewFilter,
+      questionSeed,
       currentQuestionId,
       responses,
     });
   }, [
+    bankFilter,
     currentQuestionId,
     difficultyFilter,
+    questionSeed,
     responses,
     reviewFilter,
     sessionHydrated,
@@ -298,6 +307,7 @@ export default function Practice() {
   const resetSessionState = () => {
     setResponses({});
     setCurrentQuestionId(null);
+    setQuestionSeed(null);
     setReviewFilter("all");
     queryClient.setQueryData(["practice-session"], null);
     api.clearPracticeSession();
@@ -305,6 +315,7 @@ export default function Practice() {
 
   const startSession = () => {
     resetSessionState();
+    setQuestionSeed(`practice_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
     setStarted(true);
   };
 
@@ -395,7 +406,7 @@ export default function Practice() {
         </div>
 
         <div className="space-y-6 rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-800 dark:bg-slate-950">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Topic
@@ -409,6 +420,25 @@ export default function Practice() {
                   {Object.entries(topicLabels).map(([key, label]) => (
                     <SelectItem key={key} value={key}>
                       {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Question Bank
+              </label>
+              <Select value={bankFilter} onValueChange={setBankFilter}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="All Banks" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Banks</SelectItem>
+                  {practiceBankOptions.map((bank) => (
+                    <SelectItem key={bank.id} value={bank.id}>
+                      {bank.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -437,7 +467,7 @@ export default function Practice() {
           </div>
 
           <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700 dark:text-slate-200">
-            Your practice session now runs against the server-backed question bank.
+            Your practice session now runs against a 3,000-question randomized bank with grouped practice pools.
           </div>
 
           <Button
@@ -584,6 +614,14 @@ export default function Practice() {
               <Flag className="h-4 w-4 text-amber-500" />
               <span className="text-sm text-slate-500 dark:text-slate-400">
                 {flaggedCount} flagged
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                {bankFilter === "all"
+                  ? `${practiceBankOptions.length} banks`
+                  : practiceBankOptions.find((bank) => bank.id === bankFilter)?.label ||
+                    bankFilter}
               </span>
             </div>
           </div>

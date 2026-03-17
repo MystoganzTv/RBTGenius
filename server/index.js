@@ -14,6 +14,7 @@ import {
   normalizeOrigin,
   normalizeRedirectPath,
 } from "./lib/oauth.js";
+import { resolveUserRole } from "./lib/seed.js";
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
@@ -67,15 +68,28 @@ function requireUser(req, res, next) {
   next();
 }
 
+function requireAdmin(req, res, next) {
+  requireUser(req, res, () => {
+    if (req.currentUser?.role !== "admin") {
+      res.status(403).json({ message: "Admin access required" });
+      return;
+    }
+
+    next();
+  });
+}
+
 function applyQuestionFilters(questions, query) {
   const topic = query.topic || "all";
   const difficulty = query.difficulty || "all";
+  const bank = query.bank || "all";
   const limit = Number(query.limit || 0);
 
   const filtered = questions.filter((question) => {
     const topicMatch = topic === "all" || question.topic === topic;
     const difficultyMatch = difficulty === "all" || question.difficulty === difficulty;
-    return topicMatch && difficultyMatch;
+    const bankMatch = bank === "all" || question.bank_id === bank;
+    return topicMatch && difficultyMatch && bankMatch;
   });
 
   if (limit > 0) {
@@ -186,6 +200,7 @@ function upsertOAuthUser(profile, providerId) {
             ...user,
             full_name: user.full_name || profile.name,
             token: sessionToken,
+            role: resolveUserRole(user.email, user.role || "student"),
             auth_provider: user.auth_provider || providerId,
             oauth_accounts: {
               ...(user.oauth_accounts || {}),
@@ -205,7 +220,7 @@ function upsertOAuthUser(profile, providerId) {
             id: createId("user"),
             full_name: profile.name,
             email: profile.email,
-            role: "student",
+            role: resolveUserRole(profile.email),
             plan: "free",
             token: sessionToken,
             auth_provider: providerId,
@@ -373,7 +388,7 @@ app.post("/api/auth/register", (req, res) => {
     id: createId("user"),
     full_name: fullName,
     email,
-    role: "student",
+    role: resolveUserRole(email),
     plan: "free",
     token: createSessionToken(),
     auth_provider: "password",
@@ -416,11 +431,12 @@ app.post("/api/auth/login", (req, res) => {
         return entry;
       }
 
-      updatedUser = {
-        ...entry,
-        token: nextToken,
-      };
-      return updatedUser;
+        updatedUser = {
+          ...entry,
+          role: resolveUserRole(entry.email, entry.role || "student"),
+          token: nextToken,
+        };
+        return updatedUser;
     }),
   }));
 
@@ -449,7 +465,7 @@ app.post("/api/auth/logout", requireUser, (req, res) => {
 
 app.get("/api/questions", (req, res) => {
   const mode = req.query.mode || "practice";
-  const questions = getQuestionBank(mode);
+  const questions = getQuestionBank(mode, { seed: req.query.seed });
   res.json(applyQuestionFilters(questions, req.query));
 });
 
@@ -569,17 +585,88 @@ app.patch("/api/profile", requireUser, (req, res) => {
         return user;
       }
 
-      updatedUser = {
-        ...user,
-        full_name: updates.full_name ?? user.full_name,
-        plan: updates.plan ?? user.plan,
-      };
+        updatedUser = {
+          ...user,
+          full_name: updates.full_name ?? user.full_name,
+          role: resolveUserRole(user.email, user.role || "student"),
+          plan: user.plan,
+        };
       return updatedUser;
     }),
   }));
 
   const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = updatedUser;
   res.json(safeUser);
+});
+
+app.get("/api/admin/members", requireAdmin, (req, res) => {
+  const db = readDb();
+  const members = db.users.map((user) => {
+    const progress = computeProgress(db, user.id);
+    const attemptsCount = db.attempts.filter((attempt) => attempt.user_id === user.id).length;
+    const examsCount = db.mockExams.filter((exam) => exam.user_id === user.id).length;
+
+    return {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      role: resolveUserRole(user.email, user.role || "student"),
+      plan: user.plan || "free",
+      study_streak_days: progress.study_streak_days,
+      readiness_score: progress.readiness_score,
+      total_questions_completed: progress.total_questions_completed,
+      attempts_count: attemptsCount,
+      exams_count: examsCount,
+      last_study_date: progress.last_study_date,
+    };
+  });
+
+  res.json(members);
+});
+
+app.patch("/api/admin/members/:memberId", requireAdmin, (req, res) => {
+  const { memberId } = req.params;
+  const updates = req.body || {};
+  let updatedUser = null;
+
+  updateDb((current) => ({
+    ...current,
+    users: current.users.map((user) => {
+      if (user.id !== memberId) {
+        return user;
+      }
+
+      updatedUser = {
+        ...user,
+        full_name: updates.full_name ?? user.full_name,
+        role: resolveUserRole(
+          user.email,
+          updates.role === "admin" || updates.role === "student" ? updates.role : user.role,
+        ),
+        plan:
+          updates.plan === "premium_monthly" ||
+          updates.plan === "premium_yearly" ||
+          updates.plan === "free"
+            ? updates.plan
+            : user.plan,
+      };
+
+      return updatedUser;
+    }),
+  }));
+
+  if (!updatedUser) {
+    res.status(404).json({ message: "Member not found" });
+    return;
+  }
+
+  res.json({
+    id: updatedUser.id,
+    full_name: updatedUser.full_name,
+    email: updatedUser.email,
+    role: updatedUser.role,
+    plan: updatedUser.plan,
+  });
 });
 
 app.get("/api/ai-tutor/conversations", requireUser, (req, res) => {

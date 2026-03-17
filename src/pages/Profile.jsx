@@ -52,12 +52,12 @@ const planInfo = {
     badgeClass: "bg-slate-100 text-slate-700",
   },
   premium_monthly: {
-    name: "Premium Mensual",
+    name: "Premium Monthly",
     icon: Crown,
     badgeClass: "bg-blue-100 text-blue-700",
   },
   premium_yearly: {
-    name: "Premium Anual",
+    name: "Premium Yearly",
     icon: Crown,
     badgeClass: "bg-violet-100 text-violet-700",
   },
@@ -65,30 +65,30 @@ const planInfo = {
 
 function formatPaymentDate(value) {
   if (!value) {
-    return "Pendiente";
+    return "Pending";
   }
 
   try {
-    return new Intl.DateTimeFormat("es-ES", {
-      day: "2-digit",
+    return new Intl.DateTimeFormat("en-US", {
+      day: "numeric",
       month: "short",
       year: "numeric",
     }).format(new Date(value));
   } catch {
-    return "Pendiente";
+    return "Pending";
   }
 }
 
 function getNextBillingLabel(plan) {
   if (plan === "premium_yearly") {
-    return "15 mar 2027";
+    return "Mar 15, 2027";
   }
 
   if (plan === "premium_monthly") {
-    return "15 abr 2026";
+    return "Apr 15, 2026";
   }
 
-  return "Sin renovación";
+  return "No renewal scheduled";
 }
 
 export default function Profile() {
@@ -158,18 +158,18 @@ export default function Profile() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#0F172A]">Mi Perfil</h1>
+          <h1 className="text-2xl font-bold text-[#0F172A]">My Profile</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Gestiona tu cuenta y membresia.
+            Manage your account and membership.
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="profile">Perfil</TabsTrigger>
-          <TabsTrigger value="subscription">Membresia</TabsTrigger>
-          <TabsTrigger value="payments">Pagos</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="subscription">Membership</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -183,7 +183,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-[#0F172A]">
-                    {currentUser?.full_name || "Usuario"}
+                    {currentUser?.full_name || "User"}
                   </h2>
                   <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
                     <Mail className="h-3 w-3" />
@@ -201,7 +201,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-slate-700">
-                  Nombre Completo
+                  Full Name
                 </label>
                 {editMode ? (
                   <Input
@@ -213,7 +213,7 @@ export default function Profile() {
                   />
                 ) : (
                   <p className="mt-1 text-slate-600">
-                    {currentUser?.full_name || "No especificado"}
+                    {currentUser?.full_name || "Not provided"}
                   </p>
                 )}
               </div>
@@ -224,10 +224,10 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700">Rol</label>
+                <label className="text-sm font-medium text-slate-700">Role</label>
                 <p className="mt-1 flex items-center gap-2 text-slate-600">
                   <Shield className="h-4 w-4" />
-                  {currentUser?.role === "admin" ? "Administrador" : "Usuario"}
+                  {currentUser?.role === "admin" ? "Administrator" : "User"}
                 </p>
               </div>
 
@@ -241,15 +241,15 @@ export default function Profile() {
                       }
                       className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
                     >
-                      Guardar Cambios
+                      Save Changes
                     </Button>
                     <Button onClick={() => setEditMode(false)} variant="outline">
-                      Cancelar
+                      Cancel
                     </Button>
                   </div>
                 ) : (
                   <Button onClick={() => setEditMode(true)} variant="outline">
-                    Editar Perfil
+                    Edit Profile
                   </Button>
                 )}
               </div>
@@ -258,19 +258,19 @@ export default function Profile() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500">Preguntas Completadas</p>
+              <p className="mb-1 text-xs text-slate-500">Questions Completed</p>
               <p className="text-2xl font-bold text-[#0F172A]">
                 {progress?.total_questions_completed || 0}
               </p>
             </Card>
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500">Racha de Estudio</p>
+              <p className="mb-1 text-xs text-slate-500">Study Streak</p>
               <p className="text-2xl font-bold text-[#FFB800]">
-                {progress?.study_streak_days || 0} dias
+                {progress?.study_streak_days || 0} days
               </p>
             </Card>
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500">Horas de Estudio</p>
+              <p className="mb-1 text-xs text-slate-500">Study Hours</p>
               <p className="text-2xl font-bold text-[#1E5EFF]">
                 {progress?.study_hours || 0}h
               </p>
@@ -283,9 +283,9 @@ export default function Profile() {
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <h3 className="mb-1 text-lg font-bold text-[#0F172A]">
-                  Plan Actual
+                  Current Plan
                 </h3>
-                <p className="text-sm text-slate-500">Gestiona tu membresia</p>
+                <p className="text-sm text-slate-500">Manage your membership</p>
               </div>
               <Badge className="px-3 py-1 text-sm bg-[#1E5EFF]/10 text-[#1E5EFF]">
                 {currentPlan.name}
@@ -296,42 +296,42 @@ export default function Profile() {
               <div className="py-8 text-center">
                 <Crown className="mx-auto mb-4 h-16 w-16 text-[#FFB800]" />
                 <h4 className="mb-2 text-xl font-bold text-[#0F172A]">
-                  Mejora a Premium
+                  Upgrade to Premium
                 </h4>
                 <p className="mb-6 text-slate-600">
-                  Desbloquea todas las funciones y accede a 500+ preguntas.
+                  Unlock every feature and get access to 500+ practice questions.
                 </p>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
-                      Ver Planes Premium
+                      View Premium Plans
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Selecciona tu Plan</DialogTitle>
+                      <DialogTitle>Choose Your Plan</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <PricingOption
-                        title="Premium Mensual"
+                        title="Premium Monthly"
                         price="$19.99"
-                        period="mes"
+                        period="month"
                         features={[
-                          "500+ preguntas",
-                          "Flashcards ilimitados",
-                          "Examenes simulados",
-                          "AI Tutor avanzado",
+                          "500+ practice questions",
+                          "Unlimited flashcards",
+                          "Mock exams",
+                          "Advanced AI tutor",
                         ]}
                       />
                       <PricingOption
-                        title="Premium Anual"
+                        title="Premium Yearly"
                         price="$149.99"
-                        period="ano"
-                        savings="Ahorra $90"
+                        period="year"
+                        savings="Save $90"
                         features={[
-                          "Todo de Premium Mensual",
-                          "Actualizaciones continuas",
-                          "Soporte prioritario",
+                          "Everything in Premium Monthly",
+                          "Continuous updates",
+                          "Priority support",
                         ]}
                         recommended
                       />
@@ -345,21 +345,21 @@ export default function Profile() {
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium text-emerald-900">
-                      Membresia Activa
+                      Active Membership
                     </span>
                   </div>
-                  <Badge className="bg-emerald-600 text-white">Activo</Badge>
+                  <Badge className="bg-emerald-600 text-white">Active</Badge>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-lg bg-slate-50 p-4">
-                    <p className="mb-1 text-xs text-slate-500">Proximo Pago</p>
+                    <p className="mb-1 text-xs text-slate-500">Next Payment</p>
                     <p className="text-sm font-semibold text-slate-700">
                       {getNextBillingLabel(progress?.plan)}
                     </p>
                   </div>
                   <div className="rounded-lg bg-slate-50 p-4">
-                    <p className="mb-1 text-xs text-slate-500">Monto</p>
+                    <p className="mb-1 text-xs text-slate-500">Amount</p>
                     <p className="text-sm font-semibold text-slate-700">
                       {progress?.plan === "premium_monthly" ? "$19.99" : "$149.99"}
                     </p>
@@ -367,7 +367,7 @@ export default function Profile() {
                 </div>
 
                 <Button variant="outline" className="w-full">
-                  Cancelar Membresia
+                  Cancel Membership
                 </Button>
               </div>
             )}
@@ -377,13 +377,13 @@ export default function Profile() {
         <TabsContent value="payments" className="space-y-6">
           <Card className="p-6">
             <h3 className="mb-4 text-lg font-bold text-[#0F172A]">
-              Historial de Pagos
+              Payment History
             </h3>
 
             {sortedPayments.length === 0 ? (
               <div className="py-12 text-center">
                 <CreditCard className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-                <p className="text-slate-500">No hay pagos registrados.</p>
+                <p className="text-slate-500">No payments recorded.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -414,8 +414,8 @@ export default function Profile() {
                       <div>
                         <p className="font-medium text-[#0F172A]">
                           {payment.plan === "premium_monthly"
-                            ? "Premium Mensual"
-                            : "Premium Anual"}
+                            ? "Premium Monthly"
+                            : "Premium Yearly"}
                         </p>
                         <p className="flex items-center gap-1 text-xs text-slate-500">
                           <Calendar className="h-3 w-3" />
@@ -430,10 +430,10 @@ export default function Profile() {
                         className="text-xs"
                       >
                         {payment.status === "completed"
-                          ? "Completado"
+                          ? "Completed"
                           : payment.status === "pending"
-                            ? "Pendiente"
-                            : "Fallido"}
+                            ? "Pending"
+                            : "Failed"}
                       </Badge>
                     </div>
                   </div>
@@ -463,7 +463,7 @@ function PricingOption({
       )}
     >
       {recommended && (
-        <Badge className="mb-3 bg-[#FFB800] text-white">Recomendado</Badge>
+        <Badge className="mb-3 bg-[#FFB800] text-white">Recommended</Badge>
       )}
       <h4 className="mb-1 text-lg font-bold text-[#0F172A]">{title}</h4>
       <div className="mb-4 flex items-baseline gap-1">
@@ -489,7 +489,7 @@ function PricingOption({
           recommended && "bg-[#1E5EFF] hover:bg-[#1E5EFF]/90",
         )}
       >
-        Seleccionar Plan
+        Select Plan
       </Button>
     </div>
   );

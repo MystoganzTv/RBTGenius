@@ -181,7 +181,7 @@ export default function Flashcards() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#1E5EFF] border-t-transparent" />
-          <p className="text-slate-500">Cargando flashcards...</p>
+          <p className="text-slate-500">Loading flashcards...</p>
         </div>
       </div>
     );
@@ -195,17 +195,17 @@ export default function Flashcards() {
             Flashcards Game 🎴
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Repasa conceptos del RBT con tarjetas interactivas.
+            Review RBT concepts with interactive flashcards.
           </p>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleShuffle} variant="outline" className="gap-2">
             <Shuffle className="h-4 w-4" />
-            Mezclar
+            Shuffle
           </Button>
           <Button onClick={handleReset} variant="outline" className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            Reiniciar
+            Reset
           </Button>
         </div>
       </div>
@@ -214,7 +214,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Total Tarjetas</p>
+              <p className="text-xs text-slate-500">Total Cards</p>
               <p className="text-2xl font-bold text-slate-900">
                 {allQuestions.length}
               </p>
@@ -225,7 +225,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Dominadas</p>
+              <p className="text-xs text-slate-500">Mastered</p>
               <p className="text-2xl font-bold text-emerald-600">
                 {masteredCards.length}
               </p>
@@ -236,7 +236,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Sesión Actual</p>
+              <p className="text-xs text-slate-500">Current Session</p>
               <p className="text-2xl font-bold text-[#1E5EFF]">
                 {sessionStats.correct}
               </p>
@@ -247,7 +247,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Para Revisar</p>
+              <p className="text-xs text-slate-500">Need Review</p>
               <p className="text-2xl font-bold text-amber-600">
                 {reviewCards.length}
               </p>
@@ -260,7 +260,7 @@ export default function Flashcards() {
       <Card className="p-4">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-slate-700">
-            Progreso Total
+            Overall Progress
           </span>
           <span className="text-sm font-bold text-[#1E5EFF]">
             {Math.round(progress)}%
@@ -273,15 +273,15 @@ export default function Flashcards() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700">Filtros:</span>
+            <span className="text-sm font-medium text-slate-700">Filters:</span>
           </div>
 
           <Select value={filterTopic} onValueChange={setFilterTopic}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="Tema" />
+              <SelectValue placeholder="Topic" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los temas</SelectItem>
+              <SelectItem value="all">All Topics</SelectItem>
               <SelectItem value="measurement">Measurement</SelectItem>
               <SelectItem value="assessment">Assessment</SelectItem>
               <SelectItem value="skill_acquisition">Skill Acquisition</SelectItem>
@@ -295,10 +295,10 @@ export default function Flashcards() {
 
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Dificultad" />
+              <SelectValue placeholder="Difficulty" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
+              <SelectItem value="all">All</SelectItem>
               <SelectItem value="beginner">Beginner</SelectItem>
               <SelectItem value="intermediate">Intermediate</SelectItem>
               <SelectItem value="advanced">Advanced</SelectItem>
@@ -312,7 +312,7 @@ export default function Flashcards() {
           <div className="w-full max-w-2xl">
             <div className="mb-4 flex items-center justify-between">
               <Badge variant="outline" className="text-xs">
-                Tarjeta {currentIndex + 1} de {filteredQuestions.length}
+                Card {currentIndex + 1} of {filteredQuestions.length}
               </Badge>
               <div className="flex gap-2">
                 <Badge className="bg-[#1E5EFF]/10 text-[#1E5EFF]">
@@ -334,13 +334,13 @@ export default function Flashcards() {
                 <Card className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1E5EFF] to-[#6366F1] p-8 text-white [backface-visibility:hidden]">
                   <div ref={frontContentRef} className="text-center">
                     <p className="mb-4 text-xs uppercase tracking-wider opacity-80">
-                      Pregunta
+                      Question
                     </p>
                     <h2 className="text-2xl font-bold leading-relaxed">
                       {currentCard.text}
                     </h2>
                     <p className="mt-8 text-xs opacity-60">
-                      Click para ver la respuesta
+                      Click to view the answer
                     </p>
                   </div>
                 </Card>
@@ -352,7 +352,7 @@ export default function Flashcards() {
                   <div className="flex h-full flex-col justify-between pr-1">
                     <div ref={backContentRef}>
                       <p className="mb-4 text-xs uppercase tracking-wider text-[#1E5EFF]">
-                        Respuesta Correcta
+                        Correct Answer
                       </p>
                       <div className="mb-6 space-y-3">
                         {currentCard.options?.map((option) => (
@@ -373,7 +373,7 @@ export default function Flashcards() {
                       {currentCard.explanation ? (
                         <div className="rounded-lg bg-blue-50 p-4 dark:bg-slate-900">
                           <p className="mb-1 text-xs font-semibold text-[#1E5EFF]">
-                            Explicación:
+                            Explanation:
                           </p>
                           <p className="text-sm text-slate-700 dark:text-slate-200">
                             {currentCard.explanation}
@@ -394,7 +394,7 @@ export default function Flashcards() {
                 className="gap-2 border-amber-200 hover:border-amber-300 hover:bg-amber-50"
               >
                 <ThumbsDown className="h-5 w-5 text-amber-600" />
-                Necesito Repasar
+                Need Review
               </Button>
               <Button
                 onClick={handleMastered}
@@ -402,7 +402,7 @@ export default function Flashcards() {
                 className="gap-2 bg-emerald-600 hover:bg-emerald-700"
               >
                 <ThumbsUp className="h-5 w-5" />
-                ¡La Domino!
+                Mastered!
               </Button>
             </div>
           </div>
@@ -411,16 +411,16 @@ export default function Flashcards() {
         <Card className="p-12 text-center">
           <Trophy className="mx-auto mb-4 h-16 w-16 text-[#FFB800]" />
           <h2 className="mb-2 text-2xl font-bold text-slate-900">
-            ¡Felicidades!
+            Congratulations!
           </h2>
           <p className="mb-6 text-slate-600">
-            Has completado todas las tarjetas con estos filtros.
+            You have completed every card for these filters.
           </p>
           <Button
             onClick={handleReset}
             className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
           >
-            Comenzar Nueva Sesión
+            Start New Session
           </Button>
         </Card>
       )}

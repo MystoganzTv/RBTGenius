@@ -18,9 +18,6 @@ import { cn } from "@/lib/utils";
 const TOTAL_QUESTIONS = 85;
 const EXAM_DURATION_MINUTES = 90;
 const PASS_SCORE = 80;
-async function loadMockExamQuestions() {
-  return api.listQuestions({ mode: "mock", limit: TOTAL_QUESTIONS });
-}
 
 async function saveMockExamResult(result) {
   return api.createMockExam(result);
@@ -32,13 +29,19 @@ export default function MockExams() {
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(EXAM_DURATION_MINUTES * 60);
   const [examResult, setExamResult] = useState(null);
+  const [examSeed, setExamSeed] = useState(null);
   const queryClient = useQueryClient();
   const finishExamRef = useRef(null);
 
   const { data: questions = [], isLoading } = useQuery({
-    queryKey: ["mock-exam-questions"],
-    queryFn: loadMockExamQuestions,
-    enabled: examState === "in_progress",
+    queryKey: ["mock-exam-questions", examSeed],
+    queryFn: () =>
+      api.listQuestions({
+        mode: "mock",
+        limit: TOTAL_QUESTIONS,
+        seed: examSeed,
+      }),
+    enabled: examState === "in_progress" && Boolean(examSeed),
   });
 
   const saveMutation = useMutation({
@@ -49,6 +52,7 @@ export default function MockExams() {
   });
 
   const handleStartExam = () => {
+    setExamSeed(`mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
     setExamState("in_progress");
     setCurrentIndex(0);
     setAnswers({});

@@ -45,6 +45,11 @@ export default function QuestionCard({
           <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
             Question {questionNumber} of {totalQuestions}
           </span>
+          {question?.bank_label ? (
+            <Badge variant="outline" className="text-[10px]">
+              {question.bank_label}
+            </Badge>
+          ) : null}
           <Badge
             variant="secondary"
             className="border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 text-[10px] text-[#1E5EFF]"

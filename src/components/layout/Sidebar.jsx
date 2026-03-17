@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  Shield,
   BarChart3,
   Bot,
   ChevronLeft,
@@ -25,7 +26,11 @@ const navItems = [
   { name: "Pricing", icon: CreditCard, page: "Pricing" },
 ];
 
-export default function Sidebar({ currentPage, isAdmin: _isAdmin }) {
+const adminItems = [
+  { name: "Members", icon: Shield, page: "AdminMembers", badge: "ADMIN" },
+];
+
+export default function Sidebar({ currentPage, isAdmin = false }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -103,6 +108,55 @@ export default function Sidebar({ currentPage, isAdmin: _isAdmin }) {
             </Link>
           );
         })}
+
+        {isAdmin ? (
+          <>
+            <div
+              className={cn(
+                "mb-2 mt-5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500",
+                collapsed ? "text-center" : "px-3",
+              )}
+            >
+              {collapsed ? "•" : "Admin"}
+            </div>
+
+            {adminItems.map((item) => {
+              const isActive = currentPage === item.page;
+
+              return (
+                <Link
+                  key={item.page}
+                  to={createPageUrl(item.page)}
+                  className={cn(
+                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-[#1E5EFF]/8 text-[#1E5EFF]"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100",
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      "h-[18px] w-[18px] flex-shrink-0",
+                      isActive && "text-[#1E5EFF]",
+                    )}
+                  />
+
+                  {!collapsed ? <span>{item.name}</span> : null}
+
+                  {!collapsed && item.badge ? (
+                    <span className="ml-auto rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white dark:bg-slate-100 dark:text-slate-900">
+                      {item.badge}
+                    </span>
+                  ) : null}
+
+                  {isActive ? (
+                    <div className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[#1E5EFF]" />
+                  ) : null}
+                </Link>
+              );
+            })}
+          </>
+        ) : null}
       </nav>
 
       <div className="border-t border-slate-100 p-3 dark:border-slate-800">
