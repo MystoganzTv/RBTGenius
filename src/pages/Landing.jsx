@@ -454,12 +454,29 @@ export default function Landing() {
                         </div>
                       </div>
                       <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
-                        Moving
+                        Passing
                       </span>
                     </div>
 
-                    <div className="mt-4 flex-1">
-                      {outgoingPanel.renderContent(isDark)}
+                    <div className="mt-4 flex-1 space-y-4">
+                      <div className={`rounded-[1.55rem] border p-5 ${isDark ? "border-white/8 bg-white/[0.025]" : "border-slate-200/80 bg-white/70"}`}>
+                        <div className="flex items-center justify-between">
+                          <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+                          <div className={`h-8 w-24 rounded-full border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                        </div>
+                        <div className="mt-4 space-y-3">
+                          <div className={`h-12 rounded-[1.2rem] ${isDark ? "bg-white/[0.05]" : "bg-slate-100"}`} />
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                            <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                        <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                        <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                      </div>
                     </div>
                   </div>
                 </div>
