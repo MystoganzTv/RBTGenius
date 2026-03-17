@@ -62,6 +62,10 @@ function getActionLabel(planId, currentPlan, isAuthenticated) {
     return isAuthenticated ? "Keep Free Plan" : "Create Free Account";
   }
 
+  if (!isAuthenticated) {
+    return "Log In to Upgrade";
+  }
+
   if (currentPlan === planId) {
     return "Current Plan";
   }
@@ -157,7 +161,7 @@ export default function Pricing() {
     }
 
     if (!isAuthenticated) {
-      navigate(`/login?mode=register&redirectTo=${encodeURIComponent(createPageUrl("Pricing"))}`);
+      navigate(`/login?redirectTo=${encodeURIComponent(createPageUrl("Pricing"))}`);
       return;
     }
 
@@ -259,6 +263,11 @@ export default function Pricing() {
                     <span className="ml-2 text-sm text-slate-400 dark:text-slate-500">
                       {plan.period}
                     </span>
+                    {plan.id === PLAN_IDS.PREMIUM_YEARLY ? (
+                      <p className="mt-2 text-sm font-medium text-emerald-600 dark:text-emerald-300">
+                        10% less than paying monthly for a full year
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 

@@ -22,6 +22,7 @@ import { createPageUrl } from "@/utils";
 const emptyProgress = {
   total_questions_completed: 0,
   total_correct: 0,
+  bank_accuracy: 0,
   accuracy_rate: 0,
   raw_accuracy: 0,
   recent_accuracy: 0,
@@ -47,6 +48,9 @@ const emptyProgress = {
   },
   questions_today: 0,
   total_mock_exams: 0,
+  passed_mock_exams: 0,
+  failed_mock_exams: 0,
+  average_mock_exam_score: 0,
 };
 
 const planStyles = {
@@ -86,13 +90,16 @@ export default function Dashboard() {
   const totalQuestionsAvailable =
     progress?.total_questions_available || allQuestions.length || 3000;
   const bankCoverage = progress?.bank_coverage_percent || 0;
-  const accuracy = progress?.raw_accuracy || 0;
-  const recentAccuracy = progress?.recent_accuracy || 0;
+  const answeredAccuracy = progress?.raw_accuracy || 0;
+  const bankAccuracy = progress?.bank_accuracy || 0;
   const streak = progress?.study_streak_days || 0;
   const readiness = progress?.readiness_score || 0;
   const questionsToday = progress?.questions_today || 0;
   const studyHours = progress?.study_hours || 0;
   const mockExamsTaken = progress?.total_mock_exams || exams.length || 0;
+  const passedMockExams = progress?.passed_mock_exams || 0;
+  const failedMockExams = progress?.failed_mock_exams || 0;
+  const averageMockExamScore = progress?.average_mock_exam_score || 0;
 
   const firstName =
     user?.full_name?.split(" ")[0] || user?.name?.split(" ")[0] || null;
@@ -102,14 +109,11 @@ export default function Dashboard() {
   const badges = [
     { emoji: "🔥", label: "Streak 3", unlocked: streak >= 3 },
     { emoji: "🎯", label: "100 Qs", unlocked: totalQuestions >= 100 },
-    { emoji: "⭐", label: "80% Acc", unlocked: accuracy >= 80 },
+    { emoji: "⭐", label: "80% Acc", unlocked: answeredAccuracy >= 80 },
     { emoji: "📚", label: "200 Qs", unlocked: totalQuestions >= 200 },
-    { emoji: "🏆", label: "Ready", unlocked: readiness >= 80 },
+    { emoji: "🏆", label: "Ready", unlocked: readiness >= 80 || passedMockExams > 0 },
     { emoji: "🧠", label: "Mastery", unlocked: readiness >= 90 },
   ];
-
-  const completionRate =
-    allQuestions.length > 0 ? (totalQuestions / allQuestions.length) * 100 : 0;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -130,7 +134,7 @@ export default function Dashboard() {
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-500 dark:text-slate-300">
               {totalQuestions < 20 && exams.length === 0
                 ? `You have covered ${bankCoverage}% of the full bank so far. Readiness will become more meaningful as coverage grows.`
-                : `Exam readiness at ${readiness}% based on your overall progress, accuracy, and bank coverage.`}
+                : `Exam readiness at ${readiness}% based on your overall progress, mock exam history, and bank coverage.`}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -170,14 +174,12 @@ export default function Dashboard() {
           color="blue"
         />
         <StatCard
-          title="Answered Accuracy"
-          value={`${accuracy}%`}
+          title="Bank Accuracy"
+          value={`${bankAccuracy}%`}
           subtitle={
             totalQuestions > 0
-              ? totalQuestions < 25
-                ? `${progress?.total_correct || 0} correct out of ${totalQuestions} answered · early sample`
-                : `${progress?.total_correct || 0} correct out of ${totalQuestions} answered`
-              : "No answered questions yet"
+              ? `${progress?.total_correct || 0} correct out of ${totalQuestionsAvailable} total bank questions`
+              : "No bank progress yet"
           }
           icon={Target}
           color="green"
@@ -185,7 +187,7 @@ export default function Dashboard() {
         <StatCard
           title="Bank Coverage"
           value={`${bankCoverage}%`}
-          subtitle={`${recentAccuracy}% recent form`}
+          subtitle={`${totalQuestions} answered so far`}
           icon={BookOpenCheck}
           color="purple"
         />
@@ -264,7 +266,80 @@ export default function Dashboard() {
             score={readiness}
             questionCount={totalQuestions}
             examCount={exams.length}
+            averageExamScore={averageMockExamScore}
           />
+
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Mock Exam Signal
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                  Mock Exams Taken
+                </p>
+                <p className="mt-3 text-4xl font-black text-slate-900 dark:text-slate-50">
+                  {mockExamsTaken}
+                </p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  {mockExamsTaken > 0
+                    ? "Use mock exam results as your strongest exam-readiness signal."
+                    : "Take your first mock exam to unlock a stronger readiness signal."}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                  Average Mock Score
+                </p>
+                <p className="mt-3 text-4xl font-black text-slate-900 dark:text-slate-50">
+                  {mockExamsTaken > 0 ? `${averageMockExamScore}%` : "--"}
+                </p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  {mockExamsTaken > 0
+                    ? averageMockExamScore >= 80
+                      ? "You are performing in a ready-to-test range."
+                      : "Keep practicing before scheduling the real exam."
+                    : "Your readiness recommendation will improve once you have at least one mock exam."}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                  Mock Exams Passed
+                </p>
+                <p className="mt-3 text-4xl font-black text-emerald-600 dark:text-emerald-300">
+                  {passedMockExams}
+                </p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  Scores at or above 80% count as a passed mock exam.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                  Current Recommendation
+                </p>
+                <p
+                  className={`mt-3 text-2xl font-black ${
+                    mockExamsTaken === 0
+                      ? "text-amber-500 dark:text-amber-300"
+                      : averageMockExamScore >= 80
+                        ? "text-emerald-600 dark:text-emerald-300"
+                        : "text-rose-500 dark:text-rose-300"
+                  }`}
+                >
+                  {mockExamsTaken === 0
+                    ? "Take a mock exam"
+                    : averageMockExamScore >= 80
+                      ? "Ready for the exam"
+                      : "Need more mock practice"}
+                </p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  {mockExamsTaken === 0
+                    ? "Mock exams matter more than small practice samples for final readiness."
+                    : `${failedMockExams} mock exam${failedMockExams === 1 ? "" : "s"} below the target score so far.`}
+                </p>
+              </div>
+            </div>
+          </div>
 
           <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -312,6 +387,12 @@ export default function Dashboard() {
                 <span className="text-xs text-slate-500 dark:text-slate-400">Mock Exams Taken</span>
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {mockExamsTaken}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Answered Accuracy</span>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {answeredAccuracy}%
                 </span>
               </div>
               <div className="flex items-center justify-between">

@@ -97,6 +97,8 @@ export function computeProgress(db, userId) {
           exams.reduce((total, exam) => total + (exam.score || 0), 0) / exams.length,
         )
       : 0;
+  const passedMockExams = exams.filter((exam) => (exam.score || 0) >= 80).length;
+  const failedMockExams = Math.max(0, exams.length - passedMockExams);
 
   const stableDomainKeys = Object.keys(topicLabels).filter(
     (key) => domainAttemptCounts[key] >= MIN_DOMAIN_ATTEMPTS,
@@ -132,6 +134,10 @@ export function computeProgress(db, userId) {
       ? Math.min(100, Math.round(readinessWeightedTotal / readinessWeights))
       : 0;
   const bankCoverage = Math.min(1, totalQuestionsCompleted / TOTAL_PRACTICE_QUESTIONS);
+  const bankAccuracy =
+    TOTAL_PRACTICE_QUESTIONS > 0
+      ? Number(((totalCorrect / TOTAL_PRACTICE_QUESTIONS) * 100).toFixed(1))
+      : 0;
   const examCoverageBoost = Math.min(0.35, exams.length * 0.08);
   const readinessCeiling = Math.min(1, bankCoverage * 3 + examCoverageBoost);
   const readinessScore = Math.round(readinessBaseScore * readinessCeiling);
@@ -158,6 +164,7 @@ export function computeProgress(db, userId) {
     total_questions_available: TOTAL_PRACTICE_QUESTIONS,
     bank_coverage_percent: Math.round(bankCoverage * 100),
     total_correct: totalCorrect,
+    bank_accuracy: bankAccuracy,
     accuracy_rate: accuracyRate,
     raw_accuracy: totalAccuracy,
     recent_accuracy: recentAccuracy,
@@ -175,5 +182,8 @@ export function computeProgress(db, userId) {
     ).length,
     last_question_date: lastStudyDate,
     total_mock_exams: exams.length,
+    passed_mock_exams: passedMockExams,
+    failed_mock_exams: failedMockExams,
+    average_mock_exam_score: averageExamScore,
   };
 }

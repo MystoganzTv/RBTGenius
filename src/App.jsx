@@ -69,28 +69,23 @@ function LegacyPageRenderer() {
 }
 
 function RootRoute() {
-  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const requestedPage = new URLSearchParams(location.search).get("page");
 
-  if (!isAuthenticated) {
-    if (requestedPage && PUBLIC_PAGES.has(requestedPage)) {
-      return <QueryPageRenderer />;
-    }
-
-    if (requestedPage) {
-      return (
-        <Navigate
-          to={`/login?redirectTo=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`}
-          replace
-        />
-      );
-    }
-
+  if (!requestedPage) {
     return <Landing />;
   }
 
-  return <QueryPageRenderer />;
+  if (PUBLIC_PAGES.has(requestedPage)) {
+    return <QueryPageRenderer />;
+  }
+
+  return (
+    <Navigate
+      to={`/login?redirectTo=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`}
+      replace
+    />
+  );
 }
 
 function ProtectedLegacyRoute() {

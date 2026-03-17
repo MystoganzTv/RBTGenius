@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import { createPageUrl } from "@/utils";
 
 const OAUTH_OPTIONS = [
   {
@@ -41,7 +42,7 @@ const OAUTH_OPTIONS = [
 
 function normalizeRedirectPath(value) {
   if (!value) {
-    return "/";
+    return createPageUrl("Dashboard");
   }
 
   if (value.startsWith("/")) {
@@ -52,7 +53,7 @@ function normalizeRedirectPath(value) {
     const url = new URL(value);
     return `${url.pathname}${url.search}${url.hash}` || "/";
   } catch {
-    return "/";
+    return createPageUrl("Dashboard");
   }
 }
 

@@ -44,12 +44,12 @@ export const PLAN_CATALOG = [
   {
     id: PLAN_IDS.PREMIUM_YEARLY,
     name: "Premium Yearly",
-    price: "$149.99",
+    price: "$215.89",
     period: "/year",
-    description: "Best value for long-term prep with everything in Premium plus annual savings.",
+    description: "Best value for long-term prep with everything in Premium plus a 10% annual discount.",
     cta: "Upgrade Yearly",
     popular: false,
-    badge: "Best Value",
+    badge: "Save 10%",
   },
 ];
 

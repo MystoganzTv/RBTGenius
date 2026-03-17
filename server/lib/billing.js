@@ -13,7 +13,7 @@ const STRIPE_PRICE_ENV = {
 
 const PLAN_AMOUNTS = {
   [PLAN_IDS.PREMIUM_MONTHLY]: 1999,
-  [PLAN_IDS.PREMIUM_YEARLY]: 14999,
+  [PLAN_IDS.PREMIUM_YEARLY]: 21589,
 };
 
 let stripeClient = null;

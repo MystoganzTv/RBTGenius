@@ -6,11 +6,15 @@ import {
   Crown,
   GraduationCap,
   LayoutDashboard,
+  Moon,
   Sparkles,
+  Sun,
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
 import { ACCESS_COMPARISON } from "@/lib/plan-access";
+import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 
 const featureCards = [
@@ -32,6 +36,9 @@ const featureCards = [
 ];
 
 export default function Landing() {
+  const { isDark, toggleTheme } = useTheme();
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-foreground dark:bg-background">
       <header className="border-b border-slate-200/70 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
@@ -48,16 +55,34 @@ export default function Landing() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" className="rounded-xl">
-                Log In
-              </Button>
-            </Link>
-            <Link to="/login?mode=register">
-              <Button className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
-                Create Account
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
+              onClick={toggleTheme}
+            >
+              {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+            </Button>
+            {isAuthenticated ? (
+              <Link to={createPageUrl("Dashboard")}>
+                <Button className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" className="rounded-xl">
+                    Log In
+                  </Button>
+                </Link>
+                <Link to="/login?mode=register">
+                  <Button className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
+                    Create Account
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -78,17 +103,28 @@ export default function Landing() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/login?mode=register">
-                <Button className="h-12 rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
-                  Start Free
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="outline" className="h-12 rounded-2xl px-6 text-base">
-                  I already have an account
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <Link to={createPageUrl("Dashboard")}>
+                  <Button className="h-12 rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
+                    Continue to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login?mode=register">
+                    <Button className="h-12 rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
+                      Start Free
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button variant="outline" className="h-12 rounded-2xl px-6 text-base">
+                      I already have an account
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -194,11 +230,19 @@ export default function Landing() {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/login?mode=register">
-              <Button className="rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90">
-                Start Free
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <Link to={createPageUrl("Dashboard")}>
+                <Button className="rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/login?mode=register">
+                <Button className="rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90">
+                  Start Free
+                </Button>
+              </Link>
+            )}
             <Link to={createPageUrl("Pricing")}>
               <Button variant="outline" className="rounded-2xl px-6">
                 View Full Pricing

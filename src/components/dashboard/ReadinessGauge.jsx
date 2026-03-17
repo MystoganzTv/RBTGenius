@@ -1,4 +1,9 @@
-export default function ReadinessGauge({ score = 0, questionCount = 0, examCount = 0 }) {
+export default function ReadinessGauge({
+  score = 0,
+  questionCount = 0,
+  examCount = 0,
+  averageExamScore = 0,
+}) {
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (score / 100) * circumference;
   const hasStrongSignal = questionCount >= 20 || examCount > 0;
@@ -18,6 +23,10 @@ export default function ReadinessGauge({ score = 0, questionCount = 0, examCount
   const getLabel = () => {
     if (!hasStrongSignal) {
       return "Early Estimate";
+    }
+
+    if (examCount > 0 && averageExamScore >= 80) {
+      return "Ready for the Exam";
     }
 
     if (score >= 80) {
@@ -71,9 +80,11 @@ export default function ReadinessGauge({ score = 0, questionCount = 0, examCount
           {getLabel()}
         </span>
         <p className="mt-1 text-center text-xs text-slate-400 dark:text-slate-500">
-          {hasStrongSignal
-            ? "Coverage-adjusted from your 3000-question bank"
-            : "Early estimate based on very limited bank coverage"}
+          {examCount > 0
+            ? `Guided by ${examCount} mock exam${examCount === 1 ? "" : "s"} and your 3000-question bank coverage`
+            : hasStrongSignal
+              ? "Coverage-adjusted from your 3000-question bank"
+              : "Early estimate based on very limited bank coverage"}
         </p>
       </div>
     </div>
