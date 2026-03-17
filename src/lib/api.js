@@ -10,8 +10,8 @@ function getAuthToken() {
 }
 
 async function request(path, options = {}) {
-  const { headers = {}, body, ...restOptions } = options;
-  const token = getAuthToken();
+  const { headers = {}, body, token: tokenOverride, ...restOptions } = options;
+  const token = tokenOverride || getAuthToken();
   const response = await fetch(path, {
     ...restOptions,
     headers: {
@@ -59,6 +59,9 @@ export const api = {
   getPublicSettings() {
     return request("/api/public-settings");
   },
+  getAuthProviders() {
+    return request("/api/auth/providers");
+  },
   register(payload) {
     return request("/api/auth/register", {
       method: "POST",
@@ -71,11 +74,15 @@ export const api = {
       body: payload,
     });
   },
-  getMe() {
-    return request("/api/auth/me");
+  getMe(token) {
+    return request("/api/auth/me", token ? { token } : {});
   },
   logout() {
     return request("/api/auth/logout", { method: "POST" });
+  },
+  getOAuthStartUrl(provider, redirectTo = "/") {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `/api/auth/oauth/${provider}/start${createQuery({ redirectTo, origin })}`;
   },
   listQuestions(params) {
     return request(`/api/questions${createQuery(params)}`);

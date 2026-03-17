@@ -21,6 +21,7 @@ export function buildSeedDb() {
     mockExams: [],
     payments: [],
     practiceSessions: {},
+    oauthStates: {},
     tutorConversations: {},
     customQuestions: [],
     createdAt: new Date().toISOString(),
@@ -55,12 +56,24 @@ export function normalizeDb(db) {
             : user;
 
           if (normalizedUser.password_hash && normalizedUser.password_salt) {
-            return normalizedUser;
+            return {
+              ...normalizedUser,
+              auth_provider: normalizedUser.auth_provider || "password",
+              oauth_accounts:
+                normalizedUser.oauth_accounts && typeof normalizedUser.oauth_accounts === "object"
+                  ? normalizedUser.oauth_accounts
+                  : {},
+            };
           }
 
           const credentials = hashPassword(DEMO_CREDENTIALS.password);
           return {
             ...normalizedUser,
+            auth_provider: normalizedUser.auth_provider || "password",
+            oauth_accounts:
+              normalizedUser.oauth_accounts && typeof normalizedUser.oauth_accounts === "object"
+                ? normalizedUser.oauth_accounts
+                : {},
             token: normalizedUser.token || createSessionToken(),
             password_hash: credentials.hash,
             password_salt: credentials.salt,
@@ -73,6 +86,10 @@ export function normalizeDb(db) {
     practiceSessions:
       db.practiceSessions && typeof db.practiceSessions === "object"
         ? db.practiceSessions
+        : {},
+    oauthStates:
+      db.oauthStates && typeof db.oauthStates === "object"
+        ? db.oauthStates
         : {},
     tutorConversations:
       db.tutorConversations && typeof db.tutorConversations === "object"

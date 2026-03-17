@@ -6,6 +6,14 @@ import {
   updateDb,
 } from "./lib/store.js";
 import { createSessionToken, hashPassword, verifyPassword } from "./lib/auth.js";
+import {
+  buildOAuthAuthorizationUrl,
+  createOAuthState,
+  exchangeOAuthCodeForProfile,
+  listOAuthProviders,
+  normalizeOrigin,
+  normalizeRedirectPath,
+} from "./lib/oauth.js";
 
 const app = express();
 const port = Number(process.env.API_PORT || 8787);
@@ -106,6 +114,124 @@ function createId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function getBackendOrigin(req) {
+  return `${req.protocol}://${req.get("host")}`;
+}
+
+function createSafeUser(user) {
+  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = user;
+  return safeUser;
+}
+
+function pruneOAuthStates(states = {}) {
+  const now = Date.now();
+  return Object.fromEntries(
+    Object.entries(states).filter(([, value]) => {
+      const createdAt = new Date(value?.created_at || 0).getTime();
+      return Number.isFinite(createdAt) && now - createdAt < 1000 * 60 * 15;
+    }),
+  );
+}
+
+function consumeOAuthState(stateId) {
+  let stateRecord = null;
+
+  updateDb((current) => {
+    const nextStates = pruneOAuthStates(current.oauthStates);
+    stateRecord = nextStates[stateId] || null;
+    delete nextStates[stateId];
+
+    return {
+      ...current,
+      oauthStates: nextStates,
+    };
+  });
+
+  return stateRecord;
+}
+
+function buildFrontendLoginRedirect(frontendOrigin, redirectTo, params = {}) {
+  const url = new URL("/login", frontendOrigin);
+  if (redirectTo) {
+    url.searchParams.set("redirectTo", normalizeRedirectPath(redirectTo));
+  }
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return url.toString();
+}
+
+function upsertOAuthUser(profile, providerId) {
+  let safeUser = null;
+  let sessionToken = null;
+
+  updateDb((current) => {
+    const existingUser = current.users.find(
+      (user) => user.email.toLowerCase() === profile.email.toLowerCase(),
+    );
+
+    sessionToken = createSessionToken();
+    const nextUsers = existingUser
+      ? current.users.map((user) => {
+          if (user.id !== existingUser.id) {
+            return user;
+          }
+
+          const updatedUser = {
+            ...user,
+            full_name: user.full_name || profile.name,
+            token: sessionToken,
+            auth_provider: user.auth_provider || providerId,
+            oauth_accounts: {
+              ...(user.oauth_accounts || {}),
+              [providerId]: {
+                id: profile.id,
+                email: profile.email,
+                linked_at: new Date().toISOString(),
+              },
+            },
+          };
+          safeUser = createSafeUser(updatedUser);
+          return updatedUser;
+        })
+      : [
+          ...current.users,
+          {
+            id: createId("user"),
+            full_name: profile.name,
+            email: profile.email,
+            role: "student",
+            plan: "free",
+            token: sessionToken,
+            auth_provider: providerId,
+            oauth_accounts: {
+              [providerId]: {
+                id: profile.id,
+                email: profile.email,
+                linked_at: new Date().toISOString(),
+              },
+            },
+          },
+        ];
+
+    if (!safeUser) {
+      const createdUser = nextUsers[nextUsers.length - 1];
+      safeUser = createSafeUser(createdUser);
+    }
+
+    return {
+      ...current,
+      users: nextUsers,
+    };
+  });
+
+  return { token: sessionToken, user: safeUser };
+}
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
@@ -115,6 +241,96 @@ app.get("/api/public-settings", (_req, res) => {
     auth_required: true,
     app_name: "RBT Genius",
   });
+});
+
+app.get("/api/auth/providers", (_req, res) => {
+  res.json({
+    providers: listOAuthProviders(),
+  });
+});
+
+app.get("/api/auth/oauth/:providerId/start", (req, res) => {
+  const { providerId } = req.params;
+  const redirectTo = normalizeRedirectPath(req.query.redirectTo);
+  const backendOrigin = getBackendOrigin(req);
+  const frontendOrigin = normalizeOrigin(req.query.origin, backendOrigin);
+  const state = createOAuthState();
+
+  try {
+    updateDb((current) => ({
+      ...current,
+      oauthStates: {
+        ...pruneOAuthStates(current.oauthStates),
+        [state]: {
+          provider_id: providerId,
+          frontend_origin: frontendOrigin,
+          redirect_to: redirectTo,
+          created_at: new Date().toISOString(),
+        },
+      },
+    }));
+
+    const authorizationUrl = buildOAuthAuthorizationUrl({
+      providerId,
+      state,
+      backendOrigin,
+    });
+
+    res.redirect(authorizationUrl);
+  } catch (error) {
+    res.redirect(
+      buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+        oauthError: error.message || "Unable to start sign-in",
+      }),
+    );
+  }
+});
+
+app.get("/api/auth/oauth/:providerId/callback", async (req, res) => {
+  const { providerId } = req.params;
+  const stateRecord = consumeOAuthState(String(req.query.state || ""));
+  const fallbackOrigin = getBackendOrigin(req);
+  const frontendOrigin = stateRecord?.frontend_origin || fallbackOrigin;
+  const redirectTo = stateRecord?.redirect_to || "/";
+
+  if (!stateRecord || stateRecord.provider_id !== providerId) {
+    res.redirect(
+      buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+        oauthError: "Your sign-in session expired. Please try again.",
+      }),
+    );
+    return;
+  }
+
+  if (req.query.error) {
+    res.redirect(
+      buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+        oauthError: String(req.query.error_description || req.query.error),
+      }),
+    );
+    return;
+  }
+
+  try {
+    const profile = await exchangeOAuthCodeForProfile({
+      providerId,
+      code: String(req.query.code || ""),
+      backendOrigin: fallbackOrigin,
+    });
+    const authData = upsertOAuthUser(profile, providerId);
+
+    res.redirect(
+      buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+        authToken: authData.token,
+      }),
+    );
+  } catch (error) {
+    res.redirect(
+      buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+        oauthError: error.message || "Unable to complete sign-in",
+      }),
+    );
+  }
 });
 
 app.post("/api/auth/register", (req, res) => {
@@ -146,6 +362,8 @@ app.post("/api/auth/register", (req, res) => {
     role: "student",
     plan: "free",
     token: createSessionToken(),
+    auth_provider: "password",
+    oauth_accounts: {},
     password_hash: passwordData.hash,
     password_salt: passwordData.salt,
   };
@@ -155,8 +373,7 @@ app.post("/api/auth/register", (req, res) => {
     users: [...current.users, newUser],
   }));
 
-  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = newUser;
-  res.status(201).json({ token: newUser.token, user: safeUser });
+  res.status(201).json({ token: newUser.token, user: createSafeUser(newUser) });
 });
 
 app.post("/api/auth/login", (req, res) => {
@@ -165,7 +382,12 @@ app.post("/api/auth/login", (req, res) => {
   const db = readDb();
   const user = db.users.find((entry) => entry.email.toLowerCase() === email);
 
-  if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+  if (
+    !user ||
+    !user.password_hash ||
+    !user.password_salt ||
+    !verifyPassword(password, user.password_salt, user.password_hash)
+  ) {
     res.status(401).json({ message: "Invalid email or password" });
     return;
   }
@@ -188,14 +410,11 @@ app.post("/api/auth/login", (req, res) => {
     }),
   }));
 
-  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = updatedUser;
-  res.json({ token: nextToken, user: safeUser });
+  res.json({ token: nextToken, user: createSafeUser(updatedUser) });
 });
 
 app.get("/api/auth/me", requireUser, (req, res) => {
-  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
-    req.currentUser;
-  res.json(safeUser);
+  res.json(createSafeUser(req.currentUser));
 });
 
 app.post("/api/auth/logout", requireUser, (req, res) => {

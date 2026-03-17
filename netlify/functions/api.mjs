@@ -12,6 +12,14 @@ import {
   hashPassword,
   verifyPassword,
 } from "../../server/lib/auth.js";
+import {
+  buildOAuthAuthorizationUrl,
+  createOAuthState,
+  exchangeOAuthCodeForProfile,
+  listOAuthProviders,
+  normalizeOrigin,
+  normalizeRedirectPath,
+} from "../../server/lib/oauth.js";
 import { buildSeedDb, normalizeDb } from "../../server/lib/seed.js";
 
 const store = getStore("rbt-genius-data");
@@ -115,6 +123,120 @@ function createId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function createSafeUser(user) {
+  const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } = user;
+  return safeUser;
+}
+
+function pruneOAuthStates(states = {}) {
+  const now = Date.now();
+  return Object.fromEntries(
+    Object.entries(states).filter(([, value]) => {
+      const createdAt = new Date(value?.created_at || 0).getTime();
+      return Number.isFinite(createdAt) && now - createdAt < 1000 * 60 * 15;
+    }),
+  );
+}
+
+async function consumeOAuthState(stateId) {
+  let stateRecord = null;
+
+  await updateDb((current) => {
+    const nextStates = pruneOAuthStates(current.oauthStates);
+    stateRecord = nextStates[stateId] || null;
+    delete nextStates[stateId];
+
+    return {
+      ...current,
+      oauthStates: nextStates,
+    };
+  });
+
+  return stateRecord;
+}
+
+function buildFrontendLoginRedirect(frontendOrigin, redirectTo, params = {}) {
+  const url = new URL("/login", frontendOrigin);
+  if (redirectTo) {
+    url.searchParams.set("redirectTo", normalizeRedirectPath(redirectTo));
+  }
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return url.toString();
+}
+
+async function upsertOAuthUser(profile, providerId) {
+  let safeUser = null;
+  let sessionToken = null;
+
+  await updateDb((current) => {
+    const existingUser = current.users.find(
+      (user) => user.email.toLowerCase() === profile.email.toLowerCase(),
+    );
+
+    sessionToken = createSessionToken();
+    const nextUsers = existingUser
+      ? current.users.map((user) => {
+          if (user.id !== existingUser.id) {
+            return user;
+          }
+
+          const updatedUser = {
+            ...user,
+            full_name: user.full_name || profile.name,
+            token: sessionToken,
+            auth_provider: user.auth_provider || providerId,
+            oauth_accounts: {
+              ...(user.oauth_accounts || {}),
+              [providerId]: {
+                id: profile.id,
+                email: profile.email,
+                linked_at: new Date().toISOString(),
+              },
+            },
+          };
+          safeUser = createSafeUser(updatedUser);
+          return updatedUser;
+        })
+      : [
+          ...current.users,
+          {
+            id: createId("user"),
+            full_name: profile.name,
+            email: profile.email,
+            role: "student",
+            plan: "free",
+            token: sessionToken,
+            auth_provider: providerId,
+            oauth_accounts: {
+              [providerId]: {
+                id: profile.id,
+                email: profile.email,
+                linked_at: new Date().toISOString(),
+              },
+            },
+          },
+        ];
+
+    if (!safeUser) {
+      const createdUser = nextUsers[nextUsers.length - 1];
+      safeUser = createSafeUser(createdUser);
+    }
+
+    return {
+      ...current,
+      users: nextUsers,
+    };
+  });
+
+  return { token: sessionToken, user: safeUser };
+}
+
 function getToken(request) {
   const authHeader = request.headers.get("authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -175,6 +297,104 @@ export default async (request) => {
     return json({ auth_required: true, app_name: "RBT Genius" });
   }
 
+  if (apiPath === "/auth/providers" && request.method === "GET") {
+    return json({
+      providers: listOAuthProviders(),
+    });
+  }
+
+  if (apiPath === "/auth/oauth/google/start" && request.method === "GET" ||
+      apiPath === "/auth/oauth/github/start" && request.method === "GET" ||
+      apiPath === "/auth/oauth/microsoft/start" && request.method === "GET") {
+    const providerId = apiPath.split("/")[3];
+    const redirectTo = normalizeRedirectPath(url.searchParams.get("redirectTo"));
+    const backendOrigin = url.origin;
+    const frontendOrigin = normalizeOrigin(url.searchParams.get("origin"), backendOrigin);
+    const state = createOAuthState();
+
+    try {
+      await updateDb((current) => ({
+        ...current,
+        oauthStates: {
+          ...pruneOAuthStates(current.oauthStates),
+          [state]: {
+            provider_id: providerId,
+            frontend_origin: frontendOrigin,
+            redirect_to: redirectTo,
+            created_at: new Date().toISOString(),
+          },
+        },
+      }));
+
+      return Response.redirect(
+        buildOAuthAuthorizationUrl({
+          providerId,
+          state,
+          backendOrigin,
+        }),
+        302,
+      );
+    } catch (error) {
+      return Response.redirect(
+        buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+          oauthError: error.message || "Unable to start sign-in",
+        }),
+        302,
+      );
+    }
+  }
+
+  if (apiPath === "/auth/oauth/google/callback" && request.method === "GET" ||
+      apiPath === "/auth/oauth/github/callback" && request.method === "GET" ||
+      apiPath === "/auth/oauth/microsoft/callback" && request.method === "GET") {
+    const providerId = apiPath.split("/")[3];
+    const stateRecord = await consumeOAuthState(String(url.searchParams.get("state") || ""));
+    const frontendOrigin = stateRecord?.frontend_origin || url.origin;
+    const redirectTo = stateRecord?.redirect_to || "/";
+
+    if (!stateRecord || stateRecord.provider_id !== providerId) {
+      return Response.redirect(
+        buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+          oauthError: "Your sign-in session expired. Please try again.",
+        }),
+        302,
+      );
+    }
+
+    if (url.searchParams.get("error")) {
+      return Response.redirect(
+        buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+          oauthError:
+            url.searchParams.get("error_description") || url.searchParams.get("error"),
+        }),
+        302,
+      );
+    }
+
+    try {
+      const profile = await exchangeOAuthCodeForProfile({
+        providerId,
+        code: String(url.searchParams.get("code") || ""),
+        backendOrigin: url.origin,
+      });
+      const authData = await upsertOAuthUser(profile, providerId);
+
+      return Response.redirect(
+        buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+          authToken: authData.token,
+        }),
+        302,
+      );
+    } catch (error) {
+      return Response.redirect(
+        buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
+          oauthError: error.message || "Unable to complete sign-in",
+        }),
+        302,
+      );
+    }
+  }
+
   if (apiPath === "/auth/register" && request.method === "POST") {
     const body = await request.json();
     const email = String(body?.email || "").trim().toLowerCase();
@@ -208,6 +428,8 @@ export default async (request) => {
       role: "student",
       plan: "free",
       token: createSessionToken(),
+      auth_provider: "password",
+      oauth_accounts: {},
       password_hash: passwordData.hash,
       password_salt: passwordData.salt,
     };
@@ -217,9 +439,7 @@ export default async (request) => {
       users: [...current.users, newUser],
     }));
 
-    const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
-      newUser;
-    return json({ token: newUser.token, user: safeUser }, { status: 201 });
+    return json({ token: newUser.token, user: createSafeUser(newUser) }, { status: 201 });
   }
 
   if (apiPath === "/auth/login" && request.method === "POST") {
@@ -229,7 +449,12 @@ export default async (request) => {
     const db = await readDb();
     const user = db.users.find((entry) => entry.email.toLowerCase() === email);
 
-    if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+    if (
+      !user ||
+      !user.password_hash ||
+      !user.password_salt ||
+      !verifyPassword(password, user.password_salt, user.password_hash)
+    ) {
       return json({ message: "Invalid email or password" }, { status: 401 });
     }
 
@@ -251,9 +476,7 @@ export default async (request) => {
       }),
     }));
 
-    const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
-      updatedUser;
-    return json({ token: nextToken, user: safeUser });
+    return json({ token: nextToken, user: createSafeUser(updatedUser) });
   }
 
   if (apiPath === "/auth/me" && request.method === "GET") {
@@ -262,9 +485,7 @@ export default async (request) => {
       return auth.error;
     }
 
-    const { password_hash: _passwordHash, password_salt: _passwordSalt, ...safeUser } =
-      auth.user;
-    return json(safeUser);
+    return json(createSafeUser(auth.user));
   }
 
   if (apiPath === "/auth/logout" && request.method === "POST") {
