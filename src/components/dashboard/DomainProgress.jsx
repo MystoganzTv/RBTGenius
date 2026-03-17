@@ -1,20 +1,20 @@
 const domains = [
-  { key: "measurement", label: "Measurement", color: "#1E5EFF" },
-  { key: "assessment", label: "Assessment", color: "#6366F1" },
-  { key: "skill_acquisition", label: "Skill Acquisition", color: "#10B981" },
-  { key: "behavior_reduction", label: "Behavior Reduction", color: "#FFB800" },
-  { key: "documentation", label: "Documentation", color: "#F43F5E" },
+  { key: "measurement", label: "Measurement", color: "#5E7CF7" },
+  { key: "assessment", label: "Assessment", color: "#6D81E8" },
+  { key: "skill_acquisition", label: "Skill Acquisition", color: "#4DAA94" },
+  { key: "behavior_reduction", label: "Behavior Reduction", color: "#8C9AB3" },
+  { key: "documentation", label: "Documentation", color: "#A07BB7" },
   {
     key: "professional_conduct",
     label: "Professional Conduct",
-    color: "#8B5CF6",
+    color: "#8B78D8",
   },
 ];
 
 export default function DomainProgress({ mastery = {} }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-6">
-      <h3 className="mb-4 text-sm font-semibold text-slate-700">
+    <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+      <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
         Domain Mastery
       </h3>
 
@@ -25,15 +25,15 @@ export default function DomainProgress({ mastery = {} }) {
           return (
             <div key={domain.key}>
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-600">
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
                   {domain.label}
                 </span>
-                <span className="text-xs font-semibold text-slate-700">
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
                   {value}%
                 </span>
               </div>
 
-              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
                   className="h-full rounded-full transition-all duration-1000 ease-out"
                   style={{

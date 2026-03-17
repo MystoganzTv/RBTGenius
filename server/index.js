@@ -547,6 +547,7 @@ app.get("/api/dashboard", requireUser, (req, res) => {
   res.json({
     progress: computeProgress(db, req.currentUser.id),
     allQuestions: getQuestionBank("practice"),
+    exams: db.mockExams.filter((exam) => exam.user_id === req.currentUser.id),
   });
 });
 

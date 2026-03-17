@@ -11,6 +11,16 @@ export const defaultUser = {
   plan: "free",
 };
 
+function getSmoothedRate(correct, total, baselineRate = 0.65, baselineWeight = 6) {
+  if (total <= 0) {
+    return 0;
+  }
+
+  const weightedCorrect = correct + baselineRate * baselineWeight;
+  const weightedTotal = total + baselineWeight;
+  return Math.round((weightedCorrect / weightedTotal) * 100);
+}
+
 function formatUniqueStudyDays(attempts) {
   const dateKeys = new Set(
     attempts
@@ -74,7 +84,7 @@ export function computeProgress(db, userId) {
 
     result[key] =
       topicAttempts.length > 0
-        ? Math.round((topicCorrect / topicAttempts.length) * 100)
+        ? getSmoothedRate(topicCorrect, topicAttempts.length)
         : 0;
     return result;
   }, {});

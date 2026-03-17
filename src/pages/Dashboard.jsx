@@ -19,24 +19,21 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 
-const fallbackProgress = {
-  total_questions_completed: 148,
-  total_correct: 118,
-  study_streak_days: 6,
-  readiness_score: 78,
+const emptyProgress = {
+  total_questions_completed: 0,
+  total_correct: 0,
+  study_streak_days: 0,
+  readiness_score: 0,
   domain_mastery: {
-    measurement: 84,
-    assessment: 71,
-    skill_acquisition: 79,
-    behavior_reduction: 67,
-    documentation: 74,
-    professional_conduct: 88,
+    measurement: 0,
+    assessment: 0,
+    skill_acquisition: 0,
+    behavior_reduction: 0,
+    documentation: 0,
+    professional_conduct: 0,
   },
+  questions_today: 0,
 };
-
-const fallbackQuestions = Array.from({ length: 500 }, (_, index) => ({
-  id: `question-${index + 1}`,
-}));
 
 const planStyles = {
   free: {
@@ -67,8 +64,9 @@ export default function Dashboard() {
     queryFn: loadDashboardData,
   });
 
-  const progress = data?.progress || fallbackProgress;
-  const allQuestions = data?.allQuestions || fallbackQuestions;
+  const progress = data?.progress || emptyProgress;
+  const allQuestions = data?.allQuestions || [];
+  const exams = data?.exams || [];
 
   const totalQuestions = progress?.total_questions_completed || 0;
   const accuracy =
@@ -112,7 +110,9 @@ export default function Dashboard() {
               {firstName || "Student"}
             </h1>
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-500 dark:text-slate-300">
-              Exam readiness at {readiness}% based on your latest practice performance.
+              {totalQuestions < 20 && exams.length === 0
+                ? `Your readiness score is still an early estimate. Keep practicing to make it more reliable.`
+                : `Exam readiness at ${readiness}% based on your latest practice performance.`}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -143,7 +143,6 @@ export default function Dashboard() {
           subtitle="Total completed"
           icon={HelpCircle}
           color="blue"
-          trend={12}
         />
         <StatCard
           title="Accuracy Rate"
@@ -151,7 +150,6 @@ export default function Dashboard() {
           subtitle="Correct answers"
           icon={Target}
           color="green"
-          trend={5}
         />
         <StatCard
           title="Study Streak"
@@ -174,47 +172,47 @@ export default function Dashboard() {
           <StreakCard streak={streak} />
           <DomainProgress mastery={progress?.domain_mastery || {}} />
 
-          <div className="rounded-2xl border border-slate-100 bg-white p-6">
-            <h3 className="mb-4 text-sm font-semibold text-slate-700">
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
               Quick Actions
             </h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Link to={createPageUrl("Practice")}>
-                <div className="group cursor-pointer rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 transition-all hover:border-[#1E5EFF]/30">
-                  <HelpCircle className="mb-2 h-5 w-5 text-[#1E5EFF]" />
-                  <p className="text-sm font-semibold text-slate-900">
+                <div className="group cursor-pointer rounded-xl border border-slate-200 bg-slate-50/80 p-4 transition-all hover:border-[#1E5EFF]/20 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-[#1E5EFF]/20 dark:hover:bg-slate-900">
+                  <HelpCircle className="mb-2 h-5 w-5 text-[#1E5EFF] dark:text-[#8EB0FF]" />
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     Practice Questions
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                     Test your knowledge
                   </p>
-                  <ArrowRight className="mt-2 h-4 w-4 text-[#1E5EFF] transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="mt-2 h-4 w-4 text-[#1E5EFF] transition-transform group-hover:translate-x-1 dark:text-[#8EB0FF]" />
                 </div>
               </Link>
 
               <Link to={createPageUrl("MockExams")}>
-                <div className="group cursor-pointer rounded-xl border border-emerald-100 bg-emerald-50 p-4 transition-all hover:border-emerald-200">
-                  <Trophy className="mb-2 h-5 w-5 text-emerald-600" />
-                  <p className="text-sm font-semibold text-slate-900">
+                <div className="group cursor-pointer rounded-xl border border-slate-200 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/20 dark:hover:bg-slate-900">
+                  <Trophy className="mb-2 h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     Mock Exam
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                     Simulate the real test
                   </p>
-                  <ArrowRight className="mt-2 h-4 w-4 text-emerald-600 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="mt-2 h-4 w-4 text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-300" />
                 </div>
               </Link>
 
               <Link to={createPageUrl("AITutor")}>
-                <div className="group cursor-pointer rounded-xl border border-violet-100 bg-violet-50 p-4 transition-all hover:border-violet-200">
-                  <Brain className="mb-2 h-5 w-5 text-violet-600" />
-                  <p className="text-sm font-semibold text-slate-900">
+                <div className="group cursor-pointer rounded-xl border border-slate-200 bg-slate-50/80 p-4 transition-all hover:border-violet-200 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/20 dark:hover:bg-slate-900">
+                  <Brain className="mb-2 h-5 w-5 text-violet-600 dark:text-violet-300" />
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     AI Tutor
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                     Get instant help
                   </p>
-                  <ArrowRight className="mt-2 h-4 w-4 text-violet-600 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="mt-2 h-4 w-4 text-violet-600 transition-transform group-hover:translate-x-1 dark:text-violet-300" />
                 </div>
               </Link>
             </div>
@@ -222,10 +220,14 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-6">
-          <ReadinessGauge score={readiness} />
+          <ReadinessGauge
+            score={readiness}
+            questionCount={totalQuestions}
+            examCount={exams.length}
+          />
 
-          <div className="rounded-2xl border border-slate-100 bg-white p-6">
-            <h3 className="mb-4 text-sm font-semibold text-slate-700">
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
               Badges Earned
             </h3>
             <div className="grid grid-cols-3 gap-3">
@@ -234,12 +236,12 @@ export default function Dashboard() {
                   key={badge.label}
                   className={`flex flex-col items-center rounded-xl p-3 transition-all ${
                     badge.unlocked
-                      ? "border border-[#FFB800]/30 bg-[#FFB800]/10"
-                      : "bg-slate-50 opacity-40 grayscale"
+                      ? "border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900"
+                      : "bg-slate-50 opacity-40 grayscale dark:bg-slate-900"
                   }`}
                 >
                   <span className="text-xl">{badge.emoji}</span>
-                  <span className="mt-1 text-[10px] font-medium text-slate-600">
+                  <span className="mt-1 text-[10px] font-medium text-slate-600 dark:text-slate-300">
                     {badge.label}
                   </span>
                 </div>
@@ -247,33 +249,33 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-100 bg-white p-6">
-            <h3 className="mb-4 text-sm font-semibold text-slate-700">
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
               Your Progress
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   Questions Completed
                 </span>
                 <span className="text-sm font-semibold text-[#1E5EFF]">
                   {totalQuestions}/{allQuestions.length}
                 </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-slate-100">
+              <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-[#1E5EFF] to-[#6366F1] transition-all"
                   style={{ width: `${completionRate}%` }}
                 />
               </div>
               <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-slate-500">Pass Rate Needed</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Pass Rate Needed</span>
                 <span className="text-sm font-semibold text-emerald-600">
                   80%
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500">Your Current</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Your Current</span>
                 <span
                   className={`text-sm font-semibold ${
                     accuracy >= 80 ? "text-emerald-600" : "text-amber-600"

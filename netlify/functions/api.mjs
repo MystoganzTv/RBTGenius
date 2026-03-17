@@ -676,6 +676,7 @@ export default async (request) => {
     return json({
       progress: computeProgress(db, auth.user.id),
       allQuestions: getQuestionBank("practice"),
+      exams: db.mockExams.filter((exam) => exam.user_id === auth.user.id),
     });
   }
 
