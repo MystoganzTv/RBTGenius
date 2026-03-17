@@ -275,6 +275,7 @@ export default function Landing() {
                   const order =
                     (index - activePreviewIndex + premiumPreviewPanels.length) %
                     premiumPreviewPanels.length;
+                  const isFrontCard = order === 0;
 
                   const cardStyles = [
                     "z-30 translate-y-0 rotate-[-4deg] scale-100 opacity-100 shadow-[0_40px_90px_-46px_rgba(2,6,23,0.7)]",
@@ -319,7 +320,27 @@ export default function Landing() {
                           </span>
                         </div>
 
-                        <div className="mt-4 flex-1">{content}</div>
+                        <div className="mt-4 flex-1">
+                          {isFrontCard ? (
+                            content
+                          ) : (
+                            <div className="space-y-4">
+                              <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.04] p-5">
+                                <div className="h-3 w-28 rounded-full bg-white/12" />
+                                <div className="mt-4 h-10 rounded-2xl bg-white/8" />
+                                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                  <div className="h-20 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
+                                  <div className="h-20 rounded-[1.2rem] border border-white/8 bg-white/[0.04]" />
+                                </div>
+                              </div>
+                              <div className="grid gap-3 sm:grid-cols-3">
+                                <div className="h-14 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
+                                <div className="h-14 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
+                                <div className="h-14 rounded-[1.1rem] border border-white/8 bg-white/[0.04]" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
