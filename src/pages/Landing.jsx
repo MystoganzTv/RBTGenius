@@ -219,60 +219,63 @@ export default function Landing() {
           </div>
 
           <div className="rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950">
-            <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
-              <div
-                className="flex transition-transform duration-1000"
-                style={{
-                  transform: `translateX(-${activePreviewIndex * 100}%)`,
-                  transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
-                }}
-              >
-                {premiumPreviewPanels.map(
-                  ({ label, title, subtitle, accentClassName, Icon, content }) => (
-                    <div key={title} className="w-full flex-shrink-0 p-6">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentClassName}`}
-                          >
-                            <Icon className="h-5 w-5" />
+            <div className="relative min-h-[410px] rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+              {premiumPreviewPanels.map(
+                ({ label, title, subtitle, accentClassName, Icon, content }, index) => {
+                  const order =
+                    (index - activePreviewIndex + premiumPreviewPanels.length) %
+                    premiumPreviewPanels.length;
+
+                  const cardStyles = [
+                    "z-30 translate-y-0 rotate-0 scale-100 opacity-100 shadow-[0_30px_80px_-40px_rgba(15,23,42,0.4)]",
+                    "z-20 translate-x-5 translate-y-5 rotate-[2.5deg] scale-[0.96] opacity-90 shadow-[0_24px_60px_-45px_rgba(15,23,42,0.28)]",
+                    "z-10 translate-x-10 translate-y-10 -rotate-[2deg] scale-[0.92] opacity-75 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.2)]",
+                  ];
+
+                  return (
+                    <button
+                      key={title}
+                      type="button"
+                      aria-label={`Show ${title} preview`}
+                      onClick={() => setActivePreviewIndex(index)}
+                      className={`absolute inset-4 w-[calc(100%-2rem)] rounded-[1.5rem] border border-slate-200 bg-white text-left transition-all duration-1000 dark:border-slate-800 dark:bg-slate-950 ${cardStyles[order]}`}
+                      style={{
+                        transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+                      }}
+                    >
+                      <div className="flex h-full flex-col p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentClassName}`}
+                            >
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+                                {label}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                {title}
+                              </p>
+                              <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+                                {subtitle}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-                              {label}
-                            </p>
-                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                              {title}
-                            </p>
-                            <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-                              {subtitle}
-                            </p>
-                          </div>
+                          <span className="rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                            {order === 0 ? "Now" : order === 1 ? "Next" : "Then"}
+                          </span>
                         </div>
-                        <div className="hidden items-center gap-1.5 md:flex">
-                          {premiumPreviewPanels.map((panel, index) => (
-                            <button
-                              key={panel.title}
-                              type="button"
-                              aria-label={`Show ${panel.title} preview`}
-                              onClick={() => setActivePreviewIndex(index)}
-                              className={`h-2.5 rounded-full transition-all ${
-                                index === activePreviewIndex
-                                  ? "w-8 bg-[#1E5EFF]"
-                                  : "w-2.5 bg-slate-300 dark:bg-slate-700"
-                              }`}
-                            />
-                          ))}
-                        </div>
+
+                        <div className="mt-4 flex-1">{content}</div>
                       </div>
+                    </button>
+                  );
+                },
+              )}
 
-                      <div className="min-h-[242px]">{content}</div>
-                    </div>
-                  ),
-                )}
-              </div>
-
-              <div className="flex items-center justify-center gap-1.5 border-t border-slate-200/80 px-6 py-4 md:hidden dark:border-slate-800">
+              <div className="absolute bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/90 px-3 py-2 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
                 {premiumPreviewPanels.map((panel, index) => (
                   <button
                     key={panel.title}
