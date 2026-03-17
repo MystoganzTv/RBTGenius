@@ -1,6 +1,16 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crown, Shield, Trash2, Users } from "lucide-react";
+import { Crown, Loader2, Shield, Trash2, Users } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 const PLAN_OPTIONS = [
   { value: "free", label: "Free" },
@@ -65,6 +76,7 @@ export default function AdminMembers() {
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [drafts, setDrafts] = useState({});
+  const [memberPendingDelete, setMemberPendingDelete] = useState(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -85,7 +97,34 @@ export default function AdminMembers() {
 
   const deleteMemberMutation = useMutation({
     mutationFn: (memberId) => api.deleteAdminMember(memberId),
+    onMutate: async (memberId) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-members"] });
+      const previousMembers = queryClient.getQueryData(["admin-members"]);
+
+      queryClient.setQueryData(["admin-members"], (current = []) =>
+        current.filter((member) => member.id !== memberId),
+      );
+
+      return { previousMembers };
+    },
     onSuccess: () => {
+      toast({
+        title: "Member deleted",
+        description: "The account and related study data were removed.",
+      });
+    },
+    onError: (_error, _memberId, context) => {
+      if (context?.previousMembers) {
+        queryClient.setQueryData(["admin-members"], context.previousMembers);
+      }
+
+      toast({
+        title: "Unable to delete member",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-members"] });
     },
   });
@@ -142,15 +181,8 @@ export default function AdminMembers() {
   };
 
   const handleDelete = async (member) => {
-    const confirmed = window.confirm(
-      `Delete ${member.full_name} (${member.email})? This will remove their profile, attempts, mock exams, payments, sessions, and tutor conversations.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     await deleteMemberMutation.mutateAsync(member.id);
+    setMemberPendingDelete(null);
 
     setDrafts((current) => {
       const nextDrafts = { ...current };
@@ -176,7 +208,8 @@ export default function AdminMembers() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <>
+      <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
@@ -340,7 +373,7 @@ export default function AdminMembers() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => handleDelete(member)}
+                      onClick={() => setMemberPendingDelete(member)}
                       disabled={isCurrentAdmin || deleteMemberMutation.isPending}
                       className="border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/40"
                     >
@@ -354,6 +387,91 @@ export default function AdminMembers() {
           })
         )}
       </div>
-    </div>
+      </div>
+
+      <AlertDialog
+        open={Boolean(memberPendingDelete)}
+        onOpenChange={(open) => {
+          if (!open && !deleteMemberMutation.isPending) {
+            setMemberPendingDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="rounded-3xl border-slate-200 bg-white p-0 shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+          <div className="border-b border-slate-200/80 bg-gradient-to-br from-red-50 via-white to-orange-50 px-6 py-5 dark:border-slate-800 dark:from-red-950/30 dark:via-slate-950 dark:to-orange-950/20">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-300">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            <AlertDialogHeader className="space-y-2 text-left">
+              <AlertDialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                Delete member account?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                This action permanently removes the member profile, practice attempts,
+                flashcard activity, mock exams, payments, sessions, and tutor conversations.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+          </div>
+
+          {memberPendingDelete ? (
+            <div className="px-6 py-5">
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                    {memberPendingDelete.full_name}
+                  </h3>
+                  <Badge variant="outline">
+                    {memberPendingDelete.role === "admin" ? "Admin" : "User"}
+                  </Badge>
+                  <Badge variant="outline">
+                    {getProviderLabel(memberPendingDelete.auth_provider)}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {memberPendingDelete.email}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+                  <span>{memberPendingDelete.total_questions_completed} questions completed</span>
+                  <span>{memberPendingDelete.exams_count} exams</span>
+                  <span>{memberPendingDelete.payments_count || 0} payments</span>
+                  <span>${Number(memberPendingDelete.total_paid_amount || 0).toFixed(2)} paid</span>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <AlertDialogFooter className="border-t border-slate-200/80 px-6 py-4 dark:border-slate-800">
+            <AlertDialogCancel
+              className="rounded-xl"
+              disabled={deleteMemberMutation.isPending}
+            >
+              Keep member
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"
+              disabled={deleteMemberMutation.isPending || !memberPendingDelete}
+              onClick={(event) => {
+                event.preventDefault();
+                if (memberPendingDelete) {
+                  handleDelete(memberPendingDelete);
+                }
+              }}
+            >
+              {deleteMemberMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete member
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
