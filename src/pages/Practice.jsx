@@ -4,6 +4,7 @@ import {
   Flag,
   HelpCircle,
   ListChecks,
+  ShieldAlert,
   Target,
   Trophy,
   Zap,
@@ -596,32 +597,47 @@ export default function Practice() {
   return (
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+              This Session
+            </h2>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Session-only stats. Your dashboard tracks the bigger picture separately.
+            </p>
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            {bankFilter === "all"
+              ? `${practiceBankOptions.length} banks selected`
+              : practiceBankOptions.find((bank) => bank.id === bankFilter)?.label ||
+                bankFilter}
+          </div>
+        </div>
+
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-1.5">
               <Target className="h-4 w-4 text-[#1E5EFF]" />
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                {accuracy}% accuracy
+                {accuracy}% session accuracy
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <HelpCircle className="h-4 w-4 text-slate-400 dark:text-slate-500" />
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                {answeredCount}/{baseFilteredQuestions.length} answered
+                {answeredCount}/{baseFilteredQuestions.length} answered this session
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <ShieldAlert className="h-4 w-4 text-rose-400" />
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                {incorrectCount} incorrect
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <Flag className="h-4 w-4 text-amber-500" />
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                {flaggedCount} flagged
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {bankFilter === "all"
-                  ? `${practiceBankOptions.length} banks`
-                  : practiceBankOptions.find((bank) => bank.id === bankFilter)?.label ||
-                    bankFilter}
+                {flaggedCount} flagged for review
               </span>
             </div>
           </div>

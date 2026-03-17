@@ -11,6 +11,8 @@ export const defaultUser = {
   plan: "free",
 };
 
+export const MIN_DOMAIN_ATTEMPTS = 10;
+
 function getSmoothedRate(correct, total, baselineRate = 0.65, baselineWeight = 6) {
   if (total <= 0) {
     return 0;
@@ -70,6 +72,9 @@ export function computeProgress(db, userId) {
   const attempts = db.attempts.filter((attempt) => attempt.user_id === userId);
   const exams = db.mockExams.filter((exam) => exam.user_id === userId);
   const user = db.users.find((entry) => entry.id === userId) || defaultUser;
+  const recentAttempts = [...attempts]
+    .sort((left, right) => (left.created_at < right.created_at ? 1 : -1))
+    .slice(0, 50);
 
   const totalQuestionsCompleted = attempts.length;
   const totalCorrect = attempts.filter((attempt) => attempt.is_correct).length;
@@ -77,6 +82,14 @@ export function computeProgress(db, userId) {
     totalQuestionsCompleted > 0
       ? Math.round((totalCorrect / totalQuestionsCompleted) * 100)
       : 0;
+  const accuracyRate = getSmoothedRate(totalCorrect, totalQuestionsCompleted, 0.62, 20);
+  const recentCorrect = recentAttempts.filter((attempt) => attempt.is_correct).length;
+  const recentAccuracy = getSmoothedRate(recentCorrect, recentAttempts.length, 0.62, 10);
+
+  const domainAttemptCounts = Object.keys(topicLabels).reduce((result, key) => {
+    result[key] = attempts.filter((attempt) => attempt.topic === key).length;
+    return result;
+  }, {});
 
   const domainMastery = Object.keys(topicLabels).reduce((result, key) => {
     const topicAttempts = attempts.filter((attempt) => attempt.topic === key);
@@ -96,10 +109,46 @@ export function computeProgress(db, userId) {
         )
       : 0;
 
-  const readinessScore = Math.min(
-    100,
-    Math.round(totalAccuracy * 0.6 + averageExamScore * 0.4),
+  const stableDomainKeys = Object.keys(topicLabels).filter(
+    (key) => domainAttemptCounts[key] >= MIN_DOMAIN_ATTEMPTS,
   );
+  const stableDomainAverage =
+    stableDomainKeys.length > 0
+      ? Math.round(
+          stableDomainKeys.reduce((total, key) => total + domainMastery[key], 0) /
+            stableDomainKeys.length,
+        )
+      : null;
+
+  let readinessWeightedTotal = 0;
+  let readinessWeights = 0;
+
+  if (totalQuestionsCompleted > 0) {
+    readinessWeightedTotal += accuracyRate * 0.75;
+    readinessWeights += 0.75;
+  }
+
+  if (stableDomainAverage !== null) {
+    readinessWeightedTotal += stableDomainAverage * 0.1;
+    readinessWeights += 0.1;
+  }
+
+  if (exams.length > 0) {
+    readinessWeightedTotal += averageExamScore * 0.15;
+    readinessWeights += 0.15;
+  }
+
+  const readinessScore =
+    readinessWeights > 0
+      ? Math.min(100, Math.round(readinessWeightedTotal / readinessWeights))
+      : 0;
+
+  const readinessConfidence =
+    exams.length > 0 || totalQuestionsCompleted >= 150
+      ? "high"
+      : totalQuestionsCompleted >= 50
+        ? "medium"
+        : "low";
 
   const studyHours =
     Math.round(
@@ -114,16 +163,22 @@ export function computeProgress(db, userId) {
   return {
     total_questions_completed: totalQuestionsCompleted,
     total_correct: totalCorrect,
+    accuracy_rate: accuracyRate,
+    raw_accuracy: totalAccuracy,
+    recent_accuracy: recentAccuracy,
     study_streak_days: streak,
     last_study_date: lastStudyDate,
     study_hours: studyHours,
     readiness_score: readinessScore,
+    readiness_confidence: readinessConfidence,
     badges: [],
     plan: user.plan || "free",
     domain_mastery: domainMastery,
+    domain_attempt_counts: domainAttemptCounts,
     questions_today: attempts.filter(
       (attempt) => attempt.created_at?.slice(0, 10) === new Date().toISOString().slice(0, 10),
     ).length,
     last_question_date: lastStudyDate,
+    total_mock_exams: exams.length,
   };
 }

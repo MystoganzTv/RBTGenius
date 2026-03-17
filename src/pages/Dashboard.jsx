@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
-  BookOpen,
   Brain,
+  Clock3,
   Flame,
   HelpCircle,
   Target,
@@ -22,8 +22,13 @@ import { createPageUrl } from "@/utils";
 const emptyProgress = {
   total_questions_completed: 0,
   total_correct: 0,
+  accuracy_rate: 0,
+  raw_accuracy: 0,
+  recent_accuracy: 0,
   study_streak_days: 0,
+  study_hours: 0,
   readiness_score: 0,
+  readiness_confidence: "low",
   domain_mastery: {
     measurement: 0,
     assessment: 0,
@@ -32,7 +37,16 @@ const emptyProgress = {
     documentation: 0,
     professional_conduct: 0,
   },
+  domain_attempt_counts: {
+    measurement: 0,
+    assessment: 0,
+    skill_acquisition: 0,
+    behavior_reduction: 0,
+    documentation: 0,
+    professional_conduct: 0,
+  },
   questions_today: 0,
+  total_mock_exams: 0,
 };
 
 const planStyles = {
@@ -69,12 +83,12 @@ export default function Dashboard() {
   const exams = data?.exams || [];
 
   const totalQuestions = progress?.total_questions_completed || 0;
-  const accuracy =
-    totalQuestions > 0
-      ? Math.round(((progress?.total_correct || 0) / totalQuestions) * 100)
-      : 0;
+  const accuracy = progress?.accuracy_rate || 0;
+  const recentAccuracy = progress?.recent_accuracy || 0;
   const streak = progress?.study_streak_days || 0;
   const readiness = progress?.readiness_score || 0;
+  const studyHours = progress?.study_hours || 0;
+  const mockExamsTaken = progress?.total_mock_exams || exams.length || 0;
 
   const firstName =
     user?.full_name?.split(" ")[0] || user?.name?.split(" ")[0] || null;
@@ -112,7 +126,7 @@ export default function Dashboard() {
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-500 dark:text-slate-300">
               {totalQuestions < 20 && exams.length === 0
                 ? `Your readiness score is still an early estimate. Keep practicing to make it more reliable.`
-                : `Exam readiness at ${readiness}% based on your latest practice performance.`}
+                : `Exam readiness at ${readiness}% based on your overall progress and recent performance.`}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -147,7 +161,7 @@ export default function Dashboard() {
         <StatCard
           title="Accuracy Rate"
           value={`${accuracy}%`}
-          subtitle="Correct answers"
+          subtitle={totalQuestions > 0 ? `Recent form ${recentAccuracy}%` : "Overall accuracy"}
           icon={Target}
           color="green"
         />
@@ -159,10 +173,10 @@ export default function Dashboard() {
           color="gold"
         />
         <StatCard
-          title="Questions Available"
-          value={allQuestions.length}
-          subtitle="Practice questions"
-          icon={BookOpen}
+          title="Study Hours"
+          value={`${studyHours}h`}
+          subtitle={`${mockExamsTaken} mock exams taken`}
+          icon={Clock3}
           color="purple"
         />
       </div>
@@ -170,7 +184,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <StreakCard streak={streak} />
-          <DomainProgress mastery={progress?.domain_mastery || {}} />
+          <DomainProgress
+            mastery={progress?.domain_mastery || {}}
+            attemptCounts={progress?.domain_attempt_counts || {}}
+          />
 
           <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
