@@ -19,6 +19,8 @@ import PremiumGate from "@/components/billing/PremiumGate";
 import StatCard from "@/components/dashboard/StatCard";
 import { api } from "@/lib/api";
 import { isPremiumPlan } from "@/lib/plan-access";
+import { MIN_DOMAIN_ATTEMPTS } from "@/lib/backend-core";
+import { PRACTICE_TOPIC_TOTALS, TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 
 const topicLabels = {
   measurement: "Measurement",
@@ -52,10 +54,15 @@ export default function Analytics() {
 
   const totalQuestions = progress?.total_questions_completed || 0;
   const totalCorrect = progress?.total_correct || 0;
-  const accuracy =
+  const answeredAccuracy =
     totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  const bankAccuracy = progress?.bank_accuracy || 0;
   const studyHours = progress?.study_hours || 0;
   const readiness = progress?.readiness_score || 0;
+  const bankCoveragePercent =
+    TOTAL_PRACTICE_QUESTIONS > 0
+      ? Math.round((totalQuestions / TOTAL_PRACTICE_QUESTIONS) * 100)
+      : 0;
 
   const topicData = useMemo(
     () =>
@@ -72,13 +79,27 @@ export default function Analytics() {
     [attempts],
   );
 
-  const masteryData = useMemo(
+  const domainCoverageData = useMemo(
     () =>
-      topicKeys.map((key) => ({
-        name: topicLabels[key],
-        mastery: progress?.domain_mastery?.[key] || 0,
-      })),
-    [progress],
+      topicKeys.map((key) => {
+        const answered = progress?.domain_attempt_counts?.[key] || 0;
+        const total = PRACTICE_TOPIC_TOTALS[key] || 0;
+        const correct = attempts.filter(
+          (attempt) => attempt.topic === key && attempt.is_correct,
+        ).length;
+        const answeredAccuracyForDomain =
+          answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+        return {
+          name: topicLabels[key],
+          answered,
+          total,
+          coverage: total > 0 ? Math.round((answered / total) * 100) : 0,
+          answeredAccuracy: answeredAccuracyForDomain,
+          hasEnoughData: answered >= MIN_DOMAIN_ATTEMPTS,
+        };
+      }),
+    [attempts, progress],
   );
 
   const examScoreData = useMemo(
@@ -132,9 +153,9 @@ export default function Analytics() {
           color="blue"
         />
         <StatCard
-          title="Accuracy"
-          value={`${accuracy}%`}
-          subtitle="Across answered questions"
+          title="Bank Accuracy"
+          value={`${bankAccuracy}%`}
+          subtitle={`${totalCorrect} correct out of 3000`}
           icon={Target}
           color="green"
         />
@@ -146,9 +167,9 @@ export default function Analytics() {
           color="purple"
         />
         <StatCard
-          title="Questions"
-          value={totalQuestions}
-          subtitle="Tracked attempts"
+          title="Coverage"
+          value={`${bankCoveragePercent}%`}
+          subtitle={`${totalQuestions}/${TOTAL_PRACTICE_QUESTIONS} answered`}
           icon={BookOpen}
           color="gold"
         />
@@ -158,14 +179,17 @@ export default function Analytics() {
         <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Domain Performance
+              Domain Coverage
             </h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              Answered out of each domain's share of the 3000-question bank.
+            </p>
             {analyticsQuery.isLoading ? (
               <span className="text-xs text-slate-400">Loading...</span>
             ) : null}
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={masteryData} layout="vertical">
+            <BarChart data={domainCoverageData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" opacity={0.15} />
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} />
               <YAxis
@@ -175,15 +199,48 @@ export default function Analytics() {
                 tick={{ fontSize: 11, fill: "#64748B" }}
               />
               <Tooltip
+                formatter={(value, _name, props) => {
+                  const item = props?.payload;
+                  if (!item) {
+                    return [`${value}%`, "Coverage"];
+                  }
+
+                  return [
+                    `${item.answered} of ${item.total} answered${
+                      item.hasEnoughData
+                        ? ` • ${item.answeredAccuracy}% answered accuracy`
+                        : ""
+                    }`,
+                    "Coverage",
+                  ];
+                }}
                 contentStyle={{
                   borderRadius: "12px",
                   border: "1px solid #1E293B",
                   fontSize: "12px",
                 }}
               />
-              <Bar dataKey="mastery" fill="#1E5EFF" radius={[0, 6, 6, 0]} barSize={20} />
+              <Bar dataKey="coverage" fill="#1E5EFF" radius={[0, 6, 6, 0]} barSize={20} />
             </BarChart>
           </ResponsiveContainer>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {domainCoverageData.map((item) => (
+              <div
+                key={item.name}
+                className="rounded-xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900"
+              >
+                <p className="font-medium text-slate-700 dark:text-slate-200">{item.name}</p>
+                <p className="mt-1 text-slate-500 dark:text-slate-400">
+                  {item.answered}/{item.total} answered
+                </p>
+                <p className="text-slate-500 dark:text-slate-400">
+                  {item.hasEnoughData
+                    ? `${item.answeredAccuracy}% answered accuracy`
+                    : `Need ${MIN_DOMAIN_ATTEMPTS - item.answered} more for stable accuracy`}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">

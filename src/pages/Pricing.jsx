@@ -7,6 +7,7 @@ import {
   Crown,
   GraduationCap,
   Loader2,
+  Minus,
   Sparkles,
   X,
 } from "lucide-react";
@@ -266,10 +267,20 @@ export default function Pricing() {
                   </div>
                 ) : null}
 
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
-                    {plan.name}
-                  </h2>
+                <div className="mb-6 min-h-[180px]">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                      {plan.name}
+                    </h2>
+                    {isCurrent ? (
+                      <Badge
+                        variant="outline"
+                        className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300"
+                      >
+                        Current
+                      </Badge>
+                    ) : null}
+                  </div>
                   <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
                     {plan.description}
                   </p>
@@ -326,12 +337,22 @@ export default function Pricing() {
                     </div>
                   ))}
                 </div>
-
-                {isCurrent ? (
-                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                    You are currently on this plan.
-                  </div>
-                ) : null}
+                <div className="mt-5 min-h-[24px] text-sm font-medium">
+                  {isCurrent ? (
+                    <span className="text-emerald-600 dark:text-emerald-300">
+                      Your current billing plan.
+                    </span>
+                  ) : isPremiumPlan(currentPlan) && plan.id !== currentPlan ? (
+                    <span className="text-slate-400 dark:text-slate-500">
+                      Switch plans anytime from billing.
+                    </span>
+                  ) : (
+                    <span className="invisible inline-flex items-center gap-1">
+                      <Minus className="h-3.5 w-3.5" />
+                      spacer
+                    </span>
+                  )}
+                </div>
               </div>
             );
           })}
