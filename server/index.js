@@ -19,6 +19,7 @@ const app = express();
 const port = Number(process.env.API_PORT || 8787);
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -286,9 +287,10 @@ app.get("/api/auth/oauth/:providerId/start", (req, res) => {
   }
 });
 
-app.get("/api/auth/oauth/:providerId/callback", async (req, res) => {
+async function handleOAuthCallback(req, res) {
   const { providerId } = req.params;
-  const stateRecord = consumeOAuthState(String(req.query.state || ""));
+  const callbackState = String((req.body?.state || req.query.state) || "");
+  const stateRecord = consumeOAuthState(callbackState);
   const fallbackOrigin = getBackendOrigin(req);
   const frontendOrigin = stateRecord?.frontend_origin || fallbackOrigin;
   const redirectTo = stateRecord?.redirect_to || "/";
@@ -302,10 +304,15 @@ app.get("/api/auth/oauth/:providerId/callback", async (req, res) => {
     return;
   }
 
-  if (req.query.error) {
+  if (req.body?.error || req.query.error) {
     res.redirect(
       buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
-        oauthError: String(req.query.error_description || req.query.error),
+        oauthError: String(
+          req.body?.error_description ||
+            req.query.error_description ||
+            req.body?.error ||
+            req.query.error,
+        ),
       }),
     );
     return;
@@ -314,8 +321,12 @@ app.get("/api/auth/oauth/:providerId/callback", async (req, res) => {
   try {
     const profile = await exchangeOAuthCodeForProfile({
       providerId,
-      code: String(req.query.code || ""),
+      code: String((req.body?.code || req.query.code) || ""),
       backendOrigin: fallbackOrigin,
+      callbackParams: {
+        ...req.query,
+        ...req.body,
+      },
     });
     const authData = upsertOAuthUser(profile, providerId);
 
@@ -331,7 +342,10 @@ app.get("/api/auth/oauth/:providerId/callback", async (req, res) => {
       }),
     );
   }
-});
+}
+
+app.get("/api/auth/oauth/:providerId/callback", handleOAuthCallback);
+app.post("/api/auth/oauth/:providerId/callback", handleOAuthCallback);
 
 app.post("/api/auth/register", (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();

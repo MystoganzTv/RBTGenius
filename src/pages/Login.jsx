@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  BadgeCheck,
   Building2,
   Github,
   Globe,
@@ -20,6 +21,11 @@ const OAUTH_OPTIONS = [
     id: "google",
     label: "Continue with Google",
     Icon: Globe,
+  },
+  {
+    id: "apple",
+    label: "Continue with Apple",
+    Icon: BadgeCheck,
   },
   {
     id: "github",
@@ -72,6 +78,10 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [authProviders, setAuthProviders] = useState([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(true);
+  const availableProviders = useMemo(
+    () => OAUTH_OPTIONS.filter((option) => authProviders.some((provider) => provider.id === option.id)),
+    [authProviders],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -180,8 +190,6 @@ export default function Login() {
     }
   };
 
-  const availableProviderIds = new Set(authProviders.map((provider) => provider.id));
-
   const handleProviderAuth = (providerId) => {
     setErrorMessage("");
     window.location.assign(api.getOAuthStartUrl(providerId, redirectPath));
@@ -202,40 +210,43 @@ export default function Login() {
             <Sparkles className="-mt-1 h-4 w-4 text-[#FFB800]" />
           </div>
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-            Sign in to sync your progress, mock exams, and AI tutor history.
+            Choose the easiest way to continue and keep your study progress synced.
           </p>
         </div>
 
-        <div className="mb-6 space-y-3">
-          {OAUTH_OPTIONS.map(({ id, label, Icon }) => {
-            const isAvailable = availableProviderIds.has(id);
-
-            return (
+        {availableProviders.length > 0 ? (
+          <>
+            <div className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
+              Quick sign in
+            </div>
+            <div className="mb-6 space-y-3">
+              {availableProviders.map(({ id, label, Icon }) => (
               <Button
                 key={id}
                 type="button"
                 variant="outline"
-                disabled={!isAvailable || isSubmitting}
+                disabled={isSubmitting}
                 onClick={() => handleProviderAuth(id)}
                 className="w-full justify-start gap-3 rounded-xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
               >
                 <Icon className="h-4 w-4" />
                 {label}
-                {!isAvailable && !isLoadingProviders ? (
-                  <span className="ml-auto text-[11px] uppercase tracking-wide text-slate-400">
-                    Soon
-                  </span>
-                ) : null}
               </Button>
-            );
-          })}
-        </div>
+              ))}
+            </div>
 
-        <div className="mb-6 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-          <span>or continue manually</span>
-          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-        </div>
+            <div className="mb-6 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              <span>or use email</span>
+              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+            </div>
+          </>
+        ) : isLoadingProviders ? (
+          <div className="mb-6 flex items-center justify-center py-2 text-sm text-slate-400 dark:text-slate-500">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Loading sign-in options...
+          </div>
+        ) : null}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">

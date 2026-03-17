@@ -1,5 +1,74 @@
 import crypto from "node:crypto";
 
+function decodeJwtPayload(token) {
+  const [, payload] = String(token || "").split(".");
+  if (!payload) {
+    return null;
+  }
+
+  const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  return JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+}
+
+function parseAppleUserPayload(value) {
+  if (!value) {
+    return {};
+  }
+
+  if (typeof value === "object") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return {};
+  }
+}
+
+function signAppleClientSecret({
+  clientId,
+  teamId,
+  keyId,
+  privateKey,
+}) {
+  const header = {
+    alg: "ES256",
+    kid: keyId,
+    typ: "JWT",
+  };
+
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: teamId,
+    iat: now,
+    exp: now + 60 * 60 * 24 * 180,
+    aud: "https://appleid.apple.com",
+    sub: clientId,
+  };
+
+  const encode = (value) =>
+    Buffer.from(JSON.stringify(value))
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+
+  const signingInput = `${encode(header)}.${encode(payload)}`;
+  const signature = crypto
+    .sign("sha256", Buffer.from(signingInput), {
+      key: privateKey.replace(/\\n/g, "\n"),
+      dsaEncoding: "ieee-p1363",
+    })
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+
+  return `${signingInput}.${signature}`;
+}
+
 const OAUTH_PROVIDERS = {
   google: {
     id: "google",
@@ -108,6 +177,49 @@ const OAUTH_PROVIDERS = {
       };
     },
   },
+  apple: {
+    id: "apple",
+    label: "Apple",
+    authorizationUrl: "https://appleid.apple.com/auth/authorize",
+    tokenUrl: "https://appleid.apple.com/auth/token",
+    scopes: ["name", "email"],
+    clientIdEnv: "APPLE_CLIENT_ID",
+    clientSecretEnv: "APPLE_PRIVATE_KEY",
+    isConfigured(env) {
+      return Boolean(
+        env.APPLE_CLIENT_ID &&
+          env.APPLE_TEAM_ID &&
+          env.APPLE_KEY_ID &&
+          env.APPLE_PRIVATE_KEY,
+      );
+    },
+    getClientSecret(env) {
+      return signAppleClientSecret({
+        clientId: env.APPLE_CLIENT_ID,
+        teamId: env.APPLE_TEAM_ID,
+        keyId: env.APPLE_KEY_ID,
+        privateKey: env.APPLE_PRIVATE_KEY,
+      });
+    },
+    extraAuthParams: {
+      response_mode: "form_post",
+      response_type: "code",
+    },
+    async getProfile(_accessToken, _env, tokenData, callbackParams) {
+      const idTokenPayload = decodeJwtPayload(tokenData?.id_token);
+      const appleUser = parseAppleUserPayload(callbackParams?.user);
+      const firstName = appleUser?.name?.firstName || "";
+      const lastName = appleUser?.name?.lastName || "";
+      const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+      return {
+        id: idTokenPayload?.sub || appleUser?.sub || null,
+        email: idTokenPayload?.email || appleUser?.email || null,
+        name: fullName || idTokenPayload?.email || "Apple User",
+        avatar_url: null,
+      };
+    },
+  },
 };
 
 function getProviderDefinition(providerId) {
@@ -116,7 +228,11 @@ function getProviderDefinition(providerId) {
 
 export function listOAuthProviders(env = process.env) {
   return Object.values(OAUTH_PROVIDERS)
-    .filter((provider) => env[provider.clientIdEnv] && env[provider.clientSecretEnv])
+    .filter((provider) =>
+      provider.isConfigured
+        ? provider.isConfigured(env)
+        : env[provider.clientIdEnv] && env[provider.clientSecretEnv],
+    )
     .map((provider) => ({
       id: provider.id,
       label: provider.label,
@@ -163,9 +279,11 @@ export function buildOAuthAuthorizationUrl({
     throw new Error("Unsupported OAuth provider");
   }
 
+  const isConfigured = provider.isConfigured
+    ? provider.isConfigured(env)
+    : env[provider.clientIdEnv] && env[provider.clientSecretEnv];
   const clientId = env[provider.clientIdEnv];
-  const clientSecret = env[provider.clientSecretEnv];
-  if (!clientId || !clientSecret) {
+  if (!isConfigured || !clientId) {
     throw new Error(`${provider.label} sign-in is not configured yet`);
   }
 
@@ -189,6 +307,7 @@ export async function exchangeOAuthCodeForProfile({
   providerId,
   code,
   backendOrigin,
+  callbackParams = {},
   env = process.env,
 }) {
   const provider = getProviderDefinition(providerId);
@@ -197,8 +316,13 @@ export async function exchangeOAuthCodeForProfile({
   }
 
   const clientId = env[provider.clientIdEnv];
-  const clientSecret = env[provider.clientSecretEnv];
-  if (!clientId || !clientSecret) {
+  const clientSecret = provider.getClientSecret
+    ? provider.getClientSecret(env)
+    : env[provider.clientSecretEnv];
+  const isConfigured = provider.isConfigured
+    ? provider.isConfigured(env)
+    : env[provider.clientIdEnv] && env[provider.clientSecretEnv];
+  if (!clientId || !clientSecret || !isConfigured) {
     throw new Error(`${provider.label} sign-in is not configured yet`);
   }
 
@@ -231,7 +355,7 @@ export async function exchangeOAuthCodeForProfile({
     throw new Error(`Unable to complete ${provider.label} sign-in`);
   }
 
-  const profile = await provider.getProfile(accessToken, env);
+  const profile = await provider.getProfile(accessToken, env, tokenData, callbackParams);
   if (!profile?.email) {
     throw new Error(`${provider.label} did not return an email address`);
   }

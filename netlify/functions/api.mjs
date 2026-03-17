@@ -281,6 +281,31 @@ function getApiPath(url) {
     .replace(/^\/api/, "") || "/";
 }
 
+function isOAuthStartRoute(apiPath) {
+  return /^\/auth\/oauth\/[^/]+\/start$/.test(apiPath);
+}
+
+function isOAuthCallbackRoute(apiPath) {
+  return /^\/auth\/oauth\/[^/]+\/callback$/.test(apiPath);
+}
+
+async function parseCallbackParams(request) {
+  if (request.method === "POST") {
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      const bodyText = await request.text();
+      return Object.fromEntries(new URLSearchParams(bodyText));
+    }
+
+    if (contentType.includes("application/json")) {
+      return await request.json();
+    }
+  }
+
+  const url = new URL(request.url);
+  return Object.fromEntries(url.searchParams.entries());
+}
+
 export default async (request) => {
   if (request.method === "OPTIONS") {
     return json({}, { status: 204 });
@@ -303,9 +328,7 @@ export default async (request) => {
     });
   }
 
-  if (apiPath === "/auth/oauth/google/start" && request.method === "GET" ||
-      apiPath === "/auth/oauth/github/start" && request.method === "GET" ||
-      apiPath === "/auth/oauth/microsoft/start" && request.method === "GET") {
+  if (request.method === "GET" && isOAuthStartRoute(apiPath)) {
     const providerId = apiPath.split("/")[3];
     const redirectTo = normalizeRedirectPath(url.searchParams.get("redirectTo"));
     const backendOrigin = url.origin;
@@ -344,11 +367,10 @@ export default async (request) => {
     }
   }
 
-  if (apiPath === "/auth/oauth/google/callback" && request.method === "GET" ||
-      apiPath === "/auth/oauth/github/callback" && request.method === "GET" ||
-      apiPath === "/auth/oauth/microsoft/callback" && request.method === "GET") {
+  if ((request.method === "GET" || request.method === "POST") && isOAuthCallbackRoute(apiPath)) {
     const providerId = apiPath.split("/")[3];
-    const stateRecord = await consumeOAuthState(String(url.searchParams.get("state") || ""));
+    const callbackParams = await parseCallbackParams(request);
+    const stateRecord = await consumeOAuthState(String(callbackParams.state || ""));
     const frontendOrigin = stateRecord?.frontend_origin || url.origin;
     const redirectTo = stateRecord?.redirect_to || "/";
 
@@ -361,11 +383,10 @@ export default async (request) => {
       );
     }
 
-    if (url.searchParams.get("error")) {
+    if (callbackParams.error) {
       return Response.redirect(
         buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
-          oauthError:
-            url.searchParams.get("error_description") || url.searchParams.get("error"),
+          oauthError: callbackParams.error_description || callbackParams.error,
         }),
         302,
       );
@@ -374,8 +395,9 @@ export default async (request) => {
     try {
       const profile = await exchangeOAuthCodeForProfile({
         providerId,
-        code: String(url.searchParams.get("code") || ""),
+        code: String(callbackParams.code || ""),
         backendOrigin: url.origin,
+        callbackParams,
       });
       const authData = await upsertOAuthUser(profile, providerId);
 
