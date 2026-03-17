@@ -599,9 +599,9 @@ export default function Practice() {
               Navigator
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="rounded-xl text-xs text-slate-400 dark:text-slate-500 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+              className="rounded-xl text-xs"
               onClick={endSession}
             >
               End Session
@@ -616,7 +616,7 @@ export default function Practice() {
               type="button"
               onClick={() => setReviewFilter(filter.id)}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5EFF]/15",
                 reviewFilter === filter.id
                   ? "border-[#1E5EFF] bg-[#1E5EFF]/10 text-[#1E5EFF]"
                   : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900",

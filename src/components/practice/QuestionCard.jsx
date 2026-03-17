@@ -40,8 +40,8 @@ export default function QuestionCard({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
-      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-4 dark:border-slate-800 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
             Question {questionNumber} of {totalQuestions}
           </span>
@@ -58,34 +58,36 @@ export default function QuestionCard({
           ) : null}
         </div>
 
-        <Badge
-          variant="secondary"
-          className={cn(
-            "text-[10px]",
-            question?.difficulty === "beginner"
-              ? "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"
-              : question?.difficulty === "intermediate"
-                ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300"
-                : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300",
-          )}
-        >
-          {question?.difficulty}
-        </Badge>
+        <div className="flex items-center justify-between gap-3 lg:justify-end">
+          <Badge
+            variant="secondary"
+            className={cn(
+              "text-[10px]",
+              question?.difficulty === "beginner"
+                ? "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"
+                : question?.difficulty === "intermediate"
+                  ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300"
+                  : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300",
+            )}
+          >
+            {question?.difficulty}
+          </Badge>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "ml-2 rounded-xl px-2.5 text-xs",
-            isFlagged
-              ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-              : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900",
-          )}
-          onClick={onToggleFlag}
-        >
-          <Flag className={cn("h-3.5 w-3.5", isFlagged && "fill-current")} />
-          {isFlagged ? "Flagged" : "Flag"}
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "rounded-xl px-2.5 text-xs",
+              isFlagged
+                ? "bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/60"
+                : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900",
+            )}
+            onClick={onToggleFlag}
+          >
+            <Flag className={cn("h-3.5 w-3.5", isFlagged && "fill-current")} />
+            {isFlagged ? "Flagged" : "Flag"}
+          </Button>
+        </div>
       </div>
 
       <div className="p-6">
@@ -127,7 +129,7 @@ export default function QuestionCard({
                 onClick={() => !isSubmitted && onSelectAnswer?.(option.label)}
                 disabled={isSubmitted}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
+                  "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5EFF]/15 focus-visible:ring-offset-0",
                   optionStyle,
                 )}
               >
