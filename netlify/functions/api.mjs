@@ -39,7 +39,7 @@ import {
 } from "../../src/lib/plan-access.js";
 
 function getDbStore() {
-  return getStore("rbt-genius-data");
+  return getStore({ name: "rbt-genius-data", consistency: "strong" });
 }
 
 async function withFreshStore(operation) {
