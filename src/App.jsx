@@ -16,11 +16,15 @@ import PageNotFound from "@/lib/PageNotFound";
 import { queryClientInstance } from "@/lib/query-client";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
+import { pageNameToSlug } from "@/utils";
 import { pagesConfig } from "./pages.config";
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : null;
+const PAGE_SLUGS = Object.fromEntries(
+  Object.keys(Pages).map((pageName) => [pageNameToSlug(pageName), pageName]),
+);
 const PUBLIC_PAGES = new Set([
   "Pricing",
   "TermsOfService",
@@ -41,49 +45,51 @@ function resolvePageComponent(pageName) {
   return Pages[pageName] || null;
 }
 
-function QueryPageRenderer() {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const requestedPage = searchParams.get("page");
-  const pageKey = requestedPage && Pages[requestedPage] ? requestedPage : mainPageKey;
-  const PageComponent = resolvePageComponent(pageKey) || MainPage;
+function resolvePageKey(candidate) {
+  if (!candidate) {
+    return null;
+  }
+
+  if (Pages[candidate]) {
+    return candidate;
+  }
+
+  return PAGE_SLUGS[String(candidate).toLowerCase()] || null;
+}
+
+function PageRenderer({ pageKey }) {
+  const resolvedPageKey = resolvePageKey(pageKey) || mainPageKey;
+  const PageComponent = resolvePageComponent(resolvedPageKey) || MainPage;
 
   if (!PageComponent) {
     return <PageNotFound />;
   }
 
-  if (PUBLIC_PAGES.has(pageKey)) {
+  if (PUBLIC_PAGES.has(resolvedPageKey)) {
     return <PageComponent />;
   }
 
   return (
-    <LayoutWrapper currentPageName={pageKey}>
+    <LayoutWrapper currentPageName={resolvedPageKey}>
       <PageComponent />
     </LayoutWrapper>
   );
 }
 
-function LegacyPageRenderer() {
-  const { pageName } = useParams();
-  const PageComponent = resolvePageComponent(pageName);
+function QueryPageRedirect() {
+  const location = useLocation();
+  const requestedPage = new URLSearchParams(location.search).get("page");
+  const pageKey = resolvePageKey(requestedPage);
 
-  if (!PageComponent) {
-    return <PageNotFound />;
+  if (!pageKey) {
+    return <Landing />;
   }
 
-  if (PUBLIC_PAGES.has(pageName)) {
-    return <PageComponent />;
-  }
-
-  return (
-    <LayoutWrapper currentPageName={pageName}>
-      <PageComponent />
-    </LayoutWrapper>
-  );
+  const destination = `/${pageNameToSlug(pageKey)}`;
+  return <Navigate to={destination} replace />;
 }
 
 function RootRoute() {
-  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const requestedPage = new URLSearchParams(location.search).get("page");
 
@@ -91,25 +97,21 @@ function RootRoute() {
     return <Landing />;
   }
 
-  if (PUBLIC_PAGES.has(requestedPage) || isAuthenticated) {
-    return <QueryPageRenderer />;
-  }
-
-  return (
-    <Navigate
-      to={`/login?redirectTo=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`}
-      replace
-    />
-  );
+  return <QueryPageRedirect key={location.search} />;
 }
 
-function ProtectedLegacyRoute() {
+function RoutedPage() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   const { pageName } = useParams();
+  const resolvedPageKey = resolvePageKey(pageName);
 
-  if (!isAuthenticated && PUBLIC_PAGES.has(pageName)) {
-    return <LegacyPageRenderer />;
+  if (!resolvedPageKey) {
+    return <PageNotFound />;
+  }
+
+  if (!isAuthenticated && PUBLIC_PAGES.has(resolvedPageKey)) {
+    return <PageRenderer pageKey={resolvedPageKey} />;
   }
 
   if (!isAuthenticated) {
@@ -121,7 +123,13 @@ function ProtectedLegacyRoute() {
     );
   }
 
-  return <LegacyPageRenderer />;
+  const canonicalPath = `/${pageNameToSlug(resolvedPageKey)}`;
+
+  if (location.pathname !== canonicalPath) {
+    return <Navigate to={canonicalPath} replace />;
+  }
+
+  return <PageRenderer pageKey={resolvedPageKey} />;
 }
 
 function AuthenticatedApp() {
@@ -133,10 +141,10 @@ function AuthenticatedApp() {
     isAuthenticated,
   } = useAuth();
   const location = useLocation();
-  const requestedPage = new URLSearchParams(location.search).get("page");
-  const legacyPageName = location.pathname.startsWith("/")
-    ? location.pathname.slice(1)
-    : location.pathname;
+  const requestedPage = resolvePageKey(new URLSearchParams(location.search).get("page"));
+  const legacyPageName = resolvePageKey(
+    location.pathname.startsWith("/") ? location.pathname.slice(1) : location.pathname,
+  );
   const isLoginRoute = location.pathname === "/login";
   const isLandingRoute = location.pathname === "/" && !new URLSearchParams(location.search).get("page");
   const isPublicRoute =
@@ -180,7 +188,7 @@ function AuthenticatedApp() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<RootRoute />} />
-      <Route path="/:pageName" element={<ProtectedLegacyRoute />} />
+      <Route path="/:pageName" element={<RoutedPage />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
