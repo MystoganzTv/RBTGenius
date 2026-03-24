@@ -323,7 +323,13 @@ export default function Landing() {
                 const activePanel = premiumPreviewPanels[activePreviewIndex];
 
                 return (
-                  <>
+                  <div
+                    className={`overflow-hidden rounded-[2rem] border p-3 ${
+                      isDark
+                        ? "border-slate-800 bg-[linear-gradient(180deg,#0b1224,#0a1020)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
+                        : "border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.22)]"
+                    }`}
+                  >
                     <div
                       key={activePanel.title}
                       className={`rounded-[1.7rem] border ${
@@ -366,64 +372,15 @@ export default function Landing() {
                         </div>
                       </div>
                     </div>
-
-                    {outgoingPanel ? (
-                      <div
-                        aria-hidden="true"
-                        className={`pointer-events-none absolute inset-0 rounded-[1.7rem] border ${
-                          isDark
-                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
-                            : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
-                        }`}
-                        style={{
-                          animation:
-                            "landing-preview-mobile-exit 560ms cubic-bezier(0.19, 1, 0.22, 1) forwards",
-                        }}
-                      >
-                        <div className="flex min-h-[290px] flex-col p-4 pb-5">
-                          <div className="flex items-start gap-3">
-                            <div
-                              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${outgoingPanel.accentClassName}`}
-                            >
-                              <outgoingPanel.Icon className="h-4 w-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
-                                {outgoingPanel.label}
-                              </p>
-                              <p className={`text-sm font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                                {outgoingPanel.title}
-                              </p>
-                              <p className={`text-xs leading-5 ${isDark ? "text-slate-300" : "text-slate-500"}`}>
-                                {outgoingPanel.subtitle}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="mt-4 flex-1 space-y-4">
-                            <div className={`rounded-[1.3rem] border p-4 ${isDark ? "border-white/8 bg-white/[0.025]" : "border-slate-200/80 bg-white/70"}`}>
-                              <div className="flex items-center justify-between">
-                                <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
-                                <div className={`h-8 w-24 rounded-full border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                              </div>
-                              <div className="mt-4 space-y-3">
-                                <div className={`h-12 rounded-[1.2rem] ${isDark ? "bg-white/[0.05]" : "bg-slate-100"}`} />
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                  <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                                  <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                                </div>
-                              </div>
-                            </div>
-                            <div className="grid gap-3 sm:grid-cols-3">
-                              <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                              <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                              <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
-                  </>
+                    <div
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute inset-x-6 bottom-3 h-24 rounded-[1.6rem] border ${
+                        isDark
+                          ? "border-slate-700/40 bg-white/[0.02]"
+                          : "border-slate-200/70 bg-white/55"
+                      }`}
+                    />
+                  </div>
                 );
               })()}
             </div>
