@@ -50,8 +50,8 @@ const premiumPreviewPanels = [
       <div>
         <div className="grid grid-cols-2 gap-4">
           <div
-            className={`rounded-[1.15rem] border p-3 ${
-              isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"
+            className={`rounded-[1.15rem] p-3 ${
+              isDark ? "bg-white/[0.04]" : "bg-white/92 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.18)]"
             }`}
           >
             <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
@@ -61,8 +61,8 @@ const premiumPreviewPanels = [
             <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
           </div>
           <div
-            className={`rounded-[1.15rem] border p-3 ${
-              isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"
+            className={`rounded-[1.15rem] p-3 ${
+              isDark ? "bg-white/[0.04]" : "bg-white/92 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.18)]"
             }`}
           >
             <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
@@ -149,15 +149,15 @@ const premiumPreviewPanels = [
           <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-400" />
         </div>
         <div className="mt-4 grid grid-cols-3 gap-3">
-          <div className={`rounded-[1rem] border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"}`}>
+          <div className={`rounded-[1rem] p-3 ${isDark ? "bg-white/[0.04]" : "bg-white/92 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.18)]"}`}>
             <p className="text-2xl font-black text-emerald-300">2</p>
             <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>passed</p>
           </div>
-          <div className={`rounded-[1rem] border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"}`}>
+          <div className={`rounded-[1rem] p-3 ${isDark ? "bg-white/[0.04]" : "bg-white/92 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.18)]"}`}>
             <p className={`text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>6</p>
             <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>taken</p>
           </div>
-          <div className={`rounded-[1rem] border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"}`}>
+          <div className={`rounded-[1rem] p-3 ${isDark ? "bg-white/[0.04]" : "bg-white/92 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.18)]"}`}>
             <p className="text-2xl font-black text-amber-300">4</p>
             <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>review</p>
           </div>
@@ -400,7 +400,7 @@ export default function Landing() {
 
           <div className="relative min-h-[380px] px-0 py-2 sm:min-h-[520px] sm:px-2 sm:py-6 lg:px-4">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
-            <div className="mx-auto mb-3 max-w-[22rem] text-center sm:mb-4 sm:max-w-[34rem] sm:text-left">
+            <div className="mx-auto mb-3 hidden max-w-[22rem] text-center sm:mb-4 sm:max-w-[34rem] sm:text-left">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-[11px] font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B] sm:text-sm">
                 <Crown className="h-3.5 w-3.5" />
                 Premium Preview
@@ -414,43 +414,31 @@ export default function Landing() {
                 const activePanel = premiumPreviewPanels[activePreviewIndex];
 
                 return (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <span
-                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                          isDark
-                            ? "bg-white/6 text-slate-300"
-                            : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        Guest
-                      </span>
-                      <span
-                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                          isDark
-                            ? "bg-emerald-500/10 text-emerald-300"
-                            : "bg-emerald-50 text-emerald-700"
-                        }`}
-                      >
-                        Free
-                      </span>
-                      <span className="rounded-full bg-[#FFB800]/14 px-3 py-1 text-[11px] font-semibold text-[#C88700] dark:text-[#FFD36B]">
-                        Premium
+                  <div
+                    className={`rounded-[2rem] border p-3 ${
+                      isDark
+                        ? "border-slate-800 bg-[linear-gradient(180deg,#0b1224,#0a1020)]"
+                        : "border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.18)]"
+                    }`}
+                  >
+                    <div className="mb-3 flex justify-start">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-[11px] font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
+                        <Crown className="h-3.5 w-3.5" />
+                        Premium Preview
                       </span>
                     </div>
-
                     <div
-                      className={`overflow-hidden rounded-[2rem] border p-2 ${
+                      className={`overflow-hidden rounded-[1.75rem] ${
                         isDark
-                          ? "border-slate-800 bg-[linear-gradient(180deg,#0b1224,#0a1020)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
-                          : "border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.18)]"
+                          ? "bg-[linear-gradient(180deg,#0f1930,#0b1427)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
+                          : "bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_24px_60px_-42px_rgba(15,23,42,0.16)]"
                       }`}
                     >
                       <div
-                        className={`rounded-[1.65rem] border ${
+                        className={`rounded-[1.75rem] ${
                           isDark
-                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
-                            : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] text-slate-900 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+                            ? "bg-[linear-gradient(180deg,rgba(18,31,58,0.94),rgba(10,18,35,0.9))] text-white backdrop-blur-xl"
+                            : "bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] text-slate-900 backdrop-blur-xl"
                         }`}
                         style={{
                           animation:
