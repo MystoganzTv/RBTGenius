@@ -46,6 +46,27 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-emerald-500/14 text-emerald-300",
     Icon: Brain,
+    renderMobileContent: (isDark) => (
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className={`rounded-[1.1rem] border p-3 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/88"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>Bank</p>
+            <p className={`mt-2 text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>3000</p>
+            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>questions</p>
+          </div>
+          <div className={`rounded-[1.1rem] border p-3 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/88"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>Mocks</p>
+            <p className={`mt-2 text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>85</p>
+            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>per exam</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className={`rounded-[0.95rem] border px-3 py-2 text-center text-xs font-medium ${isDark ? "border-[#2D6BFF]/30 bg-[#2D6BFF]/14 text-[#8EB0FF]" : "border-[#2D6BFF]/18 bg-[#2D6BFF]/8 text-[#1E5EFF]"}`}>Practice</div>
+          <div className={`rounded-[0.95rem] border px-3 py-2 text-center text-xs font-medium ${isDark ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300" : "border-emerald-300/40 bg-emerald-50 text-emerald-700"}`}>Cards</div>
+          <div className={`rounded-[0.95rem] border px-3 py-2 text-center text-xs font-medium ${isDark ? "border-violet-400/20 bg-violet-500/10 text-violet-300" : "border-violet-300/40 bg-violet-50 text-violet-700"}`}>AI</div>
+        </div>
+      </div>
+    ),
     renderContent: (isDark) => (
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -97,6 +118,39 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-[#2D6BFF]/14 text-[#8EB0FF]",
     Icon: ClipboardCheck,
+    renderMobileContent: (isDark) => (
+      <div className="space-y-3">
+        <div className={`rounded-[1.1rem] border p-4 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/88"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>Average mock score</span>
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${isDark ? "bg-amber-500/16 text-amber-300" : "bg-amber-100 text-amber-700"}`}>Keep practicing</span>
+          </div>
+          <div className={`mt-3 h-3 rounded-full p-0.5 ${isDark ? "bg-white/8" : "bg-slate-100"}`}>
+            <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-400" />
+          </div>
+          <div className="mt-3 flex items-end justify-between gap-3">
+            <div>
+              <p className={`text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>212</p>
+              <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>scaled score</p>
+            </div>
+            <div className={`text-right text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              <p>6 taken</p>
+              <p>2 passed</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className={`rounded-[0.95rem] border px-3 py-3 ${isDark ? "border-emerald-400/18 bg-emerald-500/8" : "border-emerald-300/40 bg-emerald-50"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>Passed</p>
+            <p className="mt-1 text-2xl font-black text-emerald-300">2</p>
+          </div>
+          <div className={`rounded-[0.95rem] border px-3 py-3 ${isDark ? "border-amber-400/18 bg-amber-500/8" : "border-amber-300/40 bg-amber-50"}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>Review</p>
+            <p className="mt-1 text-2xl font-black text-amber-300">4</p>
+          </div>
+        </div>
+      </div>
+    ),
     renderContent: (isDark) => (
       <div className="space-y-4">
         <div
@@ -152,6 +206,27 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-violet-500/14 text-violet-300",
     Icon: MessageSquareMore,
+    renderMobileContent: (isDark) => (
+      <div className="space-y-3">
+        <div className={`space-y-3 rounded-[1.1rem] border p-4 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/88"}`}>
+          <div className={`max-w-[82%] rounded-2xl rounded-bl-md px-3 py-2 text-xs ${isDark ? "bg-white/8 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
+            Why is differential reinforcement better than just saying “no”?
+          </div>
+          <div className="ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-[#2D6BFF] px-3 py-2 text-xs text-white">
+            It teaches what to do instead, not only what to stop.
+          </div>
+          <div className={`flex items-center gap-2 pt-1 text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            Unlimited premium AI support
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className={`rounded-[0.95rem] border px-2 py-2 text-center text-xs font-medium ${isDark ? "border-violet-400/20 bg-violet-500/10 text-violet-300" : "border-violet-300/40 bg-violet-50 text-violet-700"}`}>Concepts</div>
+          <div className={`rounded-[0.95rem] border px-2 py-2 text-center text-xs font-medium ${isDark ? "border-white/10 bg-white/5 text-slate-300" : "border-slate-200 bg-white text-slate-600"}`}>Explain</div>
+          <div className={`rounded-[0.95rem] border px-2 py-2 text-center text-xs font-medium ${isDark ? "border-white/10 bg-white/5 text-slate-300" : "border-slate-200 bg-white text-slate-600"}`}>Prompts</div>
+        </div>
+      </div>
+    ),
     renderContent: (isDark) => (
       <div className="space-y-4">
         <div
@@ -351,7 +426,7 @@ export default function Landing() {
                           "landing-preview-mobile-enter 560ms cubic-bezier(0.19, 1, 0.22, 1) both, landing-preview-drift 10.5s ease-in-out 620ms infinite",
                       }}
                     >
-                      <div className="flex min-h-[290px] flex-col p-4 pb-5">
+                      <div className="flex min-h-[236px] flex-col p-4 pb-4">
                         <div className="flex items-start gap-3">
                           <div
                             className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${activePanel.accentClassName}`}
@@ -359,9 +434,6 @@ export default function Landing() {
                             <activePanel.Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0">
-                            <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
-                              {activePanel.label}
-                            </p>
                             <p className={`text-sm font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
                               {activePanel.title}
                             </p>
@@ -371,18 +443,10 @@ export default function Landing() {
                           </div>
                         </div>
                         <div className="mt-4 flex-1">
-                          {activePanel.renderContent(isDark)}
+                          {(activePanel.renderMobileContent ?? activePanel.renderContent)(isDark)}
                         </div>
                       </div>
                     </div>
-                    <div
-                      aria-hidden="true"
-                      className={`pointer-events-none absolute inset-x-6 bottom-3 h-24 rounded-[1.6rem] border ${
-                        isDark
-                          ? "border-slate-700/40 bg-white/[0.02]"
-                          : "border-slate-200/70 bg-white/55"
-                      }`}
-                    />
                   </div>
                 );
               })()}
