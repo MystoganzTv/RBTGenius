@@ -307,6 +307,36 @@ export default function Landing() {
     return () => window.clearInterval(intervalId);
   }, []);
 
+  const renderDesktopWindowBar = (title, stateLabel) => (
+    <div
+      className={`flex items-center justify-between border-b px-5 py-3 ${
+        isDark ? "border-white/8 bg-white/[0.025]" : "border-slate-200/80 bg-white/65"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="h-3 w-3 rounded-full bg-[#FF5F57]" />
+        <span className="h-3 w-3 rounded-full bg-[#FEBC2E]" />
+        <span className="h-3 w-3 rounded-full bg-[#28C840]" />
+      </div>
+      <div className="flex items-center gap-3">
+        <p
+          className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${
+            isDark ? "text-slate-400" : "text-slate-500"
+          }`}
+        >
+          {title}
+        </p>
+        <span
+          className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
+            isDark ? "border-white/10 bg-white/[0.03] text-slate-400" : "border-slate-200 bg-white/85 text-slate-500"
+          }`}
+        >
+          {stateLabel}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-foreground dark:bg-background">
       <header className="border-b border-slate-200/70 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
@@ -519,11 +549,11 @@ export default function Landing() {
                       type="button"
                       aria-label={`Show ${title} preview`}
                       onClick={() => rotatePreview(index)}
-                      className={`absolute left-1/2 top-0 w-[96%] -translate-x-1/2 rounded-[1.7rem] border text-left transition-all will-change-transform sm:w-[92%] sm:rounded-[2rem] ${cardStyles[order]} ${
+                      className={`absolute left-1/2 top-0 w-[96%] -translate-x-1/2 rounded-[1.9rem] border text-left transition-all will-change-transform sm:w-[92%] sm:rounded-[2.1rem] ${cardStyles[order]} ${
                         isFrontCard
                           ? isDark
-                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
-                            : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
+                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.9),rgba(10,18,35,0.86))] text-white backdrop-blur-xl"
+                            : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.95))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
                           : isDark
                             ? "border-slate-300/10 bg-[linear-gradient(180deg,rgba(23,36,68,0.24),rgba(11,19,38,0.18))] text-white backdrop-blur-md"
                             : "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(248,250,252,0.58))] text-slate-700 shadow-[0_20px_50px_-46px_rgba(15,23,42,0.12)] backdrop-blur-md"
@@ -533,20 +563,21 @@ export default function Landing() {
                         transitionDuration: "3000ms",
                       }}
                     >
-                      <div
-                        className="flex min-h-[290px] flex-col p-4 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7"
-                        style={{
-                          animation:
-                            order % 2 === 0
-                              ? `landing-preview-drift ${isFrontCard ? "8.5s" : "10.5s"} ease-in-out infinite`
-                              : `landing-preview-drift-alt ${isFrontCard ? "9.25s" : "11.25s"} ease-in-out infinite`,
-                          animationDelay: `${index * 0.45}s`,
-                        }}
-                      >
-                        <div className="flex items-start justify-between gap-3 sm:gap-4">
-                          <div className="flex min-w-0 items-center gap-3">
+                      <div className="overflow-hidden rounded-[1.9rem] sm:rounded-[2.1rem]">
+                        {renderDesktopWindowBar(title, order === 0 ? "Now" : order === 1 ? "Next" : "Then")}
+                        <div
+                          className="flex min-h-[290px] flex-col p-5 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7"
+                          style={{
+                            animation:
+                              order % 2 === 0
+                                ? `landing-preview-drift ${isFrontCard ? "8.5s" : "10.5s"} ease-in-out infinite`
+                                : `landing-preview-drift-alt ${isFrontCard ? "9.25s" : "11.25s"} ease-in-out infinite`,
+                            animationDelay: `${index * 0.45}s`,
+                          }}
+                        >
+                          <div className="flex items-start gap-3 sm:gap-4">
                             <div
-                              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${accentClassName}`}
+                              className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${accentClassName}`}
                             >
                               <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                             </div>
@@ -562,36 +593,33 @@ export default function Landing() {
                               </p>
                             </div>
                           </div>
-                          <span className={`hidden rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] sm:inline-flex ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
-                            {order === 0 ? "Now" : order === 1 ? "Next" : "Then"}
-                          </span>
-                        </div>
 
-                        <div className="mt-4 flex-1">
-                          {isFrontCard ? (
-                            renderContent(isDark)
-                          ) : (
-                            <div className="space-y-4">
-                              <div className={`rounded-[1.3rem] border p-4 sm:rounded-[1.55rem] sm:p-5 ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200/80 bg-white/65"}`}>
-                                <div className="flex items-center justify-between">
-                                  <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
-                                  <div className={`h-8 w-24 rounded-full border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                                </div>
-                                <div className="mt-4 space-y-3">
-                                  <div className={`h-12 rounded-[1.2rem] ${isDark ? "bg-white/[0.06]" : "bg-slate-100"}`} />
-                                  <div className="grid gap-3 sm:grid-cols-2">
-                                    <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
-                                    <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
+                          <div className="mt-4 flex-1">
+                            {isFrontCard ? (
+                              renderContent(isDark)
+                            ) : (
+                              <div className="space-y-4">
+                                <div className={`rounded-[1.3rem] p-4 sm:rounded-[1.55rem] sm:p-5 ${isDark ? "bg-white/[0.03]" : "bg-white/65"}`}>
+                                  <div className="flex items-center justify-between">
+                                    <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+                                    <div className={`h-8 w-24 rounded-full ${isDark ? "bg-white/[0.05]" : "bg-white/90 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.9)]"}`} />
+                                  </div>
+                                  <div className="mt-4 space-y-3">
+                                    <div className={`h-12 rounded-[1.2rem] ${isDark ? "bg-white/[0.06]" : "bg-slate-100"}`} />
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                      <div className={`h-24 rounded-[1.2rem] ${isDark ? "bg-white/[0.04]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                                      <div className={`h-24 rounded-[1.2rem] ${isDark ? "bg-white/[0.04]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                                    </div>
                                   </div>
                                 </div>
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                  <div className={`h-16 rounded-[1.1rem] ${isDark ? "bg-white/[0.04]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                                  <div className={`h-16 rounded-[1.1rem] ${isDark ? "bg-white/[0.04]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                                  <div className={`h-16 rounded-[1.1rem] ${isDark ? "bg-white/[0.04]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                                </div>
                               </div>
-                              <div className="grid gap-3 sm:grid-cols-3">
-                                <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
-                                <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
-                                <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.04]" : "border-slate-200 bg-white/80"}`} />
-                              </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </button>
@@ -602,21 +630,22 @@ export default function Landing() {
               {outgoingPanel ? (
                 <div
                   aria-hidden="true"
-                  className={`pointer-events-none absolute left-1/2 top-0 z-40 w-[96%] -translate-x-1/2 rounded-[1.7rem] border text-left sm:w-[92%] sm:rounded-[2rem] ${
+                  className={`pointer-events-none absolute left-1/2 top-0 z-40 w-[96%] -translate-x-1/2 rounded-[1.9rem] border text-left sm:w-[92%] sm:rounded-[2.1rem] ${
                     isDark
-                      ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
-                      : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
+                      ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.9),rgba(10,18,35,0.86))] text-white backdrop-blur-xl"
+                      : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.95))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
                   }`}
                   style={{
                     animation:
                       "landing-preview-orbit-exit 3200ms cubic-bezier(0.19, 1, 0.22, 1) forwards",
                   }}
                 >
-                  <div className="flex min-h-[290px] flex-col p-4 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7">
-                    <div className="flex items-start justify-between gap-3 sm:gap-4">
-                      <div className="flex min-w-0 items-center gap-3">
+                  <div className="overflow-hidden rounded-[1.9rem] sm:rounded-[2.1rem]">
+                    {renderDesktopWindowBar(outgoingPanel.title, "Passing")}
+                    <div className="flex min-h-[290px] flex-col p-5 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7">
+                      <div className="flex items-start gap-3 sm:gap-4">
                         <div
-                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${outgoingPanel.accentClassName}`}
+                          className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${outgoingPanel.accentClassName}`}
                         >
                           <outgoingPanel.Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
@@ -632,29 +661,26 @@ export default function Landing() {
                           </p>
                         </div>
                       </div>
-                      <span className={`hidden rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] sm:inline-flex ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
-                        Passing
-                      </span>
-                    </div>
 
-                    <div className="mt-4 flex-1 space-y-4">
-                      <div className={`rounded-[1.3rem] border p-4 sm:rounded-[1.55rem] sm:p-5 ${isDark ? "border-white/8 bg-white/[0.025]" : "border-slate-200/80 bg-white/70"}`}>
-                        <div className="flex items-center justify-between">
-                          <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
-                          <div className={`h-8 w-24 rounded-full border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                        </div>
-                        <div className="mt-4 space-y-3">
-                          <div className={`h-12 rounded-[1.2rem] ${isDark ? "bg-white/[0.05]" : "bg-slate-100"}`} />
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                            <div className={`h-24 rounded-[1.2rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                      <div className="mt-4 flex-1 space-y-4">
+                        <div className={`rounded-[1.3rem] p-4 sm:rounded-[1.55rem] sm:p-5 ${isDark ? "bg-white/[0.025]" : "bg-white/70"}`}>
+                          <div className="flex items-center justify-between">
+                            <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+                            <div className={`h-8 w-24 rounded-full ${isDark ? "bg-white/[0.03]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                          </div>
+                          <div className="mt-4 space-y-3">
+                            <div className={`h-12 rounded-[1.2rem] ${isDark ? "bg-white/[0.05]" : "bg-slate-100"}`} />
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className={`h-24 rounded-[1.2rem] ${isDark ? "bg-white/[0.03]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                              <div className={`h-24 rounded-[1.2rem] ${isDark ? "bg-white/[0.03]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                        <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
-                        <div className={`h-16 rounded-[1.1rem] border ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <div className={`h-16 rounded-[1.1rem] ${isDark ? "bg-white/[0.03]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                          <div className={`h-16 rounded-[1.1rem] ${isDark ? "bg-white/[0.03]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                          <div className={`h-16 rounded-[1.1rem] ${isDark ? "bg-white/[0.03]" : "bg-white/85 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]"}`} />
+                        </div>
                       </div>
                     </div>
                   </div>
