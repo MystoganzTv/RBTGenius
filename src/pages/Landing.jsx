@@ -46,6 +46,36 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-emerald-500/14 text-emerald-300",
     Icon: Brain,
+    renderMobileContent: (isDark) => (
+      <div
+        className={`rounded-[1.35rem] border p-4 ${
+          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/92"
+        }`}
+      >
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              Question bank
+            </p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>3000</p>
+            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
+          </div>
+          <div>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              Mock exams
+            </p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>85</p>
+            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>questions each</p>
+          </div>
+        </div>
+        <div className={`mt-4 h-px ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${isDark ? "bg-[#2D6BFF]/14 text-[#8EB0FF]" : "bg-[#2D6BFF]/8 text-[#1E5EFF]"}`}>Practice</span>
+          <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${isDark ? "bg-emerald-500/10 text-emerald-300" : "bg-emerald-50 text-emerald-700"}`}>Flashcards</span>
+          <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${isDark ? "bg-violet-500/10 text-violet-300" : "bg-violet-50 text-violet-700"}`}>AI tutor</span>
+        </div>
+      </div>
+    ),
     renderContent: (isDark) => (
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -97,6 +127,43 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-[#2D6BFF]/14 text-[#8EB0FF]",
     Icon: ClipboardCheck,
+    renderMobileContent: (isDark) => (
+      <div
+        className={`rounded-[1.35rem] border p-4 ${
+          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/92"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              Mock readiness
+            </p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>212</p>
+            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>average scaled score</p>
+          </div>
+          <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${isDark ? "bg-amber-500/16 text-amber-300" : "bg-amber-100 text-amber-700"}`}>
+            Keep practicing
+          </span>
+        </div>
+        <div className={`mt-4 h-3 rounded-full p-0.5 ${isDark ? "bg-white/8" : "bg-slate-100"}`}>
+          <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-400" />
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          <div>
+            <p className="text-2xl font-black text-emerald-300">2</p>
+            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>passed</p>
+          </div>
+          <div>
+            <p className={`text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>6</p>
+            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>taken</p>
+          </div>
+          <div>
+            <p className="text-2xl font-black text-amber-300">4</p>
+            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>review</p>
+          </div>
+        </div>
+      </div>
+    ),
     renderContent: (isDark) => (
       <div className="space-y-4">
         <div
@@ -152,6 +219,25 @@ const premiumPreviewPanels = [
     accentClassName:
       "bg-violet-500/14 text-violet-300",
     Icon: MessageSquareMore,
+    renderMobileContent: (isDark) => (
+      <div
+        className={`rounded-[1.35rem] border p-4 ${
+          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/92"
+        }`}
+      >
+        <div className={`max-w-[85%] rounded-2xl rounded-bl-md px-3 py-2 text-xs ${isDark ? "bg-white/8 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
+          Why is differential reinforcement better than just saying “no”?
+        </div>
+        <div className="mt-3 ml-auto max-w-[82%] rounded-2xl rounded-br-md bg-[#2D6BFF] px-3 py-2 text-xs text-white">
+          It teaches what to do instead, so the learner has a replacement behavior to reinforce.
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${isDark ? "bg-violet-500/10 text-violet-300" : "bg-violet-50 text-violet-700"}`}>Concepts</span>
+          <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${isDark ? "bg-white/6 text-slate-300" : "bg-slate-100 text-slate-600"}`}>Explain</span>
+          <span className={`rounded-full px-3 py-1 text-[11px] font-medium ${isDark ? "bg-white/6 text-slate-300" : "bg-slate-100 text-slate-600"}`}>Prompts</span>
+        </div>
+      </div>
+    ),
     renderContent: (isDark) => (
       <div className="space-y-4">
         <div
@@ -319,9 +405,10 @@ export default function Landing() {
           <div className="relative min-h-[380px] px-0 py-2 sm:min-h-[520px] sm:px-2 sm:py-6 lg:px-4">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
             <div className="mx-auto mb-3 max-w-[22rem] text-center sm:mb-4 sm:max-w-[34rem] sm:text-left">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1E5EFF] dark:text-[#8EB0FF] sm:text-xs">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-[11px] font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B] sm:text-sm">
+                <Crown className="h-3.5 w-3.5" />
                 Premium Preview
-              </p>
+              </div>
               <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400 sm:max-w-md">
                 A quick look at the premium tools you unlock with mock exams, AI support, and deeper study workflows.
               </p>
@@ -331,63 +418,100 @@ export default function Landing() {
                 const activePanel = premiumPreviewPanels[activePreviewIndex];
 
                 return (
-                  <div
-                    className={`overflow-hidden rounded-[2rem] border p-3 ${
-                      isDark
-                        ? "border-slate-800 bg-[linear-gradient(180deg,#0b1224,#0a1020)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
-                        : "border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.22)]"
-                    }`}
-                  >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                          isDark
+                            ? "bg-white/6 text-slate-300"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        Guest
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                          isDark
+                            ? "bg-emerald-500/10 text-emerald-300"
+                            : "bg-emerald-50 text-emerald-700"
+                        }`}
+                      >
+                        Free
+                      </span>
+                      <span className="rounded-full bg-[#FFB800]/14 px-3 py-1 text-[11px] font-semibold text-[#C88700] dark:text-[#FFD36B]">
+                        Premium Preview
+                      </span>
+                    </div>
+
                     <div
-                      key={activePanel.title}
-                      className={`rounded-[1.7rem] border ${
+                      className={`overflow-hidden rounded-[2rem] border p-2.5 ${
                         isDark
-                          ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
-                          : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
+                          ? "border-slate-800 bg-[linear-gradient(180deg,#0b1224,#0a1020)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
+                          : "border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.18)]"
                       }`}
-                      style={{
-                        animation:
-                          "landing-preview-mobile-enter 560ms cubic-bezier(0.19, 1, 0.22, 1) both",
-                      }}
                     >
-                      <div className="flex min-h-[290px] flex-col p-4 pb-5">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${activePanel.accentClassName}`}
-                          >
-                            <activePanel.Icon className="h-4 w-4" />
+                      <div
+                        className={`rounded-[1.65rem] border ${
+                          isDark
+                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
+                            : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] text-slate-900 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+                        }`}
+                        style={{
+                          animation:
+                            "landing-preview-mobile-enter 560ms cubic-bezier(0.19, 1, 0.22, 1) both",
+                        }}
+                      >
+                        <div
+                          className={`flex items-center justify-between border-b px-4 py-3 ${
+                            isDark ? "border-white/8" : "border-slate-200/80"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
+                            <span className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
+                            <span className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
                           </div>
-                          <div className="min-w-0">
-                            <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
-                              {activePanel.label}
-                            </p>
-                            <p className={`text-sm font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-                              {activePanel.title}
-                            </p>
-                            <p className={`text-xs leading-5 ${isDark ? "text-slate-300" : "text-slate-500"}`}>
-                              {activePanel.subtitle}
-                            </p>
+                          <div
+                            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
+                              isDark
+                                ? "bg-white/6 text-slate-300"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            Premium Window
                           </div>
                         </div>
+                        <div className="flex min-h-[254px] flex-col p-4 pb-4">
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${activePanel.accentClassName}`}
+                            >
+                              <activePanel.Icon className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p
+                                className={`text-sm font-semibold leading-tight ${
+                                  isDark ? "text-white" : "text-slate-900"
+                                }`}
+                              >
+                                {activePanel.title}
+                              </p>
+                              <p
+                                className={`text-xs leading-5 ${
+                                  isDark ? "text-slate-300" : "text-slate-500"
+                                }`}
+                              >
+                                {activePanel.subtitle}
+                              </p>
+                            </div>
+                          </div>
 
-                        <div
-                          className="mt-4 flex-1"
-                          style={{
-                            animation: "landing-preview-drift 9s ease-in-out infinite",
-                          }}
-                        >
-                          {activePanel.renderContent(isDark)}
+                          <div className="mt-4 flex-1">
+                            {(activePanel.renderMobileContent ?? activePanel.renderContent)(isDark)}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div
-                      aria-hidden="true"
-                      className={`pointer-events-none absolute inset-x-6 bottom-3 h-24 rounded-[1.6rem] border ${
-                        isDark
-                          ? "border-slate-700/40 bg-white/[0.02]"
-                          : "border-slate-200/70 bg-white/55"
-                      }`}
-                    />
                   </div>
                 );
               })()}
