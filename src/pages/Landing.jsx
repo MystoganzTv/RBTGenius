@@ -314,9 +314,9 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative min-h-[520px] px-2 py-6 lg:px-6">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_32%,rgba(45,107,255,0.12),transparent_24%),radial-gradient(circle_at_28%_78%,rgba(139,92,246,0.1),transparent_24%)] blur-2xl" />
-            <div className="relative mx-auto min-h-[460px] max-w-[33rem]">
+          <div className="relative min-h-[520px] px-2 py-6 lg:px-4">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
+            <div className="relative mx-auto h-[470px] max-w-[34rem]">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, renderContent }, index) => {
                   if (index === outgoingPreviewIndex) {
@@ -329,9 +329,9 @@ export default function Landing() {
                   const isFrontCard = order === 0;
 
                   const cardStyles = [
-                    "z-30 translate-x-0 translate-y-8 rotate-[-5deg] scale-100 opacity-100 shadow-[0_44px_100px_-46px_rgba(15,23,42,0.42)]",
-                    "z-20 translate-x-12 translate-y-0 rotate-[6deg] scale-[0.965] opacity-[0.52]",
-                    "z-10 translate-x-24 translate-y-12 rotate-[11deg] scale-[0.92] opacity-[0.26]",
+                    "z-30 translate-x-0 translate-y-8 rotate-[-4.5deg] scale-100 opacity-100 shadow-[0_40px_100px_-52px_rgba(15,23,42,0.32)]",
+                    "z-20 translate-x-9 translate-y-1 rotate-[5.5deg] scale-[0.972] opacity-[0.58]",
+                    "z-10 translate-x-16 translate-y-12 rotate-[9deg] scale-[0.94] opacity-[0.34]",
                   ];
 
                   return (
@@ -340,14 +340,14 @@ export default function Landing() {
                       type="button"
                       aria-label={`Show ${title} preview`}
                       onClick={() => rotatePreview(index)}
-                      className={`absolute left-0 top-0 w-full rounded-[2.2rem] border text-left transition-all will-change-transform ${cardStyles[order]} ${
+                      className={`absolute left-1/2 top-0 w-[92%] -translate-x-1/2 rounded-[2rem] border text-left transition-all will-change-transform ${cardStyles[order]} ${
                         isFrontCard
                           ? isDark
-                            ? "border-slate-200/18 bg-[linear-gradient(180deg,rgba(19,32,61,0.96),rgba(12,19,39,0.96))] text-white backdrop-blur-xl"
-                            : "border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] text-slate-900 shadow-[0_34px_90px_-50px_rgba(15,23,42,0.24)] backdrop-blur-xl"
+                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
+                            : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
                           : isDark
-                            ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(23,36,68,0.42),rgba(11,19,38,0.34))] text-white backdrop-blur-sm"
-                            : "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.58),rgba(248,250,252,0.45))] text-slate-700 shadow-[0_24px_60px_-50px_rgba(15,23,42,0.14)] backdrop-blur-sm"
+                            ? "border-slate-300/10 bg-[linear-gradient(180deg,rgba(23,36,68,0.24),rgba(11,19,38,0.18))] text-white backdrop-blur-md"
+                            : "border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(248,250,252,0.58))] text-slate-700 shadow-[0_20px_50px_-46px_rgba(15,23,42,0.12)] backdrop-blur-md"
                       }`}
                       style={{
                         transitionTimingFunction: "cubic-bezier(0.19, 1, 0.22, 1)",
@@ -355,7 +355,7 @@ export default function Landing() {
                       }}
                     >
                       <div
-                        className="flex h-full flex-col p-6 pb-8"
+                        className="flex min-h-[390px] flex-col p-6 pb-7"
                         style={{
                           animation:
                             order % 2 === 0
@@ -423,17 +423,17 @@ export default function Landing() {
               {outgoingPanel ? (
                 <div
                   aria-hidden="true"
-                  className={`pointer-events-none absolute left-0 top-0 z-40 w-full rounded-[2.2rem] border text-left ${
+                  className={`pointer-events-none absolute left-1/2 top-0 z-40 w-[92%] -translate-x-1/2 rounded-[2rem] border text-left ${
                     isDark
-                      ? "border-slate-200/18 bg-[linear-gradient(180deg,rgba(19,32,61,0.96),rgba(12,19,39,0.96))] text-white backdrop-blur-xl"
-                      : "border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] text-slate-900 shadow-[0_34px_90px_-50px_rgba(15,23,42,0.24)] backdrop-blur-xl"
+                      ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
+                      : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
                   }`}
                   style={{
                     animation:
                       "landing-preview-orbit-exit 3200ms cubic-bezier(0.19, 1, 0.22, 1) forwards",
                   }}
                 >
-                  <div className="flex h-full flex-col p-6 pb-8">
+                  <div className="flex min-h-[390px] flex-col p-6 pb-7">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <div
