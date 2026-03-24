@@ -319,12 +319,11 @@ export default function Landing() {
           <div className="relative min-h-[380px] px-0 py-2 sm:min-h-[520px] sm:px-2 sm:py-6 lg:px-4">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
             <div className="mx-auto mb-3 max-w-[22rem] text-center sm:mb-4 sm:max-w-[34rem] sm:text-left">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#1E5EFF]/18 bg-[#1E5EFF]/8 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF] dark:border-[#8EB0FF]/20 dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]">
-                <Crown className="h-3.5 w-3.5" />
-                Premium preview
-              </div>
-              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400 sm:max-w-md">
-                See a quick sample of the premium experience before you upgrade.
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1E5EFF] dark:text-[#8EB0FF] sm:text-xs">
+                Premium Preview
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400 sm:max-w-md">
+                A quick look at the premium tools you unlock with mock exams, AI support, and deeper study workflows.
               </p>
             </div>
             <div className="relative mx-auto max-w-[22rem] sm:hidden">
@@ -348,7 +347,7 @@ export default function Landing() {
                       }`}
                       style={{
                         animation:
-                          "landing-preview-mobile-enter 560ms cubic-bezier(0.19, 1, 0.22, 1) both, landing-preview-drift 10.5s ease-in-out 620ms infinite",
+                          "landing-preview-mobile-enter 560ms cubic-bezier(0.19, 1, 0.22, 1) both",
                       }}
                     >
                       <div className="flex min-h-[290px] flex-col p-4 pb-5">
@@ -370,7 +369,13 @@ export default function Landing() {
                             </p>
                           </div>
                         </div>
-                        <div className="mt-4 flex-1">
+
+                        <div
+                          className="mt-4 flex-1"
+                          style={{
+                            animation: "landing-preview-drift 9s ease-in-out infinite",
+                          }}
+                        >
                           {activePanel.renderContent(isDark)}
                         </div>
                       </div>
@@ -424,14 +429,18 @@ export default function Landing() {
                       style={{
                         transitionTimingFunction: "cubic-bezier(0.19, 1, 0.22, 1)",
                         transitionDuration: "3000ms",
-                        animation:
-                          order % 2 === 0
-                            ? `landing-preview-drift ${isFrontCard ? "8.75s" : "10.75s"} ease-in-out infinite`
-                            : `landing-preview-drift-alt ${isFrontCard ? "9.5s" : "11.5s"} ease-in-out infinite`,
-                        animationDelay: `${index * 0.45}s`,
                       }}
                     >
-                      <div className="flex min-h-[290px] flex-col p-4 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7">
+                      <div
+                        className="flex min-h-[290px] flex-col p-4 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7"
+                        style={{
+                          animation:
+                            order % 2 === 0
+                              ? `landing-preview-drift ${isFrontCard ? "8.5s" : "10.5s"} ease-in-out infinite`
+                              : `landing-preview-drift-alt ${isFrontCard ? "9.25s" : "11.25s"} ease-in-out infinite`,
+                          animationDelay: `${index * 0.45}s`,
+                        }}
+                      >
                         <div className="flex items-start justify-between gap-3 sm:gap-4">
                           <div className="flex min-w-0 items-center gap-3">
                             <div
