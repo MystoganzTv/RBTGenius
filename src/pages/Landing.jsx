@@ -318,14 +318,6 @@ export default function Landing() {
 
           <div className="relative min-h-[380px] px-0 py-2 sm:min-h-[520px] sm:px-2 sm:py-6 lg:px-4">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
-            <div className="mx-auto mb-3 max-w-[22rem] text-center sm:mb-4 sm:max-w-[34rem] sm:text-left">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1E5EFF] dark:text-[#8EB0FF] sm:text-xs">
-                Premium Preview
-              </p>
-              <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400 sm:max-w-md">
-                A quick look at the premium tools you unlock with mock exams, AI support, and deeper study workflows.
-              </p>
-            </div>
             <div className="relative mx-auto max-w-[22rem] sm:hidden">
               {(() => {
                 const activePanel = premiumPreviewPanels[activePreviewIndex];
