@@ -61,6 +61,30 @@
   }
 }
 
+@keyframes landing-preview-mobile-enter {
+  0% {
+    transform: translate3d(0, 14px, 0) scale(0.985);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes landing-preview-mobile-exit {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(-10px, -8px, 0) scale(0.985);
+    opacity: 0;
+  }
+}
+
 @layer base {
   :root {
     --brand-blue: #1e5eff;
