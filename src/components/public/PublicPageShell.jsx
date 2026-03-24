@@ -13,19 +13,19 @@ export default function PublicPageShell({ title, description, children }) {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-foreground dark:bg-background">
       <header className="border-b border-slate-200/70 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1E5EFF]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link to="/" className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#1E5EFF]">
               <GraduationCap className="h-5 w-5 text-white" />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">RBT</span>
-              <span className="text-lg font-bold text-[#1E5EFF]">Genius</span>
+            <div className="flex min-w-0 items-center gap-1">
+              <span className="truncate text-base font-bold text-slate-900 dark:text-slate-50 sm:text-lg">RBT</span>
+              <span className="truncate text-base font-bold text-[#1E5EFF] sm:text-lg">Genius</span>
               <Sparkles className="h-3.5 w-3.5 text-[#FFB800]" />
             </div>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -36,13 +36,14 @@ export default function PublicPageShell({ title, description, children }) {
             </Button>
             {isAuthenticated ? (
               <Link to={createPageUrl("Dashboard")}>
-                <Button className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
-                  Go to Dashboard
+                <Button className="rounded-xl bg-[#1E5EFF] px-3 text-sm hover:bg-[#1E5EFF]/90 sm:px-4 sm:text-base">
+                  <span className="hidden sm:inline">Go to Dashboard</span>
+                  <span className="sm:hidden">Dashboard</span>
                 </Button>
               </Link>
             ) : (
               <Link to="/login">
-                <Button variant="outline" className="rounded-xl">
+                <Button variant="outline" className="rounded-xl px-3 text-sm sm:px-4 sm:text-base">
                   Log In
                 </Button>
               </Link>
@@ -51,10 +52,10 @@ export default function PublicPageShell({ title, description, children }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-14">
-        <div className="rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950">
+      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+        <div className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950 sm:p-8">
           <div className="max-w-3xl">
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-slate-50">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl">
               {title}
             </h1>
             {description ? (

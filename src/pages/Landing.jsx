@@ -228,19 +228,19 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-foreground dark:bg-background">
       <header className="border-b border-slate-200/70 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1E5EFF]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#1E5EFF]">
               <GraduationCap className="h-5 w-5 text-white" />
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">RBT</span>
-              <span className="text-lg font-bold text-[#1E5EFF]">Genius</span>
+            <div className="flex min-w-0 items-center gap-1">
+              <span className="truncate text-base font-bold text-slate-900 dark:text-slate-50 sm:text-lg">RBT</span>
+              <span className="truncate text-base font-bold text-[#1E5EFF] sm:text-lg">Genius</span>
               <Sparkles className="h-3.5 w-3.5 text-[#FFB800]" />
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -251,20 +251,22 @@ export default function Landing() {
             </Button>
             {isAuthenticated ? (
               <Link to={createPageUrl("Dashboard")}>
-                <Button className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
-                  Go to Dashboard
+                <Button className="rounded-xl bg-[#1E5EFF] px-3 text-sm hover:bg-[#1E5EFF]/90 sm:px-4 sm:text-base">
+                  <span className="hidden sm:inline">Go to Dashboard</span>
+                  <span className="sm:hidden">Dashboard</span>
                 </Button>
               </Link>
             ) : (
               <>
-                <Link to="/login">
+                <Link to="/login" className="hidden sm:block">
                   <Button variant="ghost" className="rounded-xl">
                     Log In
                   </Button>
                 </Link>
                 <Link to="/login?mode=register">
-                  <Button className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90">
-                    Create Account
+                  <Button className="rounded-xl bg-[#1E5EFF] px-3 text-sm hover:bg-[#1E5EFF]/90 sm:px-4 sm:text-base">
+                    <span className="hidden sm:inline">Create Account</span>
+                    <span className="sm:hidden">Start</span>
                   </Button>
                 </Link>
               </>
@@ -273,25 +275,25 @@ export default function Landing() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-14">
-        <section className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-10">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/10 dark:text-[#8EB0FF]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-xs font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/10 dark:text-[#8EB0FF] sm:text-sm">
               <Sparkles className="h-4 w-4" />
               Built for RBT exam prep
             </div>
-            <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.96] text-slate-900 dark:text-slate-50 sm:text-6xl">
+            <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[0.96] text-slate-900 dark:text-slate-50 sm:mt-6 sm:text-5xl lg:text-6xl">
               Study with structure, not guesswork.
             </h1>
-            <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-600 dark:text-slate-300">
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-6 sm:text-xl">
               RBT Genius helps future technicians practice consistently, take realistic mock exams,
               and track meaningful progress across the full learning journey.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
               {isAuthenticated ? (
                 <Link to={createPageUrl("Dashboard")}>
-                  <Button className="h-12 rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
+                  <Button className="h-12 w-full rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90 sm:w-auto">
                     Continue to Dashboard
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -299,13 +301,13 @@ export default function Landing() {
               ) : (
                 <>
                   <Link to="/login?mode=register">
-                    <Button className="h-12 rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
+                    <Button className="h-12 w-full rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90 sm:w-auto">
                       Start Free
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                   <Link to="/login">
-                    <Button variant="outline" className="h-12 rounded-2xl px-6 text-base">
+                    <Button variant="outline" className="h-12 w-full rounded-2xl px-6 text-base sm:w-auto">
                       I already have an account
                     </Button>
                   </Link>
@@ -314,9 +316,9 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="relative min-h-[520px] px-2 py-6 lg:px-4">
+          <div className="relative min-h-[380px] px-0 py-2 sm:min-h-[520px] sm:px-2 sm:py-6 lg:px-4">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
-            <div className="relative mx-auto h-[470px] max-w-[34rem]">
+            <div className="relative mx-auto h-[340px] max-w-[22rem] sm:h-[470px] sm:max-w-[34rem]">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, renderContent }, index) => {
                   if (index === outgoingPreviewIndex) {
@@ -329,9 +331,9 @@ export default function Landing() {
                   const isFrontCard = order === 0;
 
                   const cardStyles = [
-                    "z-30 translate-x-0 translate-y-8 rotate-[-4.5deg] scale-100 opacity-100 shadow-[0_40px_100px_-52px_rgba(15,23,42,0.32)]",
-                    "z-20 translate-x-9 translate-y-1 rotate-[5.5deg] scale-[0.972] opacity-[0.58]",
-                    "z-10 translate-x-16 translate-y-12 rotate-[9deg] scale-[0.94] opacity-[0.34]",
+                    "z-30 translate-x-0 translate-y-5 rotate-[-3deg] scale-100 opacity-100 shadow-[0_32px_72px_-42px_rgba(15,23,42,0.28)] sm:translate-y-8 sm:rotate-[-4.5deg] sm:shadow-[0_40px_100px_-52px_rgba(15,23,42,0.32)]",
+                    "z-20 translate-x-4 translate-y-1 rotate-[3.5deg] scale-[0.98] opacity-[0.45] sm:translate-x-9 sm:rotate-[5.5deg] sm:scale-[0.972] sm:opacity-[0.58]",
+                    "z-10 translate-x-8 translate-y-8 rotate-[6deg] scale-[0.955] opacity-[0.18] sm:translate-x-16 sm:translate-y-12 sm:rotate-[9deg] sm:scale-[0.94] sm:opacity-[0.34]",
                   ];
 
                   return (
@@ -340,7 +342,7 @@ export default function Landing() {
                       type="button"
                       aria-label={`Show ${title} preview`}
                       onClick={() => rotatePreview(index)}
-                      className={`absolute left-1/2 top-0 w-[92%] -translate-x-1/2 rounded-[2rem] border text-left transition-all will-change-transform ${cardStyles[order]} ${
+                      className={`absolute left-1/2 top-0 w-[96%] -translate-x-1/2 rounded-[1.7rem] border text-left transition-all will-change-transform sm:w-[92%] sm:rounded-[2rem] ${cardStyles[order]} ${
                         isFrontCard
                           ? isDark
                             ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
@@ -355,7 +357,7 @@ export default function Landing() {
                       }}
                     >
                       <div
-                        className="flex min-h-[390px] flex-col p-6 pb-7"
+                        className="flex min-h-[290px] flex-col p-4 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7"
                         style={{
                           animation:
                             order % 2 === 0
@@ -364,26 +366,26 @@ export default function Landing() {
                           animationDelay: `${index * 0.45}s`,
                         }}
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-center gap-3">
+                        <div className="flex items-start justify-between gap-3 sm:gap-4">
+                          <div className="flex min-w-0 items-center gap-3">
                             <div
-                              className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accentClassName}`}
+                              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${accentClassName}`}
                             >
-                              <Icon className="h-5 w-5" />
+                              <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                             </div>
-                            <div>
-                              <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
+                            <div className="min-w-0">
+                              <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-[11px] sm:tracking-[0.24em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
                                 {label}
                               </p>
-                              <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
+                              <p className={`text-sm font-semibold leading-tight sm:text-base ${isDark ? "text-white" : "text-slate-900"}`}>
                                 {title}
                               </p>
-                              <p className={`max-w-md text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+                              <p className={`max-w-md text-xs leading-5 sm:text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}>
                                 {subtitle}
                               </p>
                             </div>
                           </div>
-                          <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
+                          <span className={`hidden rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] sm:inline-flex ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
                             {order === 0 ? "Now" : order === 1 ? "Next" : "Then"}
                           </span>
                         </div>
@@ -393,7 +395,7 @@ export default function Landing() {
                             renderContent(isDark)
                           ) : (
                             <div className="space-y-4">
-                              <div className={`rounded-[1.55rem] border p-5 ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200/80 bg-white/65"}`}>
+                              <div className={`rounded-[1.3rem] border p-4 sm:rounded-[1.55rem] sm:p-5 ${isDark ? "border-white/8 bg-white/[0.03]" : "border-slate-200/80 bg-white/65"}`}>
                                 <div className="flex items-center justify-between">
                                   <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
                                   <div className={`h-8 w-24 rounded-full border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
@@ -423,7 +425,7 @@ export default function Landing() {
               {outgoingPanel ? (
                 <div
                   aria-hidden="true"
-                  className={`pointer-events-none absolute left-1/2 top-0 z-40 w-[92%] -translate-x-1/2 rounded-[2rem] border text-left ${
+                  className={`pointer-events-none absolute left-1/2 top-0 z-40 w-[96%] -translate-x-1/2 rounded-[1.7rem] border text-left sm:w-[92%] sm:rounded-[2rem] ${
                     isDark
                       ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
                       : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
@@ -433,33 +435,33 @@ export default function Landing() {
                       "landing-preview-orbit-exit 3200ms cubic-bezier(0.19, 1, 0.22, 1) forwards",
                   }}
                 >
-                  <div className="flex min-h-[390px] flex-col p-6 pb-7">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3">
+                  <div className="flex min-h-[290px] flex-col p-4 pb-5 sm:min-h-[390px] sm:p-6 sm:pb-7">
+                    <div className="flex items-start justify-between gap-3 sm:gap-4">
+                      <div className="flex min-w-0 items-center gap-3">
                         <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-2xl ${outgoingPanel.accentClassName}`}
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${outgoingPanel.accentClassName}`}
                         >
-                          <outgoingPanel.Icon className="h-5 w-5" />
+                          <outgoingPanel.Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
-                        <div>
-                          <p className={`text-[11px] font-semibold uppercase tracking-[0.24em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
+                        <div className="min-w-0">
+                          <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-[11px] sm:tracking-[0.24em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
                             {outgoingPanel.label}
                           </p>
-                          <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-slate-900"}`}>
+                          <p className={`text-sm font-semibold leading-tight sm:text-base ${isDark ? "text-white" : "text-slate-900"}`}>
                             {outgoingPanel.title}
                           </p>
-                          <p className={`max-w-md text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+                          <p className={`max-w-md text-xs leading-5 sm:text-sm ${isDark ? "text-slate-300" : "text-slate-500"}`}>
                             {outgoingPanel.subtitle}
                           </p>
                         </div>
                       </div>
-                      <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
+                      <span className={`hidden rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] sm:inline-flex ${isDark ? "border-white/12 bg-white/5 text-slate-400" : "border-slate-200 bg-white/80 text-slate-400"}`}>
                         Passing
                       </span>
                     </div>
 
                     <div className="mt-4 flex-1 space-y-4">
-                      <div className={`rounded-[1.55rem] border p-5 ${isDark ? "border-white/8 bg-white/[0.025]" : "border-slate-200/80 bg-white/70"}`}>
+                      <div className={`rounded-[1.3rem] border p-4 sm:rounded-[1.55rem] sm:p-5 ${isDark ? "border-white/8 bg-white/[0.025]" : "border-slate-200/80 bg-white/70"}`}>
                         <div className="flex items-center justify-between">
                           <div className={`h-3 w-28 rounded-full ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
                           <div className={`h-8 w-24 rounded-full border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white/80"}`} />
@@ -485,7 +487,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="mt-16 grid gap-5 md:grid-cols-3">
+        <section className="mt-14 grid gap-4 md:mt-16 md:gap-5 md:grid-cols-3">
           {featureCards.map(({ title, description, Icon }) => (
             <div
               key={title}
@@ -500,13 +502,13 @@ export default function Landing() {
           ))}
         </section>
 
-        <section className="mt-16 rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950">
+        <section className="mt-14 rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950 sm:mt-16 sm:p-8">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-sm font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
               <Crown className="h-4 w-4" />
               Guest, Free, and Premium
             </div>
-            <h2 className="mt-5 text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">
+            <h2 className="mt-5 text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
               See what changes when you upgrade.
             </h2>
             <p className="mt-3 text-base leading-7 text-slate-500 dark:text-slate-400">
@@ -514,7 +516,7 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="mt-8 overflow-x-auto">
+          <div className="mt-8 hidden overflow-x-auto md:block">
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-slate-800">
@@ -556,22 +558,43 @@ export default function Landing() {
             </table>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 space-y-4 md:hidden">
+            <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Guest</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                Explore the product, preview pricing, and see how the study flow works before signing up.
+              </p>
+            </div>
+            <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Free</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                Build a daily routine with guided practice, flashcards, and a lighter version of the AI tutor.
+              </p>
+            </div>
+            <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Premium</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                Unlock full mock exams, analytics, unlimited study support, and the complete prep experience.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             {isAuthenticated ? (
               <Link to={createPageUrl("Dashboard")}>
-                <Button className="rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90">
+                <Button className="w-full rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90 sm:w-auto">
                   Go to Dashboard
                 </Button>
               </Link>
             ) : (
               <Link to="/login?mode=register">
-                <Button className="rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90">
+                <Button className="w-full rounded-2xl bg-[#1E5EFF] px-6 hover:bg-[#1E5EFF]/90 sm:w-auto">
                   Start Free
                 </Button>
               </Link>
             )}
             <Link to={createPageUrl("Pricing")}>
-              <Button variant="outline" className="rounded-2xl px-6">
+              <Button variant="outline" className="w-full rounded-2xl px-6 sm:w-auto">
                 View Full Pricing
               </Button>
             </Link>
