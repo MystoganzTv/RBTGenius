@@ -318,7 +318,53 @@ export default function Landing() {
 
           <div className="relative min-h-[380px] px-0 py-2 sm:min-h-[520px] sm:px-2 sm:py-6 lg:px-4">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
-            <div className="relative mx-auto h-[340px] max-w-[22rem] sm:h-[470px] sm:max-w-[34rem]">
+            <div className="relative mx-auto sm:hidden max-w-[22rem]">
+              {(() => {
+                const activePanel = premiumPreviewPanels[activePreviewIndex];
+
+                return (
+                  <div
+                    className={`rounded-[1.7rem] border ${
+                      isDark
+                        ? "border-slate-300/12 bg-[linear-gradient(180deg,rgba(18,31,58,0.88),rgba(10,18,35,0.84))] text-white backdrop-blur-xl"
+                        : "border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.92))] text-slate-900 shadow-[0_28px_80px_-48px_rgba(15,23,42,0.20)] backdrop-blur-xl"
+                    }`}
+                  >
+                    <div className="flex min-h-[290px] flex-col p-4 pb-5">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${activePanel.accentClassName}`}
+                        >
+                          <activePanel.Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-500/90" : "text-slate-400"}`}>
+                            {activePanel.label}
+                          </p>
+                          <p className={`text-sm font-semibold leading-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+                            {activePanel.title}
+                          </p>
+                          <p className={`text-xs leading-5 ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+                            {activePanel.subtitle}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div
+                        className="mt-4 flex-1"
+                        style={{
+                          animation: `landing-preview-drift 9s ease-in-out infinite`,
+                        }}
+                      >
+                        {activePanel.renderContent(isDark)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="relative mx-auto hidden h-[470px] max-w-[34rem] sm:block">
               {premiumPreviewPanels.map(
                 ({ label, title, subtitle, accentClassName, Icon, renderContent }, index) => {
                   if (index === outgoingPreviewIndex) {
