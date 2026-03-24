@@ -47,20 +47,24 @@ const premiumPreviewPanels = [
       "bg-emerald-500/14 text-emerald-300",
     Icon: Brain,
     renderMobileContent: (isDark) => (
-      <div
-        className={`rounded-[1.35rem] border p-4 ${
-          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/92"
-        }`}
-      >
+      <div>
         <div className="grid grid-cols-2 gap-4">
-          <div>
+          <div
+            className={`rounded-[1.15rem] border p-3 ${
+              isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"
+            }`}
+          >
             <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Question bank
             </p>
             <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>3000</p>
             <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
           </div>
-          <div>
+          <div
+            className={`rounded-[1.15rem] border p-3 ${
+              isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"
+            }`}
+          >
             <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Mock exams
             </p>
@@ -128,11 +132,7 @@ const premiumPreviewPanels = [
       "bg-[#2D6BFF]/14 text-[#8EB0FF]",
     Icon: ClipboardCheck,
     renderMobileContent: (isDark) => (
-      <div
-        className={`rounded-[1.35rem] border p-4 ${
-          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/92"
-        }`}
-      >
+      <div>
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
@@ -149,15 +149,15 @@ const premiumPreviewPanels = [
           <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-[#FF8A3D] via-[#FFB800] to-emerald-400" />
         </div>
         <div className="mt-4 grid grid-cols-3 gap-3">
-          <div>
+          <div className={`rounded-[1rem] border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"}`}>
             <p className="text-2xl font-black text-emerald-300">2</p>
             <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>passed</p>
           </div>
-          <div>
+          <div className={`rounded-[1rem] border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"}`}>
             <p className={`text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>6</p>
             <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>taken</p>
           </div>
-          <div>
+          <div className={`rounded-[1rem] border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white/92"}`}>
             <p className="text-2xl font-black text-amber-300">4</p>
             <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>review</p>
           </div>
@@ -220,11 +220,7 @@ const premiumPreviewPanels = [
       "bg-violet-500/14 text-violet-300",
     Icon: MessageSquareMore,
     renderMobileContent: (isDark) => (
-      <div
-        className={`rounded-[1.35rem] border p-4 ${
-          isDark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white/92"
-        }`}
-      >
+      <div>
         <div className={`max-w-[85%] rounded-2xl rounded-bl-md px-3 py-2 text-xs ${isDark ? "bg-white/8 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
           Why is differential reinforcement better than just saying “no”?
         </div>
@@ -439,12 +435,12 @@ export default function Landing() {
                         Free
                       </span>
                       <span className="rounded-full bg-[#FFB800]/14 px-3 py-1 text-[11px] font-semibold text-[#C88700] dark:text-[#FFD36B]">
-                        Premium Preview
+                        Premium
                       </span>
                     </div>
 
                     <div
-                      className={`overflow-hidden rounded-[2rem] border p-2.5 ${
+                      className={`overflow-hidden rounded-[2rem] border p-2 ${
                         isDark
                           ? "border-slate-800 bg-[linear-gradient(180deg,#0b1224,#0a1020)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.9)]"
                           : "border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fafc)] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.18)]"
@@ -471,17 +467,11 @@ export default function Landing() {
                             <span className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
                             <span className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
                           </div>
-                          <div
-                            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                              isDark
-                                ? "bg-white/6 text-slate-300"
-                                : "bg-slate-100 text-slate-500"
-                            }`}
-                          >
-                            Premium Window
+                          <div className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                            RBT Genius
                           </div>
                         </div>
-                        <div className="flex min-h-[254px] flex-col p-4 pb-4">
+                        <div className="flex min-h-[246px] flex-col p-4 pb-4">
                           <div className="flex items-start gap-3">
                             <div
                               className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl ${activePanel.accentClassName}`}
