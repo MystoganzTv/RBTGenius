@@ -1,6 +1,17 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crown, Loader2, Shield, Trash2, Users } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Crown,
+  Loader2,
+  Shield,
+  Trash2,
+  Users,
+  XCircle,
+} from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +25,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -70,6 +88,30 @@ function getProviderLabel(provider) {
   }
 }
 
+function formatPaymentDate(value) {
+  if (!value) {
+    return "Pending";
+  }
+
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(value));
+  } catch {
+    return "Pending";
+  }
+}
+
+function formatCurrency(amount, currency = "USD") {
+  return `$${Number(amount || 0).toFixed(2)} ${String(currency || "USD").toUpperCase()}`;
+}
+
+function getPaymentPlanLabel(plan) {
+  return PLAN_OPTIONS.find((option) => option.value === plan)?.label || "Premium";
+}
+
 export default function AdminMembers() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -77,6 +119,8 @@ export default function AdminMembers() {
   const [planFilter, setPlanFilter] = useState("all");
   const [drafts, setDrafts] = useState({});
   const [memberPendingDelete, setMemberPendingDelete] = useState(null);
+  const [memberPaymentsOpen, setMemberPaymentsOpen] = useState(false);
+  const [memberPaymentsTarget, setMemberPaymentsTarget] = useState(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -85,6 +129,15 @@ export default function AdminMembers() {
     queryFn: api.listAdminMembers,
     enabled: isAdmin,
     initialData: [],
+  });
+
+  const {
+    data: memberPaymentsData,
+    isLoading: isLoadingMemberPayments,
+  } = useQuery({
+    queryKey: ["admin-member-payments", memberPaymentsTarget?.id],
+    queryFn: () => api.getAdminMemberPayments(memberPaymentsTarget.id),
+    enabled: isAdmin && memberPaymentsOpen && Boolean(memberPaymentsTarget?.id),
   });
 
   const updateMemberMutation = useMutation({
@@ -189,6 +242,11 @@ export default function AdminMembers() {
       delete nextDrafts[member.id];
       return nextDrafts;
     });
+  };
+
+  const openPayments = (member) => {
+    setMemberPaymentsTarget(member);
+    setMemberPaymentsOpen(true);
   };
 
   if (!isAdmin) {
@@ -325,7 +383,7 @@ export default function AdminMembers() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[220px_180px_auto_auto] xl:min-w-[640px]">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[220px_180px_auto_auto_auto] xl:min-w-[760px]">
                     <Select
                       value={draft.plan}
                       onValueChange={(value) => updateDraft(member.id, { plan: value })}
@@ -357,6 +415,16 @@ export default function AdminMembers() {
                         ))}
                       </SelectContent>
                     </Select>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => openPayments(member)}
+                      disabled={deleteMemberMutation.isPending}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      View Payments
+                    </Button>
 
                     <Button
                       onClick={() => handleSave(member)}
@@ -472,6 +540,137 @@ export default function AdminMembers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={memberPaymentsOpen}
+        onOpenChange={(open) => {
+          setMemberPaymentsOpen(open);
+          if (!open) {
+            setMemberPaymentsTarget(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl border-slate-200 bg-white p-0 shadow-2xl sm:max-w-3xl dark:border-slate-800 dark:bg-slate-950">
+          <div className="border-b border-slate-200/80 bg-gradient-to-br from-slate-50 via-white to-blue-50 px-6 py-5 dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+            <DialogHeader className="space-y-2 text-left">
+              <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                Payment history
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {memberPaymentsTarget ? (
+                  <>
+                    Detailed billing records for{" "}
+                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                      {memberPaymentsTarget.full_name}
+                    </span>
+                    .
+                  </>
+                ) : (
+                  "Detailed billing records for the selected member."
+                )}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="space-y-5 px-6 py-5">
+            {memberPaymentsTarget ? (
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                    {memberPaymentsTarget.full_name}
+                  </h3>
+                  <Badge variant="outline">
+                    {getProviderLabel(memberPaymentsTarget.auth_provider)}
+                  </Badge>
+                  <Badge
+                    className={
+                      memberPaymentsTarget.plan === "free"
+                        ? "bg-slate-100 text-slate-700"
+                        : "bg-emerald-100 text-emerald-700"
+                    }
+                  >
+                    {PLAN_OPTIONS.find((option) => option.value === memberPaymentsTarget.plan)
+                      ?.label || memberPaymentsTarget.plan}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {memberPaymentsTarget.email}
+                </p>
+              </div>
+            ) : null}
+
+            {isLoadingMemberPayments ? (
+              <Card className="p-8 text-center text-slate-500">
+                <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
+                Loading payment history...
+              </Card>
+            ) : (memberPaymentsData?.payments || []).length === 0 ? (
+              <Card className="p-10 text-center">
+                <CreditCard className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+                <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+                  No payments yet
+                </h4>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  This member has not completed any recorded billing activity yet.
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {memberPaymentsData.payments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-800 dark:bg-slate-950"
+                  >
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div
+                        className={[
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                          payment.status === "completed" ? "bg-emerald-100 text-emerald-600" : "",
+                          payment.status === "pending" ? "bg-amber-100 text-amber-600" : "",
+                          payment.status === "failed" ? "bg-red-100 text-red-600" : "",
+                          !["completed", "pending", "failed"].includes(payment.status)
+                            ? "bg-slate-100 text-slate-500"
+                            : "",
+                        ].join(" ")}
+                      >
+                        {payment.status === "completed" ? (
+                          <CheckCircle2 className="h-5 w-5" />
+                        ) : payment.status === "pending" ? (
+                          <Clock className="h-5 w-5" />
+                        ) : payment.status === "failed" ? (
+                          <XCircle className="h-5 w-5" />
+                        ) : (
+                          <CreditCard className="h-5 w-5" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="font-medium text-slate-900 dark:text-slate-50">
+                          {getPaymentPlanLabel(payment.plan)}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {formatPaymentDate(payment.payment_date || payment.created_at)}
+                          </span>
+                          <span>{payment.provider_label || payment.provider || "Billing"}</span>
+                          <span className="uppercase tracking-wide">{payment.status}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p className="font-semibold text-slate-900 dark:text-slate-50">
+                        {formatCurrency(payment.amount, payment.currency)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -160,6 +160,9 @@ export const api = {
   listAdminMembers() {
     return request("/api/admin/members");
   },
+  getAdminMemberPayments(memberId) {
+    return request(`/api/admin/members/${memberId}/payments`);
+  },
   updateAdminMember(memberId, payload) {
     return request(`/api/admin/members/${memberId}`, {
       method: "PATCH",

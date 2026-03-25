@@ -91,6 +91,7 @@ export default function Profile() {
   const currentPlanId = currentUser?.plan || PLAN_IDS.FREE;
   const currentPlan = planInfo[currentPlanId] || planInfo.free;
   const CurrentPlanIcon = currentPlan.icon;
+  const canManageBilling = Boolean(billing.portal_enabled && currentUser?.stripe_customer_id);
 
   useEffect(() => {
     setFormData({ full_name: currentUser?.full_name || "" });
@@ -447,7 +448,7 @@ export default function Profile() {
                 <div className="flex flex-wrap gap-3">
                   <Button
                     onClick={() => portalMutation.mutate()}
-                    disabled={!billing.portal_enabled || portalMutation.isPending}
+                    disabled={!canManageBilling || portalMutation.isPending}
                     className="rounded-2xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
                   >
                     {portalMutation.isPending ? (
@@ -478,6 +479,13 @@ export default function Profile() {
                     Switch Plan
                   </Button>
                 </div>
+
+                {!canManageBilling ? (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Billing portal will appear after this membership is linked to a Stripe
+                    customer record.
+                  </p>
+                ) : null}
               </div>
             )}
           </Card>

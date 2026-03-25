@@ -224,6 +224,7 @@ function buildProfilePayload(db, user) {
       email: user.email,
       role: user.role,
       plan: user.plan,
+      stripe_customer_id: user.stripe_customer_id || null,
     },
     progress,
     entitlements,
@@ -1058,6 +1059,41 @@ export default async (request) => {
     });
 
     return json(members);
+  }
+
+  const memberPaymentsMatch = apiPath.match(/^\/admin\/members\/([^/]+)\/payments$/);
+  if (memberPaymentsMatch && request.method === "GET") {
+    const auth = await requireAdmin(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    const memberId = memberPaymentsMatch[1];
+    const db = await readDb();
+    const member = db.users.find((user) => user.id === memberId);
+
+    if (!member) {
+      return json({ message: "Member not found" }, { status: 404 });
+    }
+
+    const payments = db.payments
+      .filter((payment) => payment.user_id === memberId)
+      .sort((left, right) => {
+        const leftTime = new Date(left.payment_date || left.created_at || 0).getTime();
+        const rightTime = new Date(right.payment_date || right.created_at || 0).getTime();
+        return rightTime - leftTime;
+      });
+
+    return json({
+      member: {
+        id: member.id,
+        full_name: member.full_name,
+        email: member.email,
+        plan: member.plan || "free",
+        auth_provider: member.auth_provider || "password",
+      },
+      payments,
+    });
   }
 
   if (/^\/admin\/members\/[^/]+$/.test(apiPath) && request.method === "PATCH") {

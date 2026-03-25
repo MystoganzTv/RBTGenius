@@ -233,6 +233,7 @@ function buildProfilePayload(db, user) {
       email: user.email,
       role: user.role,
       plan: user.plan,
+      stripe_customer_id: user.stripe_customer_id || null,
     },
     progress,
     entitlements,
@@ -869,6 +870,36 @@ app.get("/api/admin/members", requireAdmin, (req, res) => {
     });
 
   res.json(members);
+});
+
+app.get("/api/admin/members/:memberId/payments", requireAdmin, (req, res) => {
+  const { memberId } = req.params;
+  const db = readDb();
+  const member = db.users.find((user) => user.id === memberId);
+
+  if (!member) {
+    res.status(404).json({ message: "Member not found" });
+    return;
+  }
+
+  const payments = db.payments
+    .filter((payment) => payment.user_id === memberId)
+    .sort((left, right) => {
+      const leftTime = new Date(left.payment_date || left.created_at || 0).getTime();
+      const rightTime = new Date(right.payment_date || right.created_at || 0).getTime();
+      return rightTime - leftTime;
+    });
+
+  res.json({
+    member: {
+      id: member.id,
+      full_name: member.full_name,
+      email: member.email,
+      plan: member.plan || "free",
+      auth_provider: member.auth_provider || "password",
+    },
+    payments,
+  });
 });
 
 app.patch("/api/admin/members/:memberId", requireAdmin, (req, res) => {

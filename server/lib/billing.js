@@ -108,8 +108,8 @@ export async function createStripeCheckoutSession({
   plan,
   user,
   origin,
-  successPath = "/?page=Profile",
-  cancelPath = "/?page=Pricing",
+  successPath = "/profile",
+  cancelPath = "/pricing",
 }) {
   const normalizedPlan = normalizePlan(plan);
   if (!isPremiumPlan(normalizedPlan)) {
@@ -202,7 +202,7 @@ export async function confirmStripeCheckoutSession(sessionId) {
 export async function createStripePortalSession({
   customerId,
   origin,
-  returnPath = "/?page=Profile",
+  returnPath = "/profile",
 }) {
   if (!customerId) {
     throw new Error("No Stripe customer is linked to this account yet.");
