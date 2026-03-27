@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import UserNotRegisteredError from "@/components/UserNotRegisteredError.jsx";
 import { Toaster } from "@/components/ui/toaster";
+import AppErrorBoundary from "@/components/AppErrorBoundary.jsx";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import PageNotFound from "@/lib/PageNotFound";
@@ -191,9 +192,11 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <AuthenticatedApp />
-          </Router>
+          <AppErrorBoundary>
+            <Router>
+              <AuthenticatedApp />
+            </Router>
+          </AppErrorBoundary>
           <Toaster />
         </QueryClientProvider>
       </AuthProvider>
