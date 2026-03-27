@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
   BrowserRouter as Router,
@@ -137,7 +136,6 @@ function AuthenticatedApp() {
     isLoadingAuth,
     isLoadingPublicSettings,
     authError,
-    navigateToLogin,
     isAuthenticated,
   } = useAuth();
   const location = useLocation();
@@ -150,17 +148,6 @@ function AuthenticatedApp() {
   const isPublicRoute =
     (location.pathname === "/" && PUBLIC_PAGES.has(requestedPage)) ||
     PUBLIC_PAGES.has(legacyPageName);
-
-  useEffect(() => {
-    if (
-      authError?.type === "auth_required" &&
-      !isLoginRoute &&
-      !isLandingRoute &&
-      !isPublicRoute
-    ) {
-      navigateToLogin();
-    }
-  }, [authError?.type, isLandingRoute, isLoginRoute, isPublicRoute, navigateToLogin]);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -181,7 +168,12 @@ function AuthenticatedApp() {
     !isPublicRoute &&
     !isAuthenticated
   ) {
-    return null;
+    return (
+      <Navigate
+        to={`/login?redirectTo=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`}
+        replace
+      />
+    );
   }
 
   return (
