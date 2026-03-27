@@ -45,8 +45,9 @@ export function resolvePlanFromPriceId(priceId) {
   return normalizePlan(matchedPlan || PLAN_IDS.FREE);
 }
 
-export function getBillingConfig() {
+export function getBillingConfig(user = null) {
   const stripe = getStripeClient();
+  const hasStripeCustomer = Boolean(user?.stripe_customer_id);
 
   return {
     stripe_enabled: Boolean(stripe),
@@ -54,7 +55,7 @@ export function getBillingConfig() {
       [PLAN_IDS.PREMIUM_MONTHLY]: Boolean(stripe && getPlanPriceId(PLAN_IDS.PREMIUM_MONTHLY)),
       [PLAN_IDS.PREMIUM_YEARLY]: Boolean(stripe && getPlanPriceId(PLAN_IDS.PREMIUM_YEARLY)),
     },
-    portal_enabled: Boolean(stripe),
+    portal_enabled: user ? Boolean(stripe && hasStripeCustomer) : Boolean(stripe),
   };
 }
 

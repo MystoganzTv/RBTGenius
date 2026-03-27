@@ -2,6 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Calendar,
   CheckCircle2,
   Clock,
@@ -16,6 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
@@ -72,6 +83,8 @@ export default function Profile() {
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ full_name: "" });
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [clearTutorOnReset, setClearTutorOnReset] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: profileData, refetch: refetchProfile } = useQuery({
@@ -172,6 +185,28 @@ export default function Profile() {
     },
   });
 
+  const resetProgressMutation = useMutation({
+    mutationFn: api.resetProfileProgress,
+    onSuccess: (data) => {
+      queryClient.setQueryData(["profile-data"], data);
+      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-members"] });
+      setResetDialogOpen(false);
+      setClearTutorOnReset(false);
+      toast({
+        title: "Study progress reset",
+        description: "Your study metrics and saved session data were cleared.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Unable to reset progress",
+        description: error.message || "Please try again.",
+      });
+    },
+  });
+
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const sessionId = searchParams.get("session_id");
@@ -203,6 +238,10 @@ export default function Profile() {
     }
 
     updateProfileMutation.mutate({ full_name: fullName });
+  };
+
+  const handleResetProgress = () => {
+    resetProgressMutation.mutate({ clear_tutor: clearTutorOnReset });
   };
 
   return (
@@ -333,6 +372,43 @@ export default function Profile() {
               </p>
             </Card>
           </div>
+
+          <Card className="border-red-200/70 p-6 dark:border-red-900/40">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="max-w-2xl">
+                <h3 className="text-lg font-bold text-[#0F172A] dark:text-slate-50">
+                  Reset Study Progress
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                  Clear your answered questions, mock exam history, readiness, streak, and saved
+                  study sessions if you want a fresh start. Your account and payment history stay
+                  untouched.
+                </p>
+                <div className="mt-4 flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900">
+                  <Checkbox
+                    id="clear-tutor-on-reset"
+                    checked={clearTutorOnReset}
+                    onCheckedChange={(checked) => setClearTutorOnReset(Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <label
+                    htmlFor="clear-tutor-on-reset"
+                    className="text-sm leading-6 text-slate-600 dark:text-slate-300"
+                  >
+                    Also clear AI tutor conversations and start with an empty tutor history.
+                  </label>
+                </div>
+              </div>
+
+              <Button
+                variant="destructive"
+                className="rounded-2xl md:min-w-[180px]"
+                onClick={() => setResetDialogOpen(true)}
+              >
+                Reset Progress
+              </Button>
+            </div>
+          </Card>
         </TabsContent>
 
         <TabsContent value="subscription" className="space-y-6">
@@ -564,6 +640,43 @@ export default function Profile() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <AlertDialogContent className="rounded-3xl border-slate-200 bg-white p-0 shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+          <div className="px-6 py-6">
+            <AlertDialogHeader className="space-y-2 text-left">
+              <AlertDialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                Reset your study progress?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                This will remove your question attempts, mock exams, readiness, streak, and saved
+                study sessions. Your account and billing history will remain.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+              {clearTutorOnReset
+                ? "AI tutor conversations will also be cleared."
+                : "AI tutor conversations will be kept."}
+            </div>
+          </div>
+
+          <AlertDialogFooter className="border-t border-slate-200/80 px-6 py-4 dark:border-slate-800">
+            <AlertDialogCancel className="rounded-2xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetProgress}
+              className="rounded-2xl bg-red-600 text-white hover:bg-red-700"
+              disabled={resetProgressMutation.isPending}
+            >
+              {resetProgressMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Reset Progress"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

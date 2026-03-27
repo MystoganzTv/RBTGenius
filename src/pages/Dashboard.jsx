@@ -51,6 +51,7 @@ const emptyProgress = {
   passed_mock_exams: 0,
   failed_mock_exams: 0,
   average_mock_exam_score: 0,
+  badges: [],
 };
 
 const planStyles = {
@@ -90,7 +91,6 @@ export default function Dashboard() {
   const totalQuestionsAvailable =
     progress?.total_questions_available || allQuestions.length || 3000;
   const bankCoverage = progress?.bank_coverage_percent || 0;
-  const answeredAccuracy = progress?.raw_accuracy || 0;
   const bankAccuracy = progress?.bank_accuracy || 0;
   const streak = progress?.study_streak_days || 0;
   const readiness = progress?.readiness_score || 0;
@@ -106,14 +106,7 @@ export default function Dashboard() {
   const plan = user?.plan || progress?.plan || "free";
   const activePlan = planStyles[plan] || planStyles.free;
 
-  const badges = [
-    { emoji: "🔥", label: "Streak 3", unlocked: streak >= 3 },
-    { emoji: "🎯", label: "100 Qs", unlocked: totalQuestions >= 100 },
-    { emoji: "⭐", label: "80% Acc", unlocked: answeredAccuracy >= 80 },
-    { emoji: "📚", label: "200 Qs", unlocked: totalQuestions >= 200 },
-    { emoji: "🏆", label: "Ready", unlocked: readiness >= 80 || passedMockExams > 0 },
-    { emoji: "🧠", label: "Mastery", unlocked: readiness >= 90 },
-  ];
+  const badges = progress?.badges || [];
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -359,6 +352,11 @@ export default function Dashboard() {
                   <span className="mt-1 text-[10px] font-medium text-slate-600 dark:text-slate-300">
                     {badge.label}
                   </span>
+                  {badge.description ? (
+                    <span className="mt-1 text-center text-[9px] leading-4 text-slate-400 dark:text-slate-500">
+                      {badge.description}
+                    </span>
+                  ) : null}
                 </div>
               ))}
             </div>

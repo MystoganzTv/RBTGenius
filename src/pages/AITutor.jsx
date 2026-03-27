@@ -17,10 +17,30 @@ import { toast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
 
 const suggestedTopics = [
-  "What is discrete trial training?",
-  "Explain positive reinforcement",
-  "Tips for the RBT exam",
-  "What is a functional behavior assessment?",
+  {
+    label: "Quiz me",
+    prompt: "Quiz me on core RBT concepts",
+  },
+  {
+    label: "Explain simply",
+    prompt: "Explain positive reinforcement in simple words",
+  },
+  {
+    label: "Give an example",
+    prompt: "Give me an example of prompting and fading",
+  },
+  {
+    label: "Why is it wrong?",
+    prompt: "Why is this answer wrong?",
+  },
+  {
+    label: "Study plan",
+    prompt: "Create a simple RBT study plan for me",
+  },
+  {
+    label: "FBA help",
+    prompt: "Explain functional behavior assessment with an example",
+  },
 ];
 
 export default function AITutor() {
@@ -107,6 +127,10 @@ export default function AITutor() {
 
   const handleSelectConversation = (conversationId) => {
     setActiveConversationId(conversationId);
+  };
+
+  const handleUsePrompt = (prompt) => {
+    setInput(prompt);
   };
 
   const handleSend = async () => {
@@ -258,20 +282,24 @@ export default function AITutor() {
                 <h3 className="text-lg font-semibold text-slate-900">
                   Hello! I&apos;m your AI Tutor
                 </h3>
-                <p className="mt-1 max-w-sm text-sm text-slate-400">
-                  Ask me anything about ABA concepts, RBT exam prep, or study
-                  strategies.
+                <p className="mt-1 max-w-md text-sm text-slate-400">
+                  Ask about ABA concepts, exam strategy, wrong answers, or ask
+                  me to quiz you. You can also paste a question and I will help
+                  break it down.
                 </p>
 
-                <div className="mt-6 grid max-w-md grid-cols-2 gap-2">
+                <div className="mt-6 grid max-w-lg grid-cols-2 gap-2">
                   {suggestedTopics.map((topic) => (
                     <button
-                      key={topic}
+                      key={topic.label}
                       type="button"
-                      onClick={() => setInput(topic)}
+                      onClick={() => handleUsePrompt(topic.prompt)}
                       className="rounded-xl border border-slate-200 p-3 text-left text-xs text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5"
                     >
-                      {topic}
+                      <span className="block font-medium text-slate-900">{topic.label}</span>
+                      <span className="mt-1 block text-[11px] leading-5 text-slate-500">
+                        {topic.prompt}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -293,6 +321,18 @@ export default function AITutor() {
           </div>
 
           <div className="border-t border-slate-100 p-4">
+            <div className="mb-3 flex flex-wrap gap-2">
+              {suggestedTopics.slice(0, 4).map((topic) => (
+                <button
+                  key={`quick-${topic.label}`}
+                  type="button"
+                  onClick={() => handleUsePrompt(topic.prompt)}
+                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5 hover:text-[#1E5EFF]"
+                >
+                  {topic.label}
+                </button>
+              ))}
+            </div>
             <form
               onSubmit={(event) => {
                 event.preventDefault();
@@ -318,7 +358,11 @@ export default function AITutor() {
               <p className="mt-3 text-xs text-amber-600">
                 Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.
               </p>
-            ) : null}
+            ) : (
+              <p className="mt-3 text-xs text-slate-400">
+                Tip: paste a full question with answer choices if you want a clearer explanation.
+              </p>
+            )}
           </div>
         </div>
       </div>

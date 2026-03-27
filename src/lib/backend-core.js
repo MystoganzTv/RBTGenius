@@ -13,6 +13,67 @@ export const defaultUser = {
 
 export const MIN_DOMAIN_ATTEMPTS = 10;
 
+function buildAchievements({
+  totalQuestionsCompleted,
+  bankCoveragePercent,
+  studyStreakDays,
+  totalMockExams,
+  passedMockExams,
+  readinessScore,
+}) {
+  return [
+    {
+      id: "first-50",
+      emoji: "🎯",
+      label: "First 50",
+      description: "Answer your first 50 questions.",
+      unlocked: totalQuestionsCompleted >= 50,
+    },
+    {
+      id: "practice-250",
+      emoji: "📚",
+      label: "250 Answered",
+      description: "Build a real practice base with 250 answered questions.",
+      unlocked: totalQuestionsCompleted >= 250,
+    },
+    {
+      id: "coverage-10",
+      emoji: "🗺️",
+      label: "10% Covered",
+      description: "Cover at least 10% of the 3000-question bank.",
+      unlocked: bankCoveragePercent >= 10,
+    },
+    {
+      id: "streak-3",
+      emoji: "🔥",
+      label: "3-Day Streak",
+      description: "Come back and study on 3 consecutive return days.",
+      unlocked: studyStreakDays >= 3,
+    },
+    {
+      id: "first-mock",
+      emoji: "📝",
+      label: "First Mock",
+      description: "Complete your first mock exam.",
+      unlocked: totalMockExams >= 1,
+    },
+    {
+      id: "mock-pass",
+      emoji: "🏆",
+      label: "Mock Pass",
+      description: "Pass at least one mock exam.",
+      unlocked: passedMockExams >= 1,
+    },
+    {
+      id: "ready-signal",
+      emoji: "🧠",
+      label: "Ready Signal",
+      description: "Reach a stronger readiness score built from coverage and exam data.",
+      unlocked: readinessScore >= 80,
+    },
+  ];
+}
+
 function getSmoothedRate(correct, total, baselineRate = 0.65, baselineWeight = 6) {
   if (total <= 0) {
     return 0;
@@ -161,11 +222,20 @@ export function computeProgress(db, userId) {
     ) / 10;
 
   const { streak, lastStudyDate } = formatUniqueStudyDays(attempts);
+  const bankCoveragePercent = Math.round(bankCoverage * 100);
+  const badges = buildAchievements({
+    totalQuestionsCompleted,
+    bankCoveragePercent,
+    studyStreakDays: streak,
+    totalMockExams: exams.length,
+    passedMockExams,
+    readinessScore,
+  });
 
   return {
     total_questions_completed: totalQuestionsCompleted,
     total_questions_available: TOTAL_PRACTICE_QUESTIONS,
-    bank_coverage_percent: Math.round(bankCoverage * 100),
+    bank_coverage_percent: bankCoveragePercent,
     total_correct: totalCorrect,
     bank_accuracy: bankAccuracy,
     accuracy_rate: accuracyRate,
@@ -176,7 +246,7 @@ export function computeProgress(db, userId) {
     study_hours: studyHours,
     readiness_score: readinessScore,
     readiness_confidence: readinessConfidence,
-    badges: [],
+    badges,
     plan: user.plan || "free",
     domain_mastery: domainMastery,
     domain_attempt_counts: domainAttemptCounts,

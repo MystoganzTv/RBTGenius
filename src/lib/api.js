@@ -132,6 +132,12 @@ export const api = {
       body: payload,
     });
   },
+  resetProfileProgress(payload) {
+    return request("/api/profile/reset-progress", {
+      method: "POST",
+      body: payload,
+    });
+  },
   createCheckoutSession(plan, origin) {
     return request("/api/billing/checkout", {
       method: "POST",
