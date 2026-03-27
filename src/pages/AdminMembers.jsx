@@ -383,7 +383,7 @@ export default function AdminMembers() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-[220px_180px_auto_auto_auto] xl:min-w-[760px]">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:min-w-[760px] xl:grid-cols-[220px_180px_auto_auto_auto]">
                     <Select
                       value={draft.plan}
                       onValueChange={(value) => updateDraft(member.id, { plan: value })}
@@ -421,6 +421,7 @@ export default function AdminMembers() {
                       variant="outline"
                       onClick={() => openPayments(member)}
                       disabled={deleteMemberMutation.isPending}
+                      className="w-full"
                     >
                       <CreditCard className="mr-2 h-4 w-4" />
                       View Payments
@@ -433,7 +434,7 @@ export default function AdminMembers() {
                         updateMemberMutation.isPending ||
                         deleteMemberMutation.isPending
                       }
-                      className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+                      className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
                     >
                       Save
                     </Button>
@@ -443,7 +444,7 @@ export default function AdminMembers() {
                       variant="outline"
                       onClick={() => setMemberPendingDelete(member)}
                       disabled={isCurrentAdmin || deleteMemberMutation.isPending}
-                      className="border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/40"
+                      className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/40"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
