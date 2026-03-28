@@ -349,7 +349,10 @@ export default function AdminMembers() {
             const isCurrentAdmin = member.id === user?.id;
 
             return (
-              <Card key={member.id} className="p-5">
+              <Card
+                key={member.id}
+                className="border-slate-200/80 bg-white/95 p-5 dark:border-slate-700/70 dark:bg-slate-900/70 dark:shadow-[0_22px_60px_-36px_rgba(96,165,250,0.22)]"
+              >
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
