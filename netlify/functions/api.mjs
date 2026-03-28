@@ -1254,6 +1254,9 @@ export default async (request) => {
     if (tutorReply.quiz) {
       assistantMessage.quiz = tutorReply.quiz;
     }
+    if (tutorReply.followUp) {
+      assistantMessage.follow_up = tutorReply.followUp;
+    }
 
     let updatedConversation = null;
 

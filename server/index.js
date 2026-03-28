@@ -1032,6 +1032,9 @@ app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (r
   if (tutorReply.quiz) {
     assistantMessage.quiz = tutorReply.quiz;
   }
+  if (tutorReply.followUp) {
+    assistantMessage.follow_up = tutorReply.followUp;
+  }
 
   let updatedConversation = null;
 

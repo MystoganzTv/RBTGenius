@@ -25,6 +25,31 @@ function formatTopicLead(topic, variant = "Continuing with") {
   return topic ? `*${variant} ${topic.title}*` : "";
 }
 
+function isAffirmative(text) {
+  return hasAny(normalizeForMatch(text), [
+    "yes",
+    "yeah",
+    "yep",
+    "sure",
+    "ok",
+    "okay",
+    "do it",
+    "go ahead",
+    "lets do it",
+    "let s do it",
+  ]);
+}
+
+function isNegative(text) {
+  return hasAny(normalizeForMatch(text), [
+    "no",
+    "nope",
+    "not now",
+    "later",
+    "skip",
+  ]);
+}
+
 function normalizeForMatch(value) {
   return String(value || "")
     .toLowerCase()
@@ -80,6 +105,15 @@ function findPendingQuiz(history) {
   const lastMessage = [...(history || [])].slice(-1)[0];
   if (lastMessage?.role === "assistant" && lastMessage?.quiz) {
     return lastMessage.quiz;
+  }
+
+  return null;
+}
+
+function findPendingFollowUp(history) {
+  const lastMessage = [...(history || [])].slice(-1)[0];
+  if (lastMessage?.role === "assistant" && lastMessage?.follow_up) {
+    return lastMessage.follow_up;
   }
 
   return null;
@@ -567,8 +601,15 @@ function formatQuizReply(topic, seed, options = {}) {
 
   const content = lines.join("\n");
   const quiz = !revealAnswers && rotated[0] ? buildQuizMetadata(topic, rotated[0]) : null;
+  const followUp = revealAnswers
+    ? {
+        type: "quiz_review",
+        topicId: topic.id,
+        defaultAction: "one_question_at_a_time",
+      }
+    : null;
 
-  return { content, quiz };
+  return { content, quiz, followUp };
 }
 
 function formatStudyPlan(activeTopic, seed) {
@@ -665,6 +706,30 @@ function buildCoreTopicQuiz(seed) {
   ].join("\n");
 }
 
+function performFollowUpAction(followUp, activeTopic, seed) {
+  const topic = getTopicById(followUp?.topicId) || activeTopic || getTopicById("positive_reinforcement");
+
+  if (followUp?.defaultAction === "one_question_at_a_time") {
+    return formatQuizReply(topic, seed + 3, {
+      count: 1,
+      revealAnswers: false,
+      intro: formatTopicLead(topic, "Let's do one question at a time on"),
+    });
+  }
+
+  if (followUp?.defaultAction === "next_question") {
+    return formatQuizReply(topic, seed + 5, {
+      count: 1,
+      revealAnswers: false,
+      intro: formatTopicLead(topic, "Next question on"),
+    });
+  }
+
+  return {
+    content: formatGeneralHelp(topic),
+  };
+}
+
 export function createTutorReply(text, options = {}) {
   const normalized = String(text || "").trim().toLowerCase();
   const history = Array.isArray(options.history) ? options.history : [];
@@ -681,6 +746,7 @@ export function createTutorReply(text, options = {}) {
   const activeTopic = explicitTopic || inferTopicFromHistory(history);
   const intro = !explicitTopic && activeTopic ? formatTopicLead(activeTopic) : "";
   const pendingQuiz = findPendingQuiz(history);
+  const pendingFollowUp = findPendingFollowUp(history);
 
   if (pendingQuiz) {
     const quizTopic = getTopicById(pendingQuiz.topicId) || activeTopic;
@@ -695,6 +761,25 @@ export function createTutorReply(text, options = {}) {
     }
 
     return formatQuizEvaluation(text, pendingQuiz, quizTopic);
+  }
+
+  if (pendingFollowUp) {
+    if (isAffirmative(text)) {
+      return performFollowUpAction(pendingFollowUp, activeTopic, seed);
+    }
+
+    if (isNegative(text)) {
+      return {
+        content: [
+          activeTopic ? formatTopicLead(activeTopic) : "",
+          "No problem.",
+          "",
+          "We can stay on this topic, switch topics, do a harder quiz, or walk through an example instead.",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      };
+    }
   }
 
   if (
@@ -757,17 +842,24 @@ export function createTutorReply(text, options = {}) {
         revealAnswers: true,
         intro: intro || `Here is a harder pass on **${topic.title}**:`,
       }).content,
+      followUp: {
+        type: "quiz_review",
+        topicId: topic.id,
+        defaultAction: "one_question_at_a_time",
+      },
     };
   }
 
   if (hasAny(normalized, ["quiz me", "test me", "practice me"])) {
     if (activeTopic) {
+      const quizReply = formatQuizReply(activeTopic, seed, {
+        count: 3,
+        revealAnswers: true,
+        intro,
+      });
       return {
-        content: formatQuizReply(activeTopic, seed, {
-          count: 3,
-          revealAnswers: true,
-          intro,
-        }).content,
+        content: quizReply.content,
+        followUp: quizReply.followUp,
       };
     }
 
