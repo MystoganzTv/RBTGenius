@@ -207,8 +207,8 @@ export default function AITutor() {
   return (
     <div className="mx-auto h-[calc(100vh-8rem)] max-w-7xl">
       <div className="flex h-full gap-4">
-        <div className="flex w-72 flex-shrink-0 flex-col rounded-2xl border border-slate-100 bg-white dark:border-[#2B3B71]/75 dark:bg-[#121B35]/82">
-          <div className="border-b border-slate-100 p-4 dark:border-[#2B3B71]/65">
+        <div className="flex w-72 flex-shrink-0 flex-col rounded-2xl border border-slate-100 bg-white dark:border-slate-700/80 dark:bg-slate-900/95">
+          <div className="border-b border-slate-100 p-4 dark:border-slate-700/70">
             <Button
               onClick={handleNewConversation}
               className="w-full gap-2 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
@@ -236,7 +236,7 @@ export default function AITutor() {
                   className={`w-full rounded-xl px-3 py-2.5 text-left text-sm transition-all ${
                     activeConversationId === conversation.id
                       ? "bg-[#1E5EFF]/5 font-medium text-[#1E5EFF] dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]"
-                      : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-[#162240]"
+                      : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/80"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -251,8 +251,8 @@ export default function AITutor() {
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col rounded-2xl border border-slate-100 bg-white dark:border-[#2B3B71]/75 dark:bg-[#121B35]/82">
-          <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4 dark:border-[#2B3B71]/65">
+        <div className="flex flex-1 flex-col rounded-2xl border border-slate-100 bg-white dark:border-slate-700/80 dark:bg-slate-900/95">
+          <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4 dark:border-slate-700/70">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E5EFF] to-[#6366F1]">
               <Brain className="h-5 w-5 text-white" />
             </div>
@@ -273,10 +273,10 @@ export default function AITutor() {
             ) : null}
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto p-6">
+          <div className="flex-1 space-y-4 overflow-y-auto bg-transparent p-6 dark:bg-slate-950/35">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1E5EFF]/10 to-violet-100">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1E5EFF]/10 to-violet-100 dark:from-[#1E5EFF]/20 dark:to-slate-700">
                   <Brain className="h-8 w-8 text-[#1E5EFF]" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
@@ -294,7 +294,7 @@ export default function AITutor() {
                       key={topic.label}
                       type="button"
                       onClick={() => handleUsePrompt(topic.prompt)}
-                      className="rounded-xl border border-slate-200 p-3 text-left text-xs text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5 dark:border-[#31406C] dark:bg-[#16213F]/55 dark:text-slate-300 dark:hover:bg-[#1A284B]"
+                      className="rounded-xl border border-slate-200 bg-white/80 p-3 text-left text-xs text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5 dark:border-slate-700/80 dark:bg-slate-800/75 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                       <span className="block font-medium text-slate-900 dark:text-slate-100">{topic.label}</span>
                       <span className="mt-1 block text-[11px] leading-5 text-slate-500 dark:text-slate-400">
@@ -320,14 +320,14 @@ export default function AITutor() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-slate-100 p-4 dark:border-[#2B3B71]/65">
+          <div className="border-t border-slate-100 p-4 dark:border-slate-700/70 dark:bg-slate-900/85">
             <div className="mb-3 flex flex-wrap gap-2">
               {suggestedTopics.slice(0, 4).map((topic) => (
                 <button
                   key={`quick-${topic.label}`}
                   type="button"
                   onClick={() => handleUsePrompt(topic.prompt)}
-                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5 hover:text-[#1E5EFF] dark:border-[#31406C] dark:bg-[#141F3C] dark:text-slate-300 dark:hover:bg-[#1A284B] dark:hover:text-[#8EB0FF]"
+                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5 hover:text-[#1E5EFF] dark:border-slate-700/80 dark:bg-slate-800/90 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-[#8EB0FF]"
                 >
                   {topic.label}
                 </button>
@@ -344,7 +344,7 @@ export default function AITutor() {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder="Ask about ABA concepts, exam tips..."
-                className="flex-1 rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-[#1E5EFF]/20 dark:border-[#31406C] dark:bg-[#18233F] dark:text-slate-100 dark:placeholder:text-slate-500"
+                className="flex-1 rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-[#1E5EFF]/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
               />
               <Button
                 type="submit"
