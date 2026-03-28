@@ -56,7 +56,22 @@ const ROLE_OPTIONS = [
 ];
 
 const darkBadgeClass =
-  "dark:border-[#33446F] dark:bg-[#161F3B] dark:text-slate-100";
+  "dark:border-[#41588A] dark:bg-[#1A284A] dark:text-slate-100";
+
+const summaryCardClass =
+  "border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#31466F]/80 dark:bg-[#15213C]/84 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.25)]";
+
+const memberCardClass =
+  "overflow-hidden border-slate-200/80 bg-white/95 p-5 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#31466F]/80 dark:bg-[#16233F]/84 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
+
+const actionPanelClass =
+  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 dark:border-[#31466F]/80 dark:bg-[#101A32]/74";
+
+const memberSelectClass =
+  "border-slate-200 bg-white text-slate-800 dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100";
+
+const memberOutlineButtonClass =
+  "w-full border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100 dark:hover:bg-[#1D2D51] dark:hover:text-slate-50";
 
 function formatJoinedDate(value) {
   if (!value) {
@@ -270,19 +285,19 @@ export default function AdminMembers() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-6xl space-y-6 overflow-x-clip">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mx-auto w-full max-w-[1240px] space-y-6 overflow-x-clip">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
               Member Management
             </h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
               Manage premium access and admin roles for your members.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
+            <Card className={summaryCardClass}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Total Members</p>
@@ -293,7 +308,7 @@ export default function AdminMembers() {
                 <Users className="h-7 w-7 shrink-0 text-[#1E5EFF]" />
               </div>
             </Card>
-            <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
+            <Card className={summaryCardClass}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Premium Members</p>
@@ -304,7 +319,7 @@ export default function AdminMembers() {
                 <Crown className="h-7 w-7 shrink-0 text-emerald-600 dark:text-emerald-300" />
               </div>
             </Card>
-            <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
+            <Card className={summaryCardClass}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Admins</p>
@@ -318,17 +333,17 @@ export default function AdminMembers() {
           </div>
         </div>
 
-        <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82">
+        <Card className={summaryCardClass}>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by name or email"
-              className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100 dark:placeholder:text-slate-500"
+              className="dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100 dark:placeholder:text-slate-500"
             />
 
             <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100">
+              <SelectTrigger className="dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100">
                 <SelectValue placeholder="Filter by plan" />
               </SelectTrigger>
               <SelectContent className="dark:border-[#30406E] dark:bg-[#10182F] dark:text-slate-100">
@@ -361,9 +376,9 @@ export default function AdminMembers() {
               return (
                 <Card
                   key={member.id}
-                  className="overflow-hidden border-slate-200/80 bg-white/95 p-5 dark:border-[#2B3B71]/75 dark:bg-[#121B35]/82 dark:shadow-[0_22px_60px_-36px_rgba(96,165,250,0.22)]"
+                  className={memberCardClass}
                 >
-                  <div className="flex flex-col gap-5">
+                  <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="min-w-0 break-words text-lg font-semibold text-slate-900 dark:text-slate-50">
@@ -400,13 +415,24 @@ export default function AdminMembers() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                    <div className={actionPanelClass}>
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                          Quick Actions
+                        </p>
+                        {hasChanges ? (
+                          <Badge className="border-transparent bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300">
+                            Unsaved changes
+                          </Badge>
+                        ) : null}
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
                         <Select
                           value={draft.plan}
                           onValueChange={(value) => updateDraft(member.id, { plan: value })}
                         >
-                          <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
+                          <SelectTrigger className={memberSelectClass}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="dark:border-[#31406C] dark:bg-[#10182F] dark:text-slate-100">
@@ -422,7 +448,7 @@ export default function AdminMembers() {
                           value={draft.role}
                           onValueChange={(value) => updateDraft(member.id, { role: value })}
                         >
-                          <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
+                          <SelectTrigger className={memberSelectClass}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="dark:border-[#31406C] dark:bg-[#10182F] dark:text-slate-100">
@@ -435,16 +461,16 @@ export default function AdminMembers() {
                         </Select>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => openPayments(member)}
                           disabled={deleteMemberMutation.isPending}
-                          className="w-full dark:border-[#31406C] dark:bg-[#15213F] dark:text-slate-100 dark:hover:bg-[#1A284B]"
+                          className={memberOutlineButtonClass}
                         >
                           <CreditCard className="mr-2 h-4 w-4" />
-                          View Payments
+                          Payments
                         </Button>
 
                         <Button
@@ -454,7 +480,7 @@ export default function AdminMembers() {
                             updateMemberMutation.isPending ||
                             deleteMemberMutation.isPending
                           }
-                          className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:shadow-[0_10px_30px_-18px_rgba(30,94,255,0.65)]"
+                          className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:bg-[#6D8DFF] dark:text-slate-950 dark:hover:bg-[#86A1FF] dark:shadow-[0_16px_32px_-22px_rgba(109,141,255,0.9)]"
                         >
                           Save
                         </Button>
@@ -464,7 +490,7 @@ export default function AdminMembers() {
                           variant="outline"
                           onClick={() => setMemberPendingDelete(member)}
                           disabled={isCurrentAdmin || deleteMemberMutation.isPending}
-                          className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-500/25 dark:bg-[#211727] dark:text-red-300 dark:hover:bg-[#2A1B30]"
+                          className="w-full border-red-200 bg-white text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-400/25 dark:bg-[#291a2b] dark:text-red-200 dark:hover:bg-[#332037]"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
