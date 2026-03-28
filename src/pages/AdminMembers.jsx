@@ -62,10 +62,10 @@ const summaryCardClass =
   "border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#31466F]/80 dark:bg-[#15213C]/84 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.25)]";
 
 const memberCardClass =
-  "overflow-hidden border-slate-200/80 bg-white/95 p-5 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#31466F]/80 dark:bg-[#16233F]/84 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
+  "overflow-hidden border-slate-200/80 bg-white/95 p-5 lg:px-6 lg:py-6 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#31466F]/80 dark:bg-[#16233F]/84 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
 
 const actionPanelClass =
-  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 dark:border-[#31466F]/80 dark:bg-[#101A32]/74";
+  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 lg:p-5 dark:border-[#31466F]/80 dark:bg-[#101A32]/74";
 
 const memberSelectClass =
   "border-slate-200 bg-white text-slate-800 dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100";
@@ -285,7 +285,7 @@ export default function AdminMembers() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-[1240px] space-y-6 overflow-x-clip">
+      <div className="mx-auto w-full max-w-[1360px] space-y-6 overflow-x-clip">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
@@ -378,7 +378,7 @@ export default function AdminMembers() {
                   key={member.id}
                   className={memberCardClass}
                 >
-                  <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start xl:grid-cols-[minmax(0,1.1fr)_460px]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="min-w-0 break-words text-lg font-semibold text-slate-900 dark:text-slate-50">
@@ -427,7 +427,7 @@ export default function AdminMembers() {
                         ) : null}
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
                         <Select
                           value={draft.plan}
                           onValueChange={(value) => updateDraft(member.id, { plan: value })}
@@ -461,7 +461,7 @@ export default function AdminMembers() {
                         </Select>
                       </div>
 
-                      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <Button
                           type="button"
                           variant="outline"
