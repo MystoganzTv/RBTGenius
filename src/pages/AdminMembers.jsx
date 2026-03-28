@@ -55,6 +55,9 @@ const ROLE_OPTIONS = [
   { value: "admin", label: "Admin" },
 ];
 
+const darkBadgeClass =
+  "dark:border-[#33446F] dark:bg-[#161F3B] dark:text-slate-100";
+
 function formatJoinedDate(value) {
   if (!value) {
     return "Unknown join date";
@@ -360,8 +363,12 @@ export default function AdminMembers() {
                       <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                         {member.full_name}
                       </h2>
-                      <Badge variant="outline">{member.role === "admin" ? "Admin" : "User"}</Badge>
-                      <Badge variant="outline">{getProviderLabel(member.auth_provider)}</Badge>
+                      <Badge variant="outline" className={darkBadgeClass}>
+                        {member.role === "admin" ? "Admin" : "User"}
+                      </Badge>
+                      <Badge variant="outline" className={darkBadgeClass}>
+                        {getProviderLabel(member.auth_provider)}
+                      </Badge>
                       <Badge
                         className={
                           member.plan === "free"
@@ -425,7 +432,7 @@ export default function AdminMembers() {
                       variant="outline"
                       onClick={() => openPayments(member)}
                       disabled={deleteMemberMutation.isPending}
-                      className="w-full dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100 dark:hover:bg-[#15203D]"
+                      className="w-full dark:border-[#31406C] dark:bg-[#15213F] dark:text-slate-100 dark:hover:bg-[#1A284B]"
                     >
                       <CreditCard className="mr-2 h-4 w-4" />
                       View Payments
@@ -448,7 +455,7 @@ export default function AdminMembers() {
                       variant="outline"
                       onClick={() => setMemberPendingDelete(member)}
                       disabled={isCurrentAdmin || deleteMemberMutation.isPending}
-                      className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:bg-[#191522] dark:text-red-300 dark:hover:bg-red-950/30"
+                      className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-500/25 dark:bg-[#211727] dark:text-red-300 dark:hover:bg-[#2A1B30]"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
@@ -493,10 +500,10 @@ export default function AdminMembers() {
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                     {memberPendingDelete.full_name}
                   </h3>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className={darkBadgeClass}>
                     {memberPendingDelete.role === "admin" ? "Admin" : "User"}
                   </Badge>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className={darkBadgeClass}>
                     {getProviderLabel(memberPendingDelete.auth_provider)}
                   </Badge>
                 </div>
@@ -584,7 +591,7 @@ export default function AdminMembers() {
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                     {memberPaymentsTarget.full_name}
                   </h3>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className={darkBadgeClass}>
                     {getProviderLabel(memberPaymentsTarget.auth_provider)}
                   </Badge>
                   <Badge
