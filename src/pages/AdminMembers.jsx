@@ -279,7 +279,7 @@ export default function AdminMembers() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Card className="p-4">
+          <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-500">Total Members</p>
@@ -290,7 +290,7 @@ export default function AdminMembers() {
               <Users className="h-7 w-7 text-[#1E5EFF]" />
             </div>
           </Card>
-          <Card className="p-4">
+          <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-500">Premium Members</p>
@@ -299,7 +299,7 @@ export default function AdminMembers() {
               <Crown className="h-7 w-7 text-emerald-600" />
             </div>
           </Card>
-          <Card className="p-4">
+          <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-500">Admins</p>
@@ -311,16 +311,17 @@ export default function AdminMembers() {
         </div>
       </div>
 
-      <Card className="p-4">
+      <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px]">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by name or email"
+            className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100 dark:placeholder:text-slate-500"
           />
 
           <Select value={planFilter} onValueChange={setPlanFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100">
               <SelectValue placeholder="Filter by plan" />
             </SelectTrigger>
             <SelectContent>
@@ -351,7 +352,7 @@ export default function AdminMembers() {
             return (
               <Card
                 key={member.id}
-                className="border-slate-200/80 bg-white/95 p-5 dark:border-slate-700/70 dark:bg-slate-900/70 dark:shadow-[0_22px_60px_-36px_rgba(96,165,250,0.22)]"
+                className="border-slate-200/80 bg-white/95 p-5 dark:border-[#2B3B71]/75 dark:bg-[#121B35]/82 dark:shadow-[0_22px_60px_-36px_rgba(96,165,250,0.22)]"
               >
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0">
@@ -364,8 +365,8 @@ export default function AdminMembers() {
                       <Badge
                         className={
                           member.plan === "free"
-                            ? "bg-slate-100 text-slate-700"
-                            : "bg-emerald-100 text-emerald-700"
+                            ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
                         }
                       >
                         {PLAN_OPTIONS.find((option) => option.value === member.plan)?.label ||
@@ -391,7 +392,7 @@ export default function AdminMembers() {
                       value={draft.plan}
                       onValueChange={(value) => updateDraft(member.id, { plan: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -407,7 +408,7 @@ export default function AdminMembers() {
                       value={draft.role}
                       onValueChange={(value) => updateDraft(member.id, { role: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -424,7 +425,7 @@ export default function AdminMembers() {
                       variant="outline"
                       onClick={() => openPayments(member)}
                       disabled={deleteMemberMutation.isPending}
-                      className="w-full"
+                      className="w-full dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100 dark:hover:bg-[#15203D]"
                     >
                       <CreditCard className="mr-2 h-4 w-4" />
                       View Payments
@@ -437,7 +438,7 @@ export default function AdminMembers() {
                         updateMemberMutation.isPending ||
                         deleteMemberMutation.isPending
                       }
-                      className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+                      className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:shadow-[0_10px_30px_-18px_rgba(30,94,255,0.65)]"
                     >
                       Save
                     </Button>
@@ -447,7 +448,7 @@ export default function AdminMembers() {
                       variant="outline"
                       onClick={() => setMemberPendingDelete(member)}
                       disabled={isCurrentAdmin || deleteMemberMutation.isPending}
-                      className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-900/70 dark:text-red-300 dark:hover:bg-red-950/40"
+                      className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:bg-[#191522] dark:text-red-300 dark:hover:bg-red-950/30"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
