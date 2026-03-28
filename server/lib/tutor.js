@@ -2,9 +2,294 @@ function hasAny(text, patterns) {
   return patterns.some((pattern) => text.includes(pattern));
 }
 
-function conceptReply({ title, summary, whyItMatters, example, examTip }) {
-  return [
-    `**${title}**`,
+function hashText(value) {
+  return Array.from(String(value || "")).reduce(
+    (total, char) => total + char.charCodeAt(0),
+    0,
+  );
+}
+
+function pickBySeed(items, seed = 0) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return "";
+  }
+
+  return items[Math.abs(seed) % items.length];
+}
+
+function uniqueItems(items) {
+  return [...new Set(items.filter(Boolean))];
+}
+
+const TOPICS = [
+  {
+    id: "positive_reinforcement",
+    title: "Positive Reinforcement",
+    aliases: ["positive reinforcement", "reinforcement", "reward"],
+    summaries: [
+      "Positive reinforcement means adding something valuable right after a behavior so that the behavior is more likely to happen again.",
+      "In ABA, positive reinforcement happens when a behavior is followed by something preferred and that behavior increases later.",
+    ],
+    whyItMatters: [
+      "it is one of the most tested ABA principles and shows up constantly in RBT-style questions",
+      "many exam questions hide it inside scenarios, so recognizing the future increase in behavior is key",
+    ],
+    examples: [
+      "a learner answers correctly, then receives praise or access to a preferred item",
+      "a child asks for a break appropriately and gets a short break, so that communication response happens more often next time",
+    ],
+    examTips: [
+      "if the question asks whether behavior increases in the future, positive reinforcement is often the target concept",
+      "ignore whether the consequence sounds pleasant and ask what happened to the future behavior afterward",
+    ],
+    quizzes: [
+      {
+        prompt: "A learner labels a picture correctly and immediately gets praise and a token. What principle is most likely occurring if correct labeling increases later?",
+        answer: "Positive reinforcement",
+        rationale: "A valued consequence was added after the response and the response increased in the future.",
+      },
+      {
+        prompt: "What is the single best sign that positive reinforcement occurred?",
+        answer: "The behavior becomes more likely in the future",
+        rationale: "The defining feature of reinforcement is an increase in future behavior.",
+      },
+      {
+        prompt: "Why is praise alone not enough to prove reinforcement happened?",
+        answer: "Because you still have to see whether the behavior increases later",
+        rationale: "The label depends on the future effect on behavior, not just the consequence delivered.",
+      },
+    ],
+  },
+  {
+    id: "prompting",
+    title: "Prompting and Prompt Fading",
+    aliases: ["prompting", "prompt hierarchy", "least to most", "most to least", "prompt fading"],
+    summaries: [
+      "Prompts are extra cues that help the learner respond correctly, and prompt fading reduces that help over time.",
+      "Prompting supports correct responding in the moment, while fading helps transfer control to the natural cue.",
+    ],
+    whyItMatters: [
+      "the goal is not just a correct response today, but independent responding later",
+      "many exam items test whether staff are preventing prompt dependence or creating it",
+    ],
+    examples: [
+      "you start with a gesture prompt, then fade it so the learner responds to the natural cue alone",
+      "a technician uses a model prompt to teach toothbrushing, then gradually removes that support as the learner improves",
+    ],
+    examTips: [
+      "if the question asks about preventing prompt dependence, think prompt fading and transfer of stimulus control",
+      "most-to-least helps with error reduction, while least-to-most often gives the learner a chance to respond more independently first",
+    ],
+    quizzes: [
+      {
+        prompt: "What is the main purpose of prompt fading?",
+        answer: "To transfer control to the natural cue and build independence",
+        rationale: "Fading is about reducing extra help so the learner responds independently.",
+      },
+      {
+        prompt: "Which arrangement is more consistent with least-to-most prompting?",
+        answer: "Start with the smallest amount of help and increase only if needed",
+        rationale: "Least-to-most gives the learner an initial chance to respond with less assistance.",
+      },
+      {
+        prompt: "If a learner waits for help every trial, what risk should you think about first?",
+        answer: "Prompt dependence",
+        rationale: "Overreliance on prompts can block independent responding.",
+      },
+    ],
+  },
+  {
+    id: "data_collection",
+    title: "Data Collection",
+    aliases: ["data collection", "taking data", "recording data", "collecting data"],
+    summaries: [
+      "Data collection means recording behavior or skill performance accurately and consistently according to the treatment plan.",
+      "Good data tells the team what is improving, what is not, and whether the intervention should stay the same or change.",
+    ],
+    whyItMatters: [
+      "supervisors rely on clean data to judge progress and make treatment decisions",
+      "RBT exam questions often treat objective, consistent data as the safest professional answer",
+    ],
+    examples: [
+      "tracking frequency of aggression or percentage of independent correct responses",
+      "recording duration of tantrums across sessions to see whether the behavior is decreasing over time",
+    ],
+    examTips: [
+      "when the safest answer talks about objectivity, consistency, or treatment decisions, data collection is usually central",
+      "if an option relies on memory instead of immediate recording, it is usually weaker",
+    ],
+    quizzes: [
+      {
+        prompt: "Why does the treatment team need accurate data from the RBT?",
+        answer: "To evaluate progress and make sound treatment decisions",
+        rationale: "Data drives whether goals, procedures, or supports need to change.",
+      },
+      {
+        prompt: "Which is usually stronger: objective written data or memory-based impressions after session?",
+        answer: "Objective written data",
+        rationale: "Objective recording reduces bias and improves consistency.",
+      },
+      {
+        prompt: "If two staff collect data differently on the same target, what problem should you suspect?",
+        answer: "Poor measurement consistency",
+        rationale: "Inconsistent data makes progress harder to interpret.",
+      },
+    ],
+  },
+  {
+    id: "fba",
+    title: "Functional Behavior Assessment",
+    aliases: ["functional behavior assessment", "fba", "function of behavior", "abc data"],
+    summaries: [
+      "A functional behavior assessment identifies why a behavior happens by looking at antecedents, behavior, and consequences.",
+      "FBA is about finding the behavior's likely function so the intervention matches what is maintaining it.",
+    ],
+    whyItMatters: [
+      "interventions are stronger when they match the real function of the behavior",
+      "exam questions often expect you to gather more ABC data before jumping to an intervention",
+    ],
+    examples: [
+      "if aggression usually leads to escape from tasks, the behavior may be maintained by escape",
+      "if a learner screams and adults consistently rush over with comfort, the behavior may be maintained by attention",
+    ],
+    examTips: [
+      "before choosing an intervention, exam questions often expect you to identify function or gather more ABC data first",
+      "when a scenario highlights what happens right before and after behavior, think ABC and function",
+    ],
+    quizzes: [
+      {
+        prompt: "What is the main goal of an FBA?",
+        answer: "To identify the variables maintaining the behavior",
+        rationale: "FBA helps explain why the behavior is happening so treatment can be matched to function.",
+      },
+      {
+        prompt: "If a learner hits when tasks are presented and the task is removed, what possible function should you consider first?",
+        answer: "Escape",
+        rationale: "The behavior appears to produce removal of a demand.",
+      },
+      {
+        prompt: "What should come before choosing a replacement behavior plan in many exam scenarios?",
+        answer: "A clearer understanding of the behavior's function",
+        rationale: "Interventions are usually stronger when they align with function.",
+      },
+    ],
+  },
+  {
+    id: "task_analysis",
+    title: "Task Analysis and Chaining",
+    aliases: ["task analysis", "chaining", "forward chaining", "backward chaining"],
+    summaries: [
+      "A task analysis breaks a skill into smaller teachable steps, and chaining teaches those steps in sequence.",
+      "Complex routines become more teachable when each step is defined clearly and reinforced systematically.",
+    ],
+    whyItMatters: [
+      "it makes complex skills easier to teach, monitor, and reinforce",
+      "exam questions often use daily living skills and routines to test this concept",
+    ],
+    examples: [
+      "washing hands can be broken into turning on water, wetting hands, adding soap, scrubbing, rinsing, and drying",
+      "making a snack can be taught step by step, reinforcing each part according to the chaining plan",
+    ],
+    examTips: [
+      "if the question focuses on step-by-step teaching of a routine, think task analysis first",
+      "forward chaining starts with the first step, while backward chaining ends with the learner completing the final step first",
+    ],
+    quizzes: [
+      {
+        prompt: "What is the purpose of a task analysis?",
+        answer: "To break a complex skill into smaller teachable steps",
+        rationale: "Task analysis makes instruction clearer and easier to monitor.",
+      },
+      {
+        prompt: "Which chaining approach commonly lets the learner contact the natural reinforcer at the end of every teaching trial?",
+        answer: "Backward chaining",
+        rationale: "The learner completes the last step and immediately contacts the finished outcome.",
+      },
+      {
+        prompt: "If a routine is too complex to teach all at once, what should you think of first?",
+        answer: "Task analysis",
+        rationale: "It organizes the routine into teachable components.",
+      },
+    ],
+  },
+  {
+    id: "ethics",
+    title: "Ethics and Professional Conduct",
+    aliases: ["ethics", "professional conduct", "supervisor", "scope of competence", "confidentiality"],
+    summaries: [
+      "RBTs should stay within their role, protect confidentiality, follow the treatment plan, and contact the supervisor when a situation exceeds their authority.",
+      "Professional conduct in ABA is usually about safety, boundaries, documentation, and asking for supervision when needed.",
+    ],
+    whyItMatters: [
+      "ethics questions often reward the safest, most role-appropriate action",
+      "many exam items are really about whether the RBT stays within scope and documents appropriately",
+    ],
+    examples: [
+      "if a caregiver asks you to change the program, the safest move is usually to document and consult the supervisor",
+      "if a peer asks for private client details, protecting confidentiality is the correct priority",
+    ],
+    examTips: [
+      "when two answers seem possible, the more role-appropriate and supervised one is usually stronger",
+      "if a situation feels outside your role, involve the supervisor instead of improvising treatment changes",
+    ],
+    quizzes: [
+      {
+        prompt: "What is often the safest first step if a caregiver asks an RBT to change a treatment procedure on the spot?",
+        answer: "Consult the supervisor and follow the existing plan until guidance is given",
+        rationale: "RBTs should stay within role and not independently change treatment.",
+      },
+      {
+        prompt: "Which matters more in an ethics scenario: personal preference or role-appropriate action?",
+        answer: "Role-appropriate action",
+        rationale: "Professional conduct is grounded in boundaries, supervision, and client welfare.",
+      },
+      {
+        prompt: "If a request falls outside your competence or authorization, what should you do?",
+        answer: "Seek supervisor guidance",
+        rationale: "That protects the client and keeps practice within scope.",
+      },
+    ],
+  },
+];
+
+function getTopicById(topicId) {
+  return TOPICS.find((topic) => topic.id === topicId) || null;
+}
+
+function findTopicFromText(text) {
+  const normalized = String(text || "").toLowerCase();
+  return (
+    TOPICS.find((topic) =>
+      topic.aliases.some((alias) => normalized.includes(alias.toLowerCase())),
+    ) || null
+  );
+}
+
+function inferTopicFromHistory(history) {
+  const recentTexts = [...(history || [])]
+    .slice(-8)
+    .reverse()
+    .map((message) => String(message?.content || ""));
+
+  for (const text of recentTexts) {
+    const topic = findTopicFromText(text);
+    if (topic) {
+      return topic;
+    }
+  }
+
+  return null;
+}
+
+function formatConceptReply(topic, seed, intro = "") {
+  const summary = pickBySeed(topic.summaries, seed);
+  const whyItMatters = pickBySeed(topic.whyItMatters, seed + 1);
+  const example = pickBySeed(topic.examples, seed + 2);
+  const examTip = pickBySeed(topic.examTips, seed + 3);
+
+  return uniqueItems([
+    intro ? `${intro}` : "",
+    `**${topic.title}**`,
     "",
     summary,
     "",
@@ -13,24 +298,151 @@ function conceptReply({ title, summary, whyItMatters, example, examTip }) {
     `**Example**: ${example}`,
     "",
     `**Exam tip**: ${examTip}`,
-  ].join("\n");
+  ]).join("\n");
 }
 
-function quizReply(title, questions) {
+function formatExampleReply(topic, seed, intro = "") {
+  const example = pickBySeed(topic.examples, seed);
+  const examTip = pickBySeed(topic.examTips, seed + 1);
+
+  return uniqueItems([
+    intro ? `${intro}` : "",
+    `**${topic.title}: quick example**`,
+    "",
+    example,
+    "",
+    `**What to notice**: ${examTip}`,
+    "",
+    "If you want, I can turn this into an exam-style scenario, a wrong-answer breakdown, or a one-question check.",
+  ]).join("\n");
+}
+
+function formatQuizReply(topic, seed, options = {}) {
+  const count = options.count || 3;
+  const revealAnswers = options.revealAnswers ?? true;
+  const intro = options.intro || "";
+  const rotated = topic.quizzes
+    .map((item, index) => ({ item, score: (seed + index) % topic.quizzes.length }))
+    .sort((left, right) => left.score - right.score)
+    .slice(0, count)
+    .map(({ item }) => item);
+
+  const lines = [
+    intro,
+    `**Quick check: ${topic.title}**`,
+    "",
+  ].filter(Boolean);
+
+  rotated.forEach((question, index) => {
+    lines.push(`${index + 1}. ${question.prompt}`);
+    if (revealAnswers) {
+      lines.push(`   **Answer**: ${question.answer}`);
+      lines.push(`   **Why**: ${question.rationale}`);
+    }
+  });
+
+  lines.push("");
+  lines.push(
+    revealAnswers
+      ? "If you want, I can make the next round harder or quiz you one question at a time without showing the answer first."
+      : "Reply with your answers and I will grade them one by one.",
+  );
+
+  return lines.join("\n");
+}
+
+function formatStudyPlan(activeTopic, seed) {
+  const topicLabel = activeTopic?.title || "your weakest RBT domains";
+  const firstFocus = activeTopic
+    ? `Review **${topicLabel}** for 15 to 20 minutes and rewrite the concept in your own words.`
+    : "Review one weak domain for 15 to 20 minutes and rewrite the concept in your own words.";
+
+  const secondFocus = activeTopic
+    ? `Do 8 to 10 questions specifically on **${topicLabel}**.`
+    : "Do 10 to 15 mixed RBT practice questions.";
+
+  const closer = pickBySeed(
+    [
+      "Finish with one short quiz or flashcard round so you end with active recall.",
+      "Close the session by teaching the concept out loud as if you were explaining it to a parent or supervisee.",
+    ],
+    seed,
+  );
+
   return [
-    `**Quick quiz: ${title}**`,
+    `**Study plan for ${topicLabel}**`,
     "",
-    ...questions.map(
-      (question, index) =>
-        `${index + 1}. ${question.prompt}\n   Answer: ${question.answer}`,
-    ),
+    `1. ${firstFocus}`,
+    `2. ${secondFocus}`,
+    "3. Review every missed item by asking what concept was actually being tested.",
+    "4. Ask the tutor for one harder scenario on the same topic.",
+    `5. ${closer}`,
     "",
-    "If you want, I can also quiz you one question at a time without showing the answer first.",
+    "**Best rhythm**: shorter daily sessions usually stick better than one long cram session.",
   ].join("\n");
 }
 
-export function createTutorReply(text) {
+function formatWrongAnswerReply(activeTopic) {
+  const topicHint = activeTopic
+    ? `If this is about **${activeTopic.title}**, I can also tell you what cue in the stem points to that concept.`
+    : "If you paste the full item, I can tell you exactly what clue in the stem points to the right answer.";
+
+  return [
+    "**How to break down a wrong answer**",
+    "",
+    "1. Identify the exact concept being tested.",
+    "2. Look for the word or phrase that makes the tempting option unsafe or incomplete.",
+    "3. Ask what the best answer does better: is it more ethical, more functional, or more consistent with ABA principles?",
+    "",
+    topicHint,
+  ].join("\n");
+}
+
+function formatGeneralHelp(activeTopic) {
+  const topicLine = activeTopic
+    ? `Since we are already talking about **${activeTopic.title}**, I can keep going with that.`
+    : "I can switch between concepts, quizzes, examples, and exam strategy.";
+
+  return [
+    "I can help with:",
+    "",
+    "- explaining ABA or RBT concepts in simple words",
+    "- giving examples and exam-style scenarios",
+    "- quizzing you with easier or harder questions",
+    "- breaking down why an answer is wrong",
+    "- building a focused study plan",
+    "",
+    topicLine,
+    "",
+    "Try: `Quiz me on prompting`, `Give me a harder FBA scenario`, `Why is this answer wrong?`, or `Make me a study plan for reinforcement`.",
+  ].join("\n");
+}
+
+function buildCoreTopicQuiz(seed) {
+  const selectedTopics = TOPICS.slice(0, 4)
+    .map((topic, index) => ({ topic, score: (seed + index * 7) % TOPICS.length }))
+    .sort((left, right) => left.score - right.score)
+    .slice(0, 3)
+    .map(({ topic }) => topic);
+
+  const questions = selectedTopics.map((topic, index) => {
+    const quiz = pickBySeed(topic.quizzes, seed + index);
+    return `${index + 1}. ${quiz.prompt}\n   **Answer**: ${quiz.answer}\n   **Why**: ${quiz.rationale}`;
+  });
+
+  return [
+    "**Quick quiz: mixed core RBT concepts**",
+    "",
+    ...questions,
+    "",
+    "If you want, I can make the next round topic-specific, more scenario-based, or one question at a time.",
+  ].join("\n");
+}
+
+export function createTutorReply(text, options = {}) {
   const normalized = String(text || "").trim().toLowerCase();
+  const history = Array.isArray(options.history) ? options.history : [];
+  const seed = hashText(`${normalized}:${history.length}`);
   const now = new Date();
   const todayLabel = new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -38,6 +450,10 @@ export function createTutorReply(text) {
     day: "numeric",
     year: "numeric",
   }).format(now);
+
+  const explicitTopic = findTopicFromText(normalized);
+  const activeTopic = explicitTopic || inferTopicFromHistory(history);
+  const intro = !explicitTopic && activeTopic ? `Staying with **${activeTopic.title}**:` : "";
 
   if (
     hasAny(normalized, [
@@ -52,89 +468,69 @@ export function createTutorReply(text) {
     return `Today is **${todayLabel}**.`;
   }
 
-  if (hasAny(normalized, ["quiz me", "test me", "practice me"])) {
-    return quizReply("core RBT concepts", [
-      {
-        prompt: "What does positive reinforcement do to a future behavior?",
-        answer: "It increases the future likelihood of that behavior.",
-      },
-      {
-        prompt: "What is the purpose of collecting data as an RBT?",
-        answer: "To measure progress accurately and support treatment decisions.",
-      },
-      {
-        prompt: "What is the goal of prompt fading?",
-        answer: "To transfer control to natural cues and build independence.",
-      },
-    ]);
+  if (hasAny(normalized, ["what can you do", "help me", "how can you help"])) {
+    return formatGeneralHelp(activeTopic);
   }
 
   if (hasAny(normalized, ["study plan", "how should i study", "study schedule"])) {
-    return [
-      "**Simple RBT study plan**",
-      "",
-      "1. Review one domain for 15 to 20 minutes.",
-      "2. Do 10 to 15 practice questions from that domain.",
-      "3. Read every explanation for missed answers.",
-      "4. Ask the tutor to explain the two weakest concepts again in simpler words.",
-      "5. Finish with one quick mock block or flashcard round.",
-      "",
-      "**Best rhythm**: short daily sessions usually work better than one very long session.",
-    ].join("\n");
+    return formatStudyPlan(activeTopic, seed);
   }
 
   if (hasAny(normalized, ["why is this wrong", "why is that wrong", "why wrong"])) {
-    return [
-      "**How to review a wrong answer**",
-      "",
-      "When an answer is wrong, ask yourself three things:",
-      "1. What concept is the question really testing?",
-      "2. What word in the option makes it wrong?",
-      "3. What would make the correct option safer, more ethical, or more functional?",
-      "",
-      "If you paste the full question with the answer choices, I can break down exactly why one option is correct and why the others are not.",
-    ].join("\n");
+    return formatWrongAnswerReply(activeTopic);
+  }
+
+  if (hasAny(normalized, ["another example", "one more example", "more example"])) {
+    const topic = activeTopic || getTopicById("positive_reinforcement");
+    return formatExampleReply(topic, seed + 1, intro);
   }
 
   if (hasAny(normalized, ["example", "give me an example"])) {
-    return [
-      "**ABA example**",
-      "",
-      "A learner says `water` after being prompted. The technician immediately gives water and praise. If that response happens more often in the future, that is positive reinforcement.",
-      "",
-      "If you want, I can give you another example for reinforcement, prompting, task analysis, behavior reduction, or data collection.",
-    ].join("\n");
+    const topic = activeTopic || getTopicById("positive_reinforcement");
+    return formatExampleReply(topic, seed, intro);
   }
 
-  if (hasAny(normalized, ["discrete trial", "dtt"])) {
-    return conceptReply({
-      title: "Discrete Trial Training",
-      summary:
-        "Discrete trial training is a structured teaching format with a clear instruction, learner response, and consequence.",
-      whyItMatters:
-        "it helps teach skills in small, repeatable steps so performance is easier to measure and improve",
-      example:
-        "the instructor says `touch red`, the learner responds, and the technician gives reinforcement for the correct response",
-      examTip:
-        "remember the sequence: instruction, response, consequence, then brief pause before the next trial",
+  if (
+    hasAny(normalized, [
+      "one question at a time",
+      "one question",
+      "without showing the answer",
+      "don't show the answer",
+      "dont show the answer",
+    ])
+  ) {
+    const topic = activeTopic || getTopicById("positive_reinforcement");
+    return formatQuizReply(topic, seed, {
+      count: 1,
+      revealAnswers: false,
+      intro,
     });
   }
 
-  if (normalized.includes("positive reinforcement")) {
-    return conceptReply({
-      title: "Positive Reinforcement",
-      summary:
-        "Positive reinforcement means adding something valuable right after a behavior so that the behavior is more likely to happen again.",
-      whyItMatters:
-        "it is one of the most tested ABA principles and shows up constantly in RBT-style questions",
-      example:
-        "a learner answers correctly, then receives praise or access to a preferred item",
-      examTip:
-        "if the question asks whether behavior increases in the future, positive reinforcement is often the target concept",
+  if (hasAny(normalized, ["harder", "more challenging"])) {
+    const topic = activeTopic || getTopicById("positive_reinforcement");
+    return formatQuizReply(topic, seed + 2, {
+      count: 2,
+      revealAnswers: true,
+      intro: intro || `Here is a harder pass on **${topic.title}**:`,
     });
   }
 
-  if (hasAny(normalized, ["negative reinforcement", "punishment", "difference between reinforcement and punishment"])) {
+  if (hasAny(normalized, ["quiz me", "test me", "practice me"])) {
+    if (activeTopic) {
+      return formatQuizReply(activeTopic, seed, { count: 3, revealAnswers: true, intro });
+    }
+
+    return buildCoreTopicQuiz(seed);
+  }
+
+  if (
+    hasAny(normalized, [
+      "negative reinforcement",
+      "punishment",
+      "difference between reinforcement and punishment",
+    ])
+  ) {
     return [
       "**Reinforcement vs punishment**",
       "",
@@ -143,87 +539,14 @@ export function createTutorReply(text) {
       "- **Positive** means something is added.",
       "- **Negative** means something is removed.",
       "",
-      "**Memory tip**: ignore whether the event feels good or bad. First ask, `Did the behavior go up or down afterward?`",
+      "**Memory tip**: ignore whether the event feels good or bad and ask, `Did the future behavior go up or down?`",
+      "",
+      "If you want, I can give you three mini scenarios and have you label each one.",
     ].join("\n");
   }
 
-  if (hasAny(normalized, ["prompting", "prompt hierarchy", "least to most", "most to least"])) {
-    return conceptReply({
-      title: "Prompting and Prompt Fading",
-      summary:
-        "Prompts are extra cues that help the learner respond correctly, and prompt fading reduces that help over time.",
-      whyItMatters:
-        "the goal is not just a correct response today, but independent responding later",
-      example:
-        "you start with a gesture prompt, then fade it so the learner responds to the natural cue alone",
-      examTip:
-        "if the question asks about preventing prompt dependence, think prompt fading and transfer of stimulus control",
-    });
-  }
-
-  if (hasAny(normalized, ["data collection", "taking data", "recording data"])) {
-    return conceptReply({
-      title: "Data Collection",
-      summary:
-        "Data collection means recording behavior or skill performance accurately and consistently according to the treatment plan.",
-      whyItMatters:
-        "supervisors rely on clean data to judge progress and make treatment decisions",
-      example:
-        "tracking frequency of aggression or percentage of independent correct responses",
-      examTip:
-        "when the safest answer talks about objectivity, consistency, or treatment decisions, data collection is usually central",
-    });
-  }
-
-  if (hasAny(normalized, ["task analysis", "chaining", "forward chaining", "backward chaining"])) {
-    return conceptReply({
-      title: "Task Analysis and Chaining",
-      summary:
-        "A task analysis breaks a skill into smaller teachable steps, and chaining teaches the steps in an ordered sequence.",
-      whyItMatters:
-        "it makes complex skills easier to teach, monitor, and reinforce",
-      example:
-        "washing hands can be broken into turning on water, wetting hands, adding soap, scrubbing, rinsing, and drying",
-      examTip:
-        "if the question focuses on step-by-step teaching of a routine, think task analysis first",
-    });
-  }
-
-  if (hasAny(normalized, ["functional behavior assessment", "fba", "function of behavior"])) {
-    return conceptReply({
-      title: "Functional Behavior Assessment",
-      summary:
-        "A functional behavior assessment identifies why a behavior happens by looking at antecedents, behavior, and consequences.",
-      whyItMatters:
-        "interventions are stronger when they match the real function of the behavior",
-      example:
-        "if aggression usually leads to escape from tasks, the behavior may be maintained by escape",
-      examTip:
-        "before choosing an intervention, exam questions often expect you to identify function or gather more ABC data first",
-    });
-  }
-
-  if (hasAny(normalized, ["replacement behavior", "behavior reduction"])) {
-    return [
-      "**Replacement behavior**",
-      "",
-      "A good replacement behavior should:",
-      "- serve the same function as the problem behavior",
-      "- be easier or more efficient for the learner to use",
-      "- be acceptable and teachable",
-      "",
-      "**Exam tip**: if an option is harder, slower, or less useful than the original behavior, it is usually not the best replacement behavior.",
-    ].join("\n");
-  }
-
-  if (hasAny(normalized, ["ethics", "professional conduct", "supervisor"])) {
-    return [
-      "**Professional conduct reminder**",
-      "",
-      "RBTs should stay within their role, follow the treatment plan, protect confidentiality, collect data accurately, and ask the supervisor for guidance when a request falls outside their competence or authorization.",
-      "",
-      "If you want, I can turn this into a quick ethics quiz or give you common exam-style scenarios.",
-    ].join("\n");
+  if (activeTopic) {
+    return formatConceptReply(activeTopic, seed, intro);
   }
 
   if (hasAny(normalized, ["rbt exam", "exam tips", "study tips"])) {
@@ -231,23 +554,13 @@ export function createTutorReply(text) {
       "**RBT exam prep tips**",
       "",
       "1. Practice in short daily blocks instead of cramming.",
-      "2. Review missed questions by concept, not only by answer.",
-      "3. Focus heavily on reinforcement, prompting, data collection, ethics, and behavior reduction.",
-      "4. Use mock exams to test pacing and weak domains.",
+      "2. Review missed questions by concept, not only by final answer.",
+      "3. Focus hard on reinforcement, prompting, data collection, ethics, and behavior reduction.",
+      "4. Mix recognition practice with recall: explain concepts out loud, not just by rereading.",
       "",
-      "If you want, I can build you a 7-day mini study plan right now.",
+      "If you want, I can build you a 7-day mini study plan or quiz you on your weakest area.",
     ].join("\n");
   }
 
-  return [
-    "I can help with:",
-    "",
-    "- explaining ABA or RBT concepts in simple words",
-    "- giving examples",
-    "- quizzing you",
-    "- breaking down why an answer is wrong",
-    "- building a study plan",
-    "",
-    "Try something like: `Quiz me on reinforcement`, `Explain prompting with an example`, or `Why is this answer wrong?`",
-  ].join("\n");
+  return formatGeneralHelp(activeTopic);
 }

@@ -1239,10 +1239,15 @@ export default async (request) => {
       content,
       created_at: new Date().toISOString(),
     };
+    const currentConversation = (db.tutorConversations[auth.user.id] || []).find(
+      (conversation) => conversation.id === conversationId,
+    );
     const assistantMessage = {
       id: createId("msg"),
       role: "assistant",
-      content: createTutorReply(content),
+      content: createTutorReply(content, {
+        history: currentConversation?.messages || [],
+      }),
       created_at: new Date().toISOString(),
     };
 
