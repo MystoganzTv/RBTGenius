@@ -21,6 +21,10 @@ function uniqueItems(items) {
   return [...new Set(items.filter(Boolean))];
 }
 
+function formatTopicLead(topic, variant = "Continuing with") {
+  return topic ? `*${variant} ${topic.title}*` : "";
+}
+
 const TOPICS = [
   {
     id: "positive_reinforcement",
@@ -287,8 +291,8 @@ function formatConceptReply(topic, seed, intro = "") {
   const example = pickBySeed(topic.examples, seed + 2);
   const examTip = pickBySeed(topic.examTips, seed + 3);
 
-  return uniqueItems([
-    intro ? `${intro}` : "",
+  return [
+    intro || formatTopicLead(topic),
     `**${topic.title}**`,
     "",
     summary,
@@ -298,15 +302,17 @@ function formatConceptReply(topic, seed, intro = "") {
     `**Example**: ${example}`,
     "",
     `**Exam tip**: ${examTip}`,
-  ]).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function formatExampleReply(topic, seed, intro = "") {
   const example = pickBySeed(topic.examples, seed);
   const examTip = pickBySeed(topic.examTips, seed + 1);
 
-  return uniqueItems([
-    intro ? `${intro}` : "",
+  return [
+    intro || formatTopicLead(topic),
     `**${topic.title}: quick example**`,
     "",
     example,
@@ -314,7 +320,9 @@ function formatExampleReply(topic, seed, intro = "") {
     `**What to notice**: ${examTip}`,
     "",
     "If you want, I can turn this into an exam-style scenario, a wrong-answer breakdown, or a one-question check.",
-  ]).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function formatQuizReply(topic, seed, options = {}) {
@@ -328,7 +336,7 @@ function formatQuizReply(topic, seed, options = {}) {
     .map(({ item }) => item);
 
   const lines = [
-    intro,
+    intro || formatTopicLead(topic),
     `**Quick check: ${topic.title}**`,
     "",
   ].filter(Boolean);
@@ -336,12 +344,14 @@ function formatQuizReply(topic, seed, options = {}) {
   rotated.forEach((question, index) => {
     lines.push(`${index + 1}. ${question.prompt}`);
     if (revealAnswers) {
+      lines.push("");
       lines.push(`   **Answer**: ${question.answer}`);
+      lines.push("");
       lines.push(`   **Why**: ${question.rationale}`);
     }
+    lines.push("");
   });
 
-  lines.push("");
   lines.push(
     revealAnswers
       ? "If you want, I can make the next round harder or quiz you one question at a time without showing the answer first."
@@ -370,6 +380,7 @@ function formatStudyPlan(activeTopic, seed) {
   );
 
   return [
+    activeTopic ? formatTopicLead(activeTopic, "Focus area:") : "",
     `**Study plan for ${topicLabel}**`,
     "",
     `1. ${firstFocus}`,
@@ -379,7 +390,9 @@ function formatStudyPlan(activeTopic, seed) {
     `5. ${closer}`,
     "",
     "**Best rhythm**: shorter daily sessions usually stick better than one long cram session.",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function formatWrongAnswerReply(activeTopic) {
@@ -388,6 +401,7 @@ function formatWrongAnswerReply(activeTopic) {
     : "If you paste the full item, I can tell you exactly what clue in the stem points to the right answer.";
 
   return [
+    activeTopic ? formatTopicLead(activeTopic) : "",
     "**How to break down a wrong answer**",
     "",
     "1. Identify the exact concept being tested.",
@@ -395,7 +409,9 @@ function formatWrongAnswerReply(activeTopic) {
     "3. Ask what the best answer does better: is it more ethical, more functional, or more consistent with ABA principles?",
     "",
     topicHint,
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function formatGeneralHelp(activeTopic) {
@@ -453,7 +469,7 @@ export function createTutorReply(text, options = {}) {
 
   const explicitTopic = findTopicFromText(normalized);
   const activeTopic = explicitTopic || inferTopicFromHistory(history);
-  const intro = !explicitTopic && activeTopic ? `Staying with **${activeTopic.title}**:` : "";
+  const intro = !explicitTopic && activeTopic ? formatTopicLead(activeTopic) : "";
 
   if (
     hasAny(normalized, [

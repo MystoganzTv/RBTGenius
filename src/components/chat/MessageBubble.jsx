@@ -137,21 +137,28 @@ export default function MessageBubble({ message }) {
                 className="prose prose-sm max-w-none text-sm prose-slate [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                 components={{
                   p: ({ children }) => (
-                    <p className="my-1 leading-relaxed text-slate-700">
+                    <p className="my-2 leading-7 text-slate-700">
                       {children}
                     </p>
                   ),
-                  ul: ({ children }) => <ul className="my-1 ml-4 list-disc">{children}</ul>,
+                  ul: ({ children }) => (
+                    <ul className="my-3 ml-5 list-disc space-y-2">{children}</ul>
+                  ),
                   ol: ({ children }) => (
-                    <ol className="my-1 ml-4 list-decimal">{children}</ol>
+                    <ol className="my-3 ml-5 list-decimal space-y-3">{children}</ol>
                   ),
                   li: ({ children }) => (
-                    <li className="my-0.5 text-slate-700">{children}</li>
+                    <li className="text-slate-700 marker:font-semibold">{children}</li>
                   ),
                   strong: ({ children }) => (
                     <strong className="font-semibold text-slate-900">
                       {children}
                     </strong>
+                  ),
+                  em: ({ children }) => (
+                    <em className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 not-italic">
+                      {children}
+                    </em>
                   ),
                   code: ({ inline, children }) =>
                     inline ? (
