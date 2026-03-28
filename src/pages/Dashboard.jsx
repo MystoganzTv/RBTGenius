@@ -72,6 +72,23 @@ const planStyles = {
   },
 };
 
+const badgeAccentStyles = {
+  "First 50":
+    "border-blue-200 bg-blue-50 text-blue-700 shadow-[0_14px_30px_-24px_rgba(30,94,255,0.55)] dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-200",
+  "250 Answered":
+    "border-indigo-200 bg-indigo-50 text-indigo-700 shadow-[0_14px_30px_-24px_rgba(99,102,241,0.55)] dark:border-indigo-500/25 dark:bg-indigo-500/10 dark:text-indigo-200",
+  "10% Covered":
+    "border-cyan-200 bg-cyan-50 text-cyan-700 shadow-[0_14px_30px_-24px_rgba(6,182,212,0.5)] dark:border-cyan-500/25 dark:bg-cyan-500/10 dark:text-cyan-200",
+  "3-Day Streak":
+    "border-orange-200 bg-orange-50 text-orange-700 shadow-[0_14px_30px_-24px_rgba(249,115,22,0.45)] dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-200",
+  "First Mock":
+    "border-violet-200 bg-violet-50 text-violet-700 shadow-[0_14px_30px_-24px_rgba(139,92,246,0.5)] dark:border-violet-500/25 dark:bg-violet-500/10 dark:text-violet-200",
+  "Mock Pass":
+    "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[0_14px_30px_-24px_rgba(16,185,129,0.5)] dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200",
+  "Ready Signal":
+    "border-amber-200 bg-amber-50 text-amber-700 shadow-[0_14px_30px_-24px_rgba(245,158,11,0.45)] dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200",
+};
+
 async function loadDashboardData() {
   return api.getDashboard();
 }
@@ -344,16 +361,28 @@ export default function Dashboard() {
                   key={badge.label}
                   className={`flex flex-col items-center rounded-xl p-3 transition-all ${
                     badge.unlocked
-                      ? "border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900"
-                      : "bg-slate-50 opacity-40 grayscale dark:bg-slate-900"
+                      ? `border ${badgeAccentStyles[badge.label] || "border-slate-200 bg-slate-50/80 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"}`
+                      : "border border-slate-200/80 bg-slate-50/70 opacity-45 grayscale dark:border-slate-800 dark:bg-slate-900"
                   }`}
                 >
-                  <span className="text-xl">{badge.emoji}</span>
-                  <span className="mt-1 text-[10px] font-medium text-slate-600 dark:text-slate-300">
+                  <span className="text-xl drop-shadow-sm">{badge.emoji}</span>
+                  <span
+                    className={`mt-1 text-[10px] font-semibold ${
+                      badge.unlocked
+                        ? "text-current"
+                        : "text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
                     {badge.label}
                   </span>
                   {badge.description ? (
-                    <span className="mt-1 text-center text-[9px] leading-4 text-slate-400 dark:text-slate-500">
+                    <span
+                      className={`mt-1 text-center text-[9px] leading-4 ${
+                        badge.unlocked
+                          ? "text-current/80"
+                          : "text-slate-400 dark:text-slate-500"
+                      }`}
+                    >
                       {badge.description}
                     </span>
                   ) : null}
