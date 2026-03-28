@@ -48,7 +48,7 @@ function FunctionDisplay({ toolCall }) {
       <button
         type="button"
         onClick={() => setExpanded((current) => !current)}
-        className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 transition-all hover:bg-slate-50"
+        className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 transition-all hover:bg-slate-50 dark:border-[#314062] dark:bg-[#18213A] dark:hover:bg-[#202B47]"
       >
         <Icon
           className={cn(
@@ -57,11 +57,11 @@ function FunctionDisplay({ toolCall }) {
             statusConfig.spin && "animate-spin",
           )}
         />
-        <span className="text-slate-600">
+        <span className="text-slate-600 dark:text-slate-200">
           {name.split(".").reverse().join(" ")}
         </span>
         {statusConfig.text ? (
-          <span className="text-slate-400">• {statusConfig.text}</span>
+          <span className="text-slate-400 dark:text-slate-400">• {statusConfig.text}</span>
         ) : null}
         {!statusConfig.spin ? (
           <ChevronRight
@@ -74,7 +74,7 @@ function FunctionDisplay({ toolCall }) {
       </button>
 
       {expanded && details ? (
-        <pre className="mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-600">
+        <pre className="mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-600 dark:border-[#314062] dark:bg-[#141D32] dark:text-slate-300">
           {typeof details === "string" ? details : JSON.stringify(details, null, 2)}
         </pre>
       ) : null}
@@ -113,7 +113,7 @@ export default function MessageBubble({ message }) {
               "rounded-2xl px-4 py-3",
               isUser
                 ? "bg-[#1E5EFF] text-white"
-                : "border border-slate-200 bg-white shadow-sm",
+                : "border border-slate-200 bg-white shadow-sm dark:border-[#2D3958] dark:bg-[#151F35] dark:shadow-[0_18px_45px_-32px_rgba(15,23,42,0.9)]",
             )}
           >
             {!isUser ? (
@@ -121,7 +121,7 @@ export default function MessageBubble({ message }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700"
+                  className="h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-[#202A45] dark:hover:text-slate-100"
                   onClick={handleCopy}
                   aria-label="Copy message"
                 >
@@ -137,7 +137,7 @@ export default function MessageBubble({ message }) {
                 className="prose prose-sm max-w-none text-sm prose-slate [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                 components={{
                   p: ({ children }) => (
-                    <p className="my-2 leading-7 text-slate-700">
+                    <p className="my-2 leading-7 text-slate-700 dark:text-slate-200">
                       {children}
                     </p>
                   ),
@@ -148,25 +148,25 @@ export default function MessageBubble({ message }) {
                     <ol className="my-3 ml-5 list-decimal space-y-3">{children}</ol>
                   ),
                   li: ({ children }) => (
-                    <li className="text-slate-700 marker:font-semibold">{children}</li>
+                    <li className="text-slate-700 marker:font-semibold dark:text-slate-200">{children}</li>
                   ),
                   strong: ({ children }) => (
-                    <strong className="font-semibold text-slate-900">
+                    <strong className="font-semibold text-slate-900 dark:text-slate-50">
                       {children}
                     </strong>
                   ),
                   em: ({ children }) => (
-                    <em className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 not-italic">
+                    <em className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 not-italic dark:text-slate-400">
                       {children}
                     </em>
                   ),
                   code: ({ inline, children }) =>
                     inline ? (
-                      <code className="rounded bg-slate-100 px-1 py-0.5 text-xs text-slate-700">
+                      <code className="rounded bg-slate-100 px-1 py-0.5 text-xs text-slate-700 dark:bg-[#202B45] dark:text-slate-100">
                         {children}
                       </code>
                     ) : (
-                      <pre className="my-2 overflow-x-auto rounded-lg bg-slate-900 p-3 text-slate-100">
+                      <pre className="my-2 overflow-x-auto rounded-lg bg-slate-900 p-3 text-slate-100 dark:bg-[#1C2742]">
                         <code>{children}</code>
                       </pre>
                     ),
