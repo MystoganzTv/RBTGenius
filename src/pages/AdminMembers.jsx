@@ -386,7 +386,7 @@ export default function AdminMembers() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:min-w-[760px] xl:grid-cols-[220px_180px_auto_auto_auto]">
+                  <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:max-w-[760px] xl:flex-1 xl:grid-cols-[minmax(0,220px)_minmax(0,180px)_minmax(0,1fr)_auto_auto]">
                     <Select
                       value={draft.plan}
                       onValueChange={(value) => updateDraft(member.id, { plan: value })}
