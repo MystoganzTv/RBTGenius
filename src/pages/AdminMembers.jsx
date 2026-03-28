@@ -59,19 +59,19 @@ const darkBadgeClass =
   "dark:border-[#41588A] dark:bg-[#1A284A] dark:text-slate-100";
 
 const summaryCardClass =
-  "border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#37517F]/75 dark:bg-[#162544]/88 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
+  "border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:!border-slate-700/80 dark:!bg-slate-900/95 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
 
 const memberCardClass =
-  "overflow-hidden border-slate-200/80 bg-white/95 p-5 lg:px-6 lg:py-6 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#37517F]/75 dark:bg-[#162544]/88 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
+  "overflow-hidden border-slate-200/80 bg-white/95 p-5 lg:px-6 lg:py-6 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:!border-slate-700/80 dark:!bg-slate-900/95 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
 
 const actionPanelClass =
-  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 lg:p-5 dark:border-[#42608F]/70 dark:bg-[#1B2C4F]/72";
+  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 lg:p-5 dark:!border-slate-700/80 dark:!bg-slate-800/70";
 
 const memberSelectClass =
-  "border-slate-200 bg-white text-slate-800 dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100";
+  "border-slate-200 bg-white text-slate-800 dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100";
 
 const memberOutlineButtonClass =
-  "w-full border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100 dark:hover:bg-[#18294B] dark:hover:text-slate-50";
+  "w-full border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100 dark:hover:!bg-slate-900 dark:hover:text-slate-50";
 
 function formatJoinedDate(value) {
   if (!value) {
@@ -339,14 +339,14 @@ export default function AdminMembers() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by name or email"
-              className="dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100 dark:placeholder:text-slate-500"
+              className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
 
             <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100">
+              <SelectTrigger className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
                 <SelectValue placeholder="Filter by plan" />
               </SelectTrigger>
-              <SelectContent className="dark:border-[#30406E] dark:bg-[#10182F] dark:text-slate-100">
+              <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
                 <SelectItem value="all">All Plans</SelectItem>
                 {PLAN_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
@@ -433,7 +433,7 @@ export default function AdminMembers() {
                             <SelectTrigger className={memberSelectClass}>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100">
+                            <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
                               {PLAN_OPTIONS.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
                                   {option.label}
@@ -449,7 +449,7 @@ export default function AdminMembers() {
                             <SelectTrigger className={memberSelectClass}>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100">
+                            <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
                               {ROLE_OPTIONS.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
                                   {option.label}
