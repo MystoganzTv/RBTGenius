@@ -25,6 +25,195 @@ function formatTopicLead(topic, variant = "Continuing with") {
   return topic ? `*${variant} ${topic.title}*` : "";
 }
 
+function normalizeForMatch(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function stemWord(word) {
+  if (word.endsWith("ies") && word.length > 4) {
+    return `${word.slice(0, -3)}y`;
+  }
+
+  if (word.endsWith("es") && word.length > 4) {
+    return word.slice(0, -2);
+  }
+
+  if (word.endsWith("s") && word.length > 3) {
+    return word.slice(0, -1);
+  }
+
+  return word;
+}
+
+function tokenMatches(left, right) {
+  const a = stemWord(normalizeForMatch(left));
+  const b = stemWord(normalizeForMatch(right));
+
+  if (!a || !b) {
+    return false;
+  }
+
+  return a === b || a.startsWith(b.slice(0, 4)) || b.startsWith(a.slice(0, 4));
+}
+
+function extractWords(value) {
+  return normalizeForMatch(value)
+    .split(" ")
+    .filter((word) => word.length >= 3);
+}
+
+function buildQuizMetadata(topic, question) {
+  return {
+    topicId: topic.id,
+    prompt: question.prompt,
+    answer: question.answer,
+    rationale: question.rationale,
+    keywords: question.keywords || [],
+  };
+}
+
+function findPendingQuiz(history) {
+  const lastMessage = [...(history || [])].slice(-1)[0];
+  if (lastMessage?.role === "assistant" && lastMessage?.quiz) {
+    return lastMessage.quiz;
+  }
+
+  return null;
+}
+
+function evaluateQuizAnswer(response, quiz) {
+  const normalizedResponse = normalizeForMatch(response);
+  const normalizedAnswer = normalizeForMatch(quiz.answer);
+
+  if (!normalizedResponse) {
+    return { score: 0, verdict: "empty" };
+  }
+
+  if (
+    normalizedResponse === normalizedAnswer ||
+    normalizedResponse.includes(normalizedAnswer) ||
+    normalizedAnswer.includes(normalizedResponse)
+  ) {
+    return { score: 1, verdict: "correct" };
+  }
+
+  const responseWords = extractWords(response).map(stemWord);
+  const keywordHits = (quiz.keywords || []).filter((keyword) =>
+    responseWords.some((word) => tokenMatches(word, keyword)),
+  ).length;
+  const keywordScore =
+    quiz.keywords?.length > 0 ? keywordHits / quiz.keywords.length : 0;
+
+  const answerWords = extractWords(quiz.answer).map(stemWord);
+  const answerHits = answerWords.filter((word) =>
+    responseWords.some((responseWord) => tokenMatches(responseWord, word)),
+  ).length;
+  const answerScore = answerWords.length > 0 ? answerHits / answerWords.length : 0;
+
+  const score = Math.max(keywordScore, answerScore);
+
+  if (score >= 0.8) {
+    return { score, verdict: "correct" };
+  }
+
+  if (score >= 0.4) {
+    return { score, verdict: "partial" };
+  }
+
+  return { score, verdict: "incorrect" };
+}
+
+function formatQuizEvaluation(userText, quiz, topic) {
+  const normalized = normalizeForMatch(userText);
+
+  if (hasAny(normalized, ["hint", "clue"])) {
+    return {
+      content: [
+        formatTopicLead(topic, "Still on"),
+        "**Hint**",
+        "",
+        `Look for the key idea behind this question: ${quiz.rationale}`,
+        "",
+        "Take another shot, or say `I don't know` and I will show the answer.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    };
+  }
+
+  if (hasAny(normalized, ["i dont know", "i don't know", "dont know", "don't know", "idk", "skip"])) {
+    return {
+      content: [
+        formatTopicLead(topic, "Still on"),
+        "**No problem. Here is the answer**",
+        "",
+        `**Correct answer**: ${quiz.answer}`,
+        "",
+        `**Why**: ${quiz.rationale}`,
+        "",
+        "Say `next question` if you want another one on this same topic.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    };
+  }
+
+  const evaluation = evaluateQuizAnswer(userText, quiz);
+
+  if (evaluation.verdict === "correct") {
+    return {
+      content: [
+        formatTopicLead(topic, "Nice"),
+        "**Correct**",
+        "",
+        `Your answer matches the core idea: **${quiz.answer}**.`,
+        "",
+        `**Why**: ${quiz.rationale}`,
+        "",
+        "Say `next question` if you want another one on this topic, or `harder` if you want a tougher version.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    };
+  }
+
+  if (evaluation.verdict === "partial") {
+    return {
+      content: [
+        formatTopicLead(topic, "Almost there on"),
+        "**Close, but tighten it up**",
+        "",
+        `**Best answer**: ${quiz.answer}`,
+        "",
+        `**Why**: ${quiz.rationale}`,
+        "",
+        "Try answering again in your own words, or say `next question` if you want to keep moving.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    };
+  }
+
+  return {
+    content: [
+      formatTopicLead(topic, "Let's correct"),
+      "**Not quite**",
+      "",
+      `**Best answer**: ${quiz.answer}`,
+      "",
+      `**Why**: ${quiz.rationale}`,
+      "",
+      "If you want, say `next question` for another one or `give me an example` to review the concept again.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  };
+}
+
 const TOPICS = [
   {
     id: "positive_reinforcement",
@@ -51,16 +240,19 @@ const TOPICS = [
         prompt: "A learner labels a picture correctly and immediately gets praise and a token. What principle is most likely occurring if correct labeling increases later?",
         answer: "Positive reinforcement",
         rationale: "A valued consequence was added after the response and the response increased in the future.",
+        keywords: ["positive", "reinforcement"],
       },
       {
         prompt: "What is the single best sign that positive reinforcement occurred?",
         answer: "The behavior becomes more likely in the future",
         rationale: "The defining feature of reinforcement is an increase in future behavior.",
+        keywords: ["increase", "future", "behavior"],
       },
       {
         prompt: "Why is praise alone not enough to prove reinforcement happened?",
         answer: "Because you still have to see whether the behavior increases later",
         rationale: "The label depends on the future effect on behavior, not just the consequence delivered.",
+        keywords: ["behavior", "increases", "later"],
       },
     ],
   },
@@ -89,16 +281,19 @@ const TOPICS = [
         prompt: "What is the main purpose of prompt fading?",
         answer: "To transfer control to the natural cue and build independence",
         rationale: "Fading is about reducing extra help so the learner responds independently.",
+        keywords: ["transfer", "control", "independence"],
       },
       {
         prompt: "Which arrangement is more consistent with least-to-most prompting?",
         answer: "Start with the smallest amount of help and increase only if needed",
         rationale: "Least-to-most gives the learner an initial chance to respond with less assistance.",
+        keywords: ["smallest", "help", "increase"],
       },
       {
         prompt: "If a learner waits for help every trial, what risk should you think about first?",
         answer: "Prompt dependence",
         rationale: "Overreliance on prompts can block independent responding.",
+        keywords: ["prompt", "dependence"],
       },
     ],
   },
@@ -127,16 +322,19 @@ const TOPICS = [
         prompt: "Why does the treatment team need accurate data from the RBT?",
         answer: "To evaluate progress and make sound treatment decisions",
         rationale: "Data drives whether goals, procedures, or supports need to change.",
+        keywords: ["progress", "treatment", "decisions"],
       },
       {
         prompt: "Which is usually stronger: objective written data or memory-based impressions after session?",
         answer: "Objective written data",
         rationale: "Objective recording reduces bias and improves consistency.",
+        keywords: ["objective", "written", "data"],
       },
       {
         prompt: "If two staff collect data differently on the same target, what problem should you suspect?",
         answer: "Poor measurement consistency",
         rationale: "Inconsistent data makes progress harder to interpret.",
+        keywords: ["measurement", "consistency"],
       },
     ],
   },
@@ -165,16 +363,19 @@ const TOPICS = [
         prompt: "What is the main goal of an FBA?",
         answer: "To identify the variables maintaining the behavior",
         rationale: "FBA helps explain why the behavior is happening so treatment can be matched to function.",
+        keywords: ["identify", "variables", "behavior"],
       },
       {
         prompt: "If a learner hits when tasks are presented and the task is removed, what possible function should you consider first?",
         answer: "Escape",
         rationale: "The behavior appears to produce removal of a demand.",
+        keywords: ["escape"],
       },
       {
         prompt: "What should come before choosing a replacement behavior plan in many exam scenarios?",
         answer: "A clearer understanding of the behavior's function",
         rationale: "Interventions are usually stronger when they align with function.",
+        keywords: ["function", "behavior"],
       },
     ],
   },
@@ -203,16 +404,19 @@ const TOPICS = [
         prompt: "What is the purpose of a task analysis?",
         answer: "To break a complex skill into smaller teachable steps",
         rationale: "Task analysis makes instruction clearer and easier to monitor.",
+        keywords: ["break", "skill", "steps"],
       },
       {
         prompt: "Which chaining approach commonly lets the learner contact the natural reinforcer at the end of every teaching trial?",
         answer: "Backward chaining",
         rationale: "The learner completes the last step and immediately contacts the finished outcome.",
+        keywords: ["backward", "chaining"],
       },
       {
         prompt: "If a routine is too complex to teach all at once, what should you think of first?",
         answer: "Task analysis",
         rationale: "It organizes the routine into teachable components.",
+        keywords: ["task", "analysis"],
       },
     ],
   },
@@ -241,16 +445,19 @@ const TOPICS = [
         prompt: "What is often the safest first step if a caregiver asks an RBT to change a treatment procedure on the spot?",
         answer: "Consult the supervisor and follow the existing plan until guidance is given",
         rationale: "RBTs should stay within role and not independently change treatment.",
+        keywords: ["supervisor", "plan", "guidance"],
       },
       {
         prompt: "Which matters more in an ethics scenario: personal preference or role-appropriate action?",
         answer: "Role-appropriate action",
         rationale: "Professional conduct is grounded in boundaries, supervision, and client welfare.",
+        keywords: ["role", "appropriate", "action"],
       },
       {
         prompt: "If a request falls outside your competence or authorization, what should you do?",
         answer: "Seek supervisor guidance",
         rationale: "That protects the client and keeps practice within scope.",
+        keywords: ["supervisor", "guidance"],
       },
     ],
   },
@@ -358,7 +565,10 @@ function formatQuizReply(topic, seed, options = {}) {
       : "Reply with your answers and I will grade them one by one.",
   );
 
-  return lines.join("\n");
+  const content = lines.join("\n");
+  const quiz = !revealAnswers && rotated[0] ? buildQuizMetadata(topic, rotated[0]) : null;
+
+  return { content, quiz };
 }
 
 function formatStudyPlan(activeTopic, seed) {
@@ -470,6 +680,22 @@ export function createTutorReply(text, options = {}) {
   const explicitTopic = findTopicFromText(normalized);
   const activeTopic = explicitTopic || inferTopicFromHistory(history);
   const intro = !explicitTopic && activeTopic ? formatTopicLead(activeTopic) : "";
+  const pendingQuiz = findPendingQuiz(history);
+
+  if (pendingQuiz) {
+    const quizTopic = getTopicById(pendingQuiz.topicId) || activeTopic;
+
+    if (hasAny(normalized, ["next question", "another question", "next one"])) {
+      const topic = quizTopic || getTopicById("positive_reinforcement");
+      return formatQuizReply(topic, seed + 5, {
+        count: 1,
+        revealAnswers: false,
+        intro: formatTopicLead(topic, "Next question on"),
+      });
+    }
+
+    return formatQuizEvaluation(text, pendingQuiz, quizTopic);
+  }
 
   if (
     hasAny(normalized, [
@@ -481,29 +707,29 @@ export function createTutorReply(text, options = {}) {
       "que día es hoy",
     ])
   ) {
-    return `Today is **${todayLabel}**.`;
+    return { content: `Today is **${todayLabel}**.` };
   }
 
   if (hasAny(normalized, ["what can you do", "help me", "how can you help"])) {
-    return formatGeneralHelp(activeTopic);
+    return { content: formatGeneralHelp(activeTopic) };
   }
 
   if (hasAny(normalized, ["study plan", "how should i study", "study schedule"])) {
-    return formatStudyPlan(activeTopic, seed);
+    return { content: formatStudyPlan(activeTopic, seed) };
   }
 
   if (hasAny(normalized, ["why is this wrong", "why is that wrong", "why wrong"])) {
-    return formatWrongAnswerReply(activeTopic);
+    return { content: formatWrongAnswerReply(activeTopic) };
   }
 
   if (hasAny(normalized, ["another example", "one more example", "more example"])) {
     const topic = activeTopic || getTopicById("positive_reinforcement");
-    return formatExampleReply(topic, seed + 1, intro);
+    return { content: formatExampleReply(topic, seed + 1, intro) };
   }
 
   if (hasAny(normalized, ["example", "give me an example"])) {
     const topic = activeTopic || getTopicById("positive_reinforcement");
-    return formatExampleReply(topic, seed, intro);
+    return { content: formatExampleReply(topic, seed, intro) };
   }
 
   if (
@@ -525,19 +751,27 @@ export function createTutorReply(text, options = {}) {
 
   if (hasAny(normalized, ["harder", "more challenging"])) {
     const topic = activeTopic || getTopicById("positive_reinforcement");
-    return formatQuizReply(topic, seed + 2, {
-      count: 2,
-      revealAnswers: true,
-      intro: intro || `Here is a harder pass on **${topic.title}**:`,
-    });
+    return {
+      content: formatQuizReply(topic, seed + 2, {
+        count: 2,
+        revealAnswers: true,
+        intro: intro || `Here is a harder pass on **${topic.title}**:`,
+      }).content,
+    };
   }
 
   if (hasAny(normalized, ["quiz me", "test me", "practice me"])) {
     if (activeTopic) {
-      return formatQuizReply(activeTopic, seed, { count: 3, revealAnswers: true, intro });
+      return {
+        content: formatQuizReply(activeTopic, seed, {
+          count: 3,
+          revealAnswers: true,
+          intro,
+        }).content,
+      };
     }
 
-    return buildCoreTopicQuiz(seed);
+    return { content: buildCoreTopicQuiz(seed) };
   }
 
   if (
@@ -547,7 +781,8 @@ export function createTutorReply(text, options = {}) {
       "difference between reinforcement and punishment",
     ])
   ) {
-    return [
+    return {
+      content: [
       "**Reinforcement vs punishment**",
       "",
       "- **Reinforcement** increases a future behavior.",
@@ -558,15 +793,17 @@ export function createTutorReply(text, options = {}) {
       "**Memory tip**: ignore whether the event feels good or bad and ask, `Did the future behavior go up or down?`",
       "",
       "If you want, I can give you three mini scenarios and have you label each one.",
-    ].join("\n");
+    ].join("\n"),
+    };
   }
 
   if (activeTopic) {
-    return formatConceptReply(activeTopic, seed, intro);
+    return { content: formatConceptReply(activeTopic, seed, intro) };
   }
 
   if (hasAny(normalized, ["rbt exam", "exam tips", "study tips"])) {
-    return [
+    return {
+      content: [
       "**RBT exam prep tips**",
       "",
       "1. Practice in short daily blocks instead of cramming.",
@@ -575,8 +812,9 @@ export function createTutorReply(text, options = {}) {
       "4. Mix recognition practice with recall: explain concepts out loud, not just by rereading.",
       "",
       "If you want, I can build you a 7-day mini study plan or quiz you on your weakest area.",
-    ].join("\n");
+    ].join("\n"),
+    };
   }
 
-  return formatGeneralHelp(activeTopic);
+  return { content: formatGeneralHelp(activeTopic) };
 }

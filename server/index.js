@@ -1020,14 +1020,18 @@ app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (r
   const currentConversation = (db.tutorConversations[req.currentUser.id] || []).find(
     (conversation) => conversation.id === conversationId,
   );
+  const tutorReply = createTutorReply(content, {
+    history: currentConversation?.messages || [],
+  });
   const assistantMessage = {
     id: createId("msg"),
     role: "assistant",
-    content: createTutorReply(content, {
-      history: currentConversation?.messages || [],
-    }),
+    content: tutorReply.content,
     created_at: new Date().toISOString(),
   };
+  if (tutorReply.quiz) {
+    assistantMessage.quiz = tutorReply.quiz;
+  }
 
   let updatedConversation = null;
 
