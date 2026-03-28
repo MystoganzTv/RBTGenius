@@ -270,203 +270,213 @@ export default function AdminMembers() {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            Member Management
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Manage premium access and admin roles for your members.
-          </p>
-        </div>
+      <div className="mx-auto w-full max-w-6xl space-y-6 overflow-x-clip">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+              Member Management
+            </h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Manage premium access and admin roles for your members.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-500">Total Members</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                  {members.length}
-                </p>
-              </div>
-              <Users className="h-7 w-7 text-[#1E5EFF]" />
-            </div>
-          </Card>
-          <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-500">Premium Members</p>
-                <p className="text-2xl font-bold text-emerald-600">{premiumCount}</p>
-              </div>
-              <Crown className="h-7 w-7 text-emerald-600" />
-            </div>
-          </Card>
-          <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-500">Admins</p>
-                <p className="text-2xl font-bold text-violet-600">{adminCount}</p>
-              </div>
-              <Shield className="h-7 w-7 text-violet-600" />
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_220px]">
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by name or email"
-            className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100 dark:placeholder:text-slate-500"
-          />
-
-          <Select value={planFilter} onValueChange={setPlanFilter}>
-            <SelectTrigger className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100">
-              <SelectValue placeholder="Filter by plan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Plans</SelectItem>
-              {PLAN_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </Card>
-
-      <div className="grid grid-cols-1 gap-4">
-        {isLoading ? (
-          <Card className="p-8 text-center text-slate-500">Loading members...</Card>
-        ) : filteredMembers.length === 0 ? (
-          <Card className="p-8 text-center text-slate-500">
-            No members match the current filters.
-          </Card>
-        ) : (
-          filteredMembers.map((member) => {
-            const draft = getDraft(member);
-            const hasChanges = draft.plan !== member.plan || draft.role !== member.role;
-            const isCurrentAdmin = member.id === user?.id;
-
-            return (
-              <Card
-                key={member.id}
-                className="border-slate-200/80 bg-white/95 p-5 dark:border-[#2B3B71]/75 dark:bg-[#121B35]/82 dark:shadow-[0_22px_60px_-36px_rgba(96,165,250,0.22)]"
-              >
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                        {member.full_name}
-                      </h2>
-                      <Badge variant="outline" className={darkBadgeClass}>
-                        {member.role === "admin" ? "Admin" : "User"}
-                      </Badge>
-                      <Badge variant="outline" className={darkBadgeClass}>
-                        {getProviderLabel(member.auth_provider)}
-                      </Badge>
-                      <Badge
-                        className={
-                          member.plan === "free"
-                            ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
-                        }
-                      >
-                        {PLAN_OPTIONS.find((option) => option.value === member.plan)?.label ||
-                          member.plan}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      {member.email}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-                      <span>Joined {formatJoinedDate(member.created_at)}</span>
-                      <span>{member.total_questions_completed} questions completed</span>
-                      <span>{member.readiness_score}% readiness</span>
-                      <span>{member.study_streak_days} day streak</span>
-                      <span>{member.exams_count} exams</span>
-                      <span>{member.payments_count || 0} payments</span>
-                      <span>${Number(member.total_paid_amount || 0).toFixed(2)} paid</span>
-                    </div>
-                  </div>
-
-                  <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] xl:max-w-[760px] xl:flex-1 xl:grid-cols-[minmax(0,220px)_minmax(0,180px)_minmax(0,1fr)_auto_auto]">
-                    <Select
-                      value={draft.plan}
-                      onValueChange={(value) => updateDraft(member.id, { plan: value })}
-                    >
-                      <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PLAN_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={draft.role}
-                      onValueChange={(value) => updateDraft(member.id, { role: value })}
-                    >
-                      <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ROLE_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => openPayments(member)}
-                      disabled={deleteMemberMutation.isPending}
-                      className="w-full dark:border-[#31406C] dark:bg-[#15213F] dark:text-slate-100 dark:hover:bg-[#1A284B]"
-                    >
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      View Payments
-                    </Button>
-
-                    <Button
-                      onClick={() => handleSave(member)}
-                      disabled={
-                        !hasChanges ||
-                        updateMemberMutation.isPending ||
-                        deleteMemberMutation.isPending
-                      }
-                      className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:shadow-[0_10px_30px_-18px_rgba(30,94,255,0.65)]"
-                    >
-                      Save
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setMemberPendingDelete(member)}
-                      disabled={isCurrentAdmin || deleteMemberMutation.isPending}
-                      className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-500/25 dark:bg-[#211727] dark:text-red-300 dark:hover:bg-[#2A1B30]"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
-                  </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Total Members</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                    {members.length}
+                  </p>
                 </div>
-              </Card>
-            );
-          })
-        )}
-      </div>
+                <Users className="h-7 w-7 shrink-0 text-[#1E5EFF]" />
+              </div>
+            </Card>
+            <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Premium Members</p>
+                  <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300">
+                    {premiumCount}
+                  </p>
+                </div>
+                <Crown className="h-7 w-7 shrink-0 text-emerald-600 dark:text-emerald-300" />
+              </div>
+            </Card>
+            <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#111A33]/80">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Admins</p>
+                  <p className="text-2xl font-bold text-violet-600 dark:text-violet-300">
+                    {adminCount}
+                  </p>
+                </div>
+                <Shield className="h-7 w-7 shrink-0 text-violet-600 dark:text-violet-300" />
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        <Card className="border-slate-200/80 bg-white/95 p-4 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by name or email"
+              className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100 dark:placeholder:text-slate-500"
+            />
+
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+              <SelectTrigger className="dark:border-[#30406E] dark:bg-[#0E162A] dark:text-slate-100">
+                <SelectValue placeholder="Filter by plan" />
+              </SelectTrigger>
+              <SelectContent className="dark:border-[#30406E] dark:bg-[#10182F] dark:text-slate-100">
+                <SelectItem value="all">All Plans</SelectItem>
+                {PLAN_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+
+        <div className="grid grid-cols-1 gap-4">
+          {isLoading ? (
+            <Card className="border-slate-200/80 bg-white/95 p-8 text-center text-slate-500 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82 dark:text-slate-400">
+              Loading members...
+            </Card>
+          ) : filteredMembers.length === 0 ? (
+            <Card className="border-slate-200/80 bg-white/95 p-8 text-center text-slate-500 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82 dark:text-slate-400">
+              No members match the current filters.
+            </Card>
+          ) : (
+            filteredMembers.map((member) => {
+              const draft = getDraft(member);
+              const hasChanges = draft.plan !== member.plan || draft.role !== member.role;
+              const isCurrentAdmin = member.id === user?.id;
+
+              return (
+                <Card
+                  key={member.id}
+                  className="overflow-hidden border-slate-200/80 bg-white/95 p-5 dark:border-[#2B3B71]/75 dark:bg-[#121B35]/82 dark:shadow-[0_22px_60px_-36px_rgba(96,165,250,0.22)]"
+                >
+                  <div className="flex flex-col gap-5">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="min-w-0 break-words text-lg font-semibold text-slate-900 dark:text-slate-50">
+                          {member.full_name}
+                        </h2>
+                        <Badge variant="outline" className={darkBadgeClass}>
+                          {member.role === "admin" ? "Admin" : "User"}
+                        </Badge>
+                        <Badge variant="outline" className={darkBadgeClass}>
+                          {getProviderLabel(member.auth_provider)}
+                        </Badge>
+                        <Badge
+                          className={
+                            member.plan === "free"
+                              ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              : "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
+                          }
+                        >
+                          {PLAN_OPTIONS.find((option) => option.value === member.plan)?.label ||
+                            member.plan}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">
+                        {member.email}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+                        <span>Joined {formatJoinedDate(member.created_at)}</span>
+                        <span>{member.total_questions_completed} questions completed</span>
+                        <span>{member.readiness_score}% readiness</span>
+                        <span>{member.study_streak_days} day streak</span>
+                        <span>{member.exams_count} exams</span>
+                        <span>{member.payments_count || 0} payments</span>
+                        <span>${Number(member.total_paid_amount || 0).toFixed(2)} paid</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                        <Select
+                          value={draft.plan}
+                          onValueChange={(value) => updateDraft(member.id, { plan: value })}
+                        >
+                          <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="dark:border-[#31406C] dark:bg-[#10182F] dark:text-slate-100">
+                            {PLAN_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select
+                          value={draft.role}
+                          onValueChange={(value) => updateDraft(member.id, { role: value })}
+                        >
+                          <SelectTrigger className="dark:border-[#31406C] dark:bg-[#0F172D] dark:text-slate-100">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="dark:border-[#31406C] dark:bg-[#10182F] dark:text-slate-100">
+                            {ROLE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => openPayments(member)}
+                          disabled={deleteMemberMutation.isPending}
+                          className="w-full dark:border-[#31406C] dark:bg-[#15213F] dark:text-slate-100 dark:hover:bg-[#1A284B]"
+                        >
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          View Payments
+                        </Button>
+
+                        <Button
+                          onClick={() => handleSave(member)}
+                          disabled={
+                            !hasChanges ||
+                            updateMemberMutation.isPending ||
+                            deleteMemberMutation.isPending
+                          }
+                          className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:shadow-[0_10px_30px_-18px_rgba(30,94,255,0.65)]"
+                        >
+                          Save
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setMemberPendingDelete(member)}
+                          disabled={isCurrentAdmin || deleteMemberMutation.isPending}
+                          className="w-full border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-500/25 dark:bg-[#211727] dark:text-red-300 dark:hover:bg-[#2A1B30]"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })
+          )}
+        </div>
       </div>
 
       <AlertDialog
@@ -477,7 +487,7 @@ export default function AdminMembers() {
           }
         }}
       >
-        <AlertDialogContent className="rounded-3xl border-slate-200 bg-white p-0 shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+        <AlertDialogContent className="rounded-3xl border-slate-200 bg-white p-0 shadow-2xl dark:border-[#2A3A70]/70 dark:bg-[#10182F]">
           <div className="border-b border-slate-200/80 bg-gradient-to-br from-red-50 via-white to-orange-50 px-6 py-5 dark:border-slate-800 dark:from-red-950/30 dark:via-slate-950 dark:to-orange-950/20">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-300">
               <Trash2 className="h-5 w-5" />
@@ -495,7 +505,7 @@ export default function AdminMembers() {
 
           {memberPendingDelete ? (
             <div className="px-6 py-5">
-              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-[#2A3A70]/70 dark:bg-[#15213F]/70">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                     {memberPendingDelete.full_name}
@@ -562,7 +572,7 @@ export default function AdminMembers() {
           }
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl border-slate-200 bg-white p-0 shadow-2xl sm:max-w-3xl dark:border-slate-800 dark:bg-slate-950">
+        <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl border-slate-200 bg-white p-0 shadow-2xl sm:max-w-3xl dark:border-[#2A3A70]/70 dark:bg-[#10182F]">
           <div className="border-b border-slate-200/80 bg-gradient-to-br from-slate-50 via-white to-blue-50 px-6 py-5 dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
             <DialogHeader className="space-y-2 text-left">
               <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
@@ -586,7 +596,7 @@ export default function AdminMembers() {
 
           <div className="space-y-5 px-6 py-5">
             {memberPaymentsTarget ? (
-              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-[#2A3A70]/70 dark:bg-[#15213F]/70">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                     {memberPaymentsTarget.full_name}
@@ -597,8 +607,8 @@ export default function AdminMembers() {
                   <Badge
                     className={
                       memberPaymentsTarget.plan === "free"
-                        ? "bg-slate-100 text-slate-700"
-                        : "bg-emerald-100 text-emerald-700"
+                        ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
                     }
                   >
                     {PLAN_OPTIONS.find((option) => option.value === memberPaymentsTarget.plan)
@@ -612,12 +622,12 @@ export default function AdminMembers() {
             ) : null}
 
             {isLoadingMemberPayments ? (
-              <Card className="p-8 text-center text-slate-500">
+              <Card className="border-slate-200/80 bg-white/95 p-8 text-center text-slate-500 dark:border-[#2A3A70]/70 dark:bg-[#15213F]/70 dark:text-slate-400">
                 <Loader2 className="mx-auto mb-3 h-5 w-5 animate-spin" />
                 Loading payment history...
               </Card>
             ) : (memberPaymentsData?.payments || []).length === 0 ? (
-              <Card className="p-10 text-center">
+              <Card className="border-slate-200/80 bg-white/95 p-10 text-center dark:border-[#2A3A70]/70 dark:bg-[#15213F]/70">
                 <CreditCard className="mx-auto mb-4 h-12 w-12 text-slate-300" />
                 <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                   No payments yet
@@ -631,7 +641,7 @@ export default function AdminMembers() {
                 {memberPaymentsData.payments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-800 dark:bg-slate-950"
+                    className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-950"
                   >
                     <div className="flex min-w-0 items-center gap-4">
                       <div
