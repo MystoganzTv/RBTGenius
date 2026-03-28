@@ -59,19 +59,19 @@ const darkBadgeClass =
   "dark:border-[#41588A] dark:bg-[#1A284A] dark:text-slate-100";
 
 const summaryCardClass =
-  "border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#31466F]/80 dark:bg-[#15213C]/84 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.25)]";
+  "border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#37517F]/75 dark:bg-[#162544]/88 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
 
 const memberCardClass =
-  "overflow-hidden border-slate-200/80 bg-white/95 p-5 lg:px-6 lg:py-6 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#31466F]/80 dark:bg-[#16233F]/84 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
+  "overflow-hidden border-slate-200/80 bg-white/95 p-5 lg:px-6 lg:py-6 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:border-[#37517F]/75 dark:bg-[#162544]/88 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
 
 const actionPanelClass =
-  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 lg:p-5 dark:border-[#31466F]/80 dark:bg-[#101A32]/74";
+  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 lg:p-5 dark:border-[#42608F]/70 dark:bg-[#1B2C4F]/72";
 
 const memberSelectClass =
-  "border-slate-200 bg-white text-slate-800 dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100";
+  "border-slate-200 bg-white text-slate-800 dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100";
 
 const memberOutlineButtonClass =
-  "w-full border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-[#3A4F7D] dark:bg-[#172544] dark:text-slate-100 dark:hover:bg-[#1D2D51] dark:hover:text-slate-50";
+  "w-full border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100 dark:hover:bg-[#18294B] dark:hover:text-slate-50";
 
 function formatJoinedDate(value) {
   if (!value) {
@@ -378,7 +378,7 @@ export default function AdminMembers() {
                   key={member.id}
                   className={memberCardClass}
                 >
-                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start xl:grid-cols-[minmax(0,1.1fr)_460px]">
+                  <div className="space-y-5">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="min-w-0 break-words text-lg font-semibold text-slate-900 dark:text-slate-50">
@@ -416,10 +416,7 @@ export default function AdminMembers() {
                     </div>
 
                     <div className={actionPanelClass}>
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                          Quick Actions
-                        </p>
+                      <div className="mb-3 flex items-center justify-end gap-3">
                         {hasChanges ? (
                           <Badge className="border-transparent bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300">
                             Unsaved changes
@@ -427,74 +424,76 @@ export default function AdminMembers() {
                         ) : null}
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                        <Select
-                          value={draft.plan}
-                          onValueChange={(value) => updateDraft(member.id, { plan: value })}
-                        >
-                          <SelectTrigger className={memberSelectClass}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="dark:border-[#31406C] dark:bg-[#10182F] dark:text-slate-100">
-                            {PLAN_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] xl:items-end">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                          <Select
+                            value={draft.plan}
+                            onValueChange={(value) => updateDraft(member.id, { plan: value })}
+                          >
+                            <SelectTrigger className={memberSelectClass}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100">
+                              {PLAN_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
 
-                        <Select
-                          value={draft.role}
-                          onValueChange={(value) => updateDraft(member.id, { role: value })}
-                        >
-                          <SelectTrigger className={memberSelectClass}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="dark:border-[#31406C] dark:bg-[#10182F] dark:text-slate-100">
-                            {ROLE_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                          <Select
+                            value={draft.role}
+                            onValueChange={(value) => updateDraft(member.id, { role: value })}
+                          >
+                            <SelectTrigger className={memberSelectClass}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="dark:border-[#4A6494] dark:bg-[#12203C] dark:text-slate-100">
+                              {ROLE_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => openPayments(member)}
-                          disabled={deleteMemberMutation.isPending}
-                          className={memberOutlineButtonClass}
-                        >
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          Payments
-                        </Button>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => openPayments(member)}
+                            disabled={deleteMemberMutation.isPending}
+                            className={memberOutlineButtonClass}
+                          >
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Payments
+                          </Button>
 
-                        <Button
-                          onClick={() => handleSave(member)}
-                          disabled={
-                            !hasChanges ||
-                            updateMemberMutation.isPending ||
-                            deleteMemberMutation.isPending
-                          }
-                          className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:bg-[#6D8DFF] dark:text-slate-950 dark:hover:bg-[#86A1FF] dark:shadow-[0_16px_32px_-22px_rgba(109,141,255,0.9)]"
-                        >
-                          Save
-                        </Button>
+                          <Button
+                            onClick={() => handleSave(member)}
+                            disabled={
+                              !hasChanges ||
+                              updateMemberMutation.isPending ||
+                              deleteMemberMutation.isPending
+                            }
+                            className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:bg-[#7C97FF] dark:text-slate-950 dark:hover:bg-[#96ACFF] dark:shadow-[0_16px_32px_-22px_rgba(124,151,255,0.85)]"
+                          >
+                            Save
+                          </Button>
 
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setMemberPendingDelete(member)}
-                          disabled={isCurrentAdmin || deleteMemberMutation.isPending}
-                          className="w-full border-red-200 bg-white text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-400/25 dark:bg-[#291a2b] dark:text-red-200 dark:hover:bg-[#332037]"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setMemberPendingDelete(member)}
+                            disabled={isCurrentAdmin || deleteMemberMutation.isPending}
+                            className="w-full border-red-200 bg-white text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-400/30 dark:bg-[#2C1C30] dark:text-red-200 dark:hover:bg-[#38233D]"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
