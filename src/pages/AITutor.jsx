@@ -275,26 +275,27 @@ export default function AITutor() {
 
           <div className="flex-1 space-y-4 overflow-y-auto bg-transparent p-6 dark:bg-[#11182D]/55">
             {messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1E5EFF]/10 to-violet-100 dark:from-[#1E5EFF]/20 dark:to-slate-700">
+              <div className="flex h-full items-center justify-center">
+                <div className="flex w-full max-w-3xl flex-col items-center justify-center rounded-[2rem] border border-transparent px-6 py-10 text-center dark:border-[#243250] dark:bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_18rem),linear-gradient(180deg,rgba(20,28,49,0.74),rgba(17,24,45,0.52))]">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1E5EFF]/10 to-violet-100 dark:from-[#2F6CFF]/30 dark:to-[#253252]">
                   <Brain className="h-8 w-8 text-[#1E5EFF]" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
                   Hello! I&apos;m your AI Tutor
                 </h3>
-                <p className="mt-1 max-w-md text-sm text-slate-400 dark:text-slate-400">
+                <p className="mt-1 max-w-md text-sm text-slate-400 dark:text-slate-300">
                   Ask about ABA concepts, exam strategy, wrong answers, or ask
                   me to quiz you. You can also paste a question and I will help
                   break it down.
                 </p>
 
-                <div className="mt-6 grid max-w-lg grid-cols-2 gap-2">
+                <div className="mt-6 grid max-w-lg grid-cols-2 gap-3">
                   {suggestedTopics.map((topic) => (
                     <button
                       key={topic.label}
                       type="button"
                       onClick={() => handleUsePrompt(topic.prompt)}
-                      className="rounded-xl border border-slate-200 bg-white/80 p-3 text-left text-xs text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5 dark:border-[#2C3858] dark:bg-[#18213A]/88 dark:text-slate-300 dark:hover:bg-[#202B47]"
+                      className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-left text-xs text-slate-600 transition-all hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/5 dark:border-[#31466B] dark:bg-[#1C2742]/92 dark:text-slate-300 dark:shadow-[0_22px_45px_-36px_rgba(15,23,42,0.85)] dark:hover:border-[#4765B8] dark:hover:bg-[#243251]"
                     >
                       <span className="block font-medium text-slate-900 dark:text-slate-100">{topic.label}</span>
                       <span className="mt-1 block text-[11px] leading-5 text-slate-500 dark:text-slate-400">
@@ -302,6 +303,7 @@ export default function AITutor() {
                       </span>
                     </button>
                   ))}
+                </div>
                 </div>
               </div>
             ) : (
