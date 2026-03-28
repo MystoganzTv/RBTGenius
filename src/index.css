@@ -226,3 +226,36 @@
     color: hsl(var(--foreground));
   }
 }
+
+@layer components {
+  .dark-dashboard-grid {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .dark .dark-dashboard-grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      linear-gradient(to right, rgba(148, 163, 184, 0.075) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.075) 1px, transparent 1px);
+    background-size: 30px 30px;
+    opacity: 0.52;
+  }
+
+  .dark .dark-dashboard-grid::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 18% 16%, rgba(30, 94, 255, 0.11), transparent 24rem),
+      radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.08), transparent 20rem),
+      linear-gradient(180deg, rgba(8, 15, 35, 0.12), rgba(8, 15, 35, 0.04));
+    opacity: 0.96;
+  }
+}
