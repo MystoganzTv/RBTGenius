@@ -240,10 +240,10 @@
     z-index: -2;
     pointer-events: none;
     background:
-      linear-gradient(to right, rgba(148, 163, 184, 0.075) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(148, 163, 184, 0.075) 1px, transparent 1px);
-    background-size: 30px 30px;
-    opacity: 0.52;
+      linear-gradient(to right, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.46;
   }
 
   .dark .dark-dashboard-grid::after {
@@ -253,9 +253,11 @@
     z-index: -1;
     pointer-events: none;
     background:
-      radial-gradient(circle at 18% 16%, rgba(30, 94, 255, 0.11), transparent 24rem),
-      radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.08), transparent 20rem),
-      linear-gradient(180deg, rgba(8, 15, 35, 0.12), rgba(8, 15, 35, 0.04));
-    opacity: 0.96;
+      radial-gradient(circle at 16% 14%, rgba(96, 165, 250, 0.12), transparent 18rem),
+      radial-gradient(circle at 76% 18%, rgba(59, 130, 246, 0.1), transparent 16rem),
+      radial-gradient(circle at 46% 42%, rgba(30, 94, 255, 0.06), transparent 24rem),
+      radial-gradient(circle at 88% 72%, rgba(125, 211, 252, 0.05), transparent 20rem),
+      linear-gradient(180deg, rgba(8, 15, 35, 0.14), rgba(8, 15, 35, 0.05));
+    opacity: 0.98;
   }
 }
