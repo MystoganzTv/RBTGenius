@@ -81,7 +81,7 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
               key={item.page}
               to={createPageUrl(item.page)}
               className={cn(
-                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-all duration-200",
                 isActive
                   ? "bg-[#1E5EFF]/8 text-[#1E5EFF]"
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100",
@@ -120,7 +120,16 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
           <>
             <div
               className={cn(
-                "mb-2 mt-5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500",
+                "my-4",
+                collapsed ? "px-4" : "px-3",
+              )}
+            >
+              <div className="h-px w-full bg-slate-200 dark:bg-slate-800" />
+            </div>
+
+            <div
+              className={cn(
+                "mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500",
                 collapsed ? "text-center" : "px-3",
               )}
             >
@@ -135,7 +144,7 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
                   key={item.page}
                   to={createPageUrl(item.page)}
                   className={cn(
-                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-all duration-200",
                     isActive
                       ? "bg-[#1E5EFF]/8 text-[#1E5EFF]"
                       : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100",
