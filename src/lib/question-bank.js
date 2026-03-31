@@ -767,6 +767,366 @@ const questionConcepts = [
     explanation:
       "Preventing conflicts of interest protects objectivity and reduces the risk of boundary problems.",
   },
+  {
+    id: "measurement_count",
+    topic: "measurement",
+    difficulty: "beginner",
+    answer: "Count",
+    definition: "a raw total of responses is recorded without converting it by time or opportunities.",
+    scenario:
+      "An RBT writes down that a learner threw materials 7 times during session and reports the total number only.",
+    purpose: "To capture the raw total number of responses.",
+    explanation:
+      "Count is the simplest measure when the team needs the total number of responses and session length is not the main issue.",
+  },
+  {
+    id: "measurement_percentage",
+    topic: "measurement",
+    difficulty: "beginner",
+    answer: "Percentage of opportunities",
+    definition: "performance is summarized by dividing correct responses by total chances and converting the result to a percent.",
+    scenario:
+      "A learner answered correctly on 8 out of 10 receptive trials, and the team reports performance as a percent.",
+    purpose: "To summarize performance across a fixed number of opportunities.",
+    explanation:
+      "Percentage of opportunities is useful when the team wants to express success out of total chances rather than raw count alone.",
+  },
+  {
+    id: "measurement_duration_per_occurrence",
+    topic: "measurement",
+    difficulty: "intermediate",
+    answer: "Duration per occurrence",
+    definition: "the length of each individual behavior episode is measured and compared.",
+    scenario:
+      "Tantrums happen several times in session, so the RBT records how long each tantrum lasts rather than only the total duration for the day.",
+    purpose: "To compare how long each individual episode lasts.",
+    explanation:
+      "Duration per occurrence is useful when the team cares about the length of each episode, not only the total time across all episodes.",
+  },
+  {
+    id: "measurement_continuous",
+    topic: "measurement",
+    difficulty: "advanced",
+    answer: "Continuous measurement",
+    definition: "every instance or full dimension of the behavior is directly measured during observation.",
+    scenario:
+      "The team wants the most precise data possible, so the RBT tracks each instance of aggression as it happens throughout the session.",
+    purpose: "To capture every instance or full dimension of behavior as accurately as possible.",
+    explanation:
+      "Continuous measurement includes methods like count, duration, and latency because they record the whole response dimension directly.",
+  },
+  {
+    id: "measurement_discontinuous",
+    topic: "measurement",
+    difficulty: "advanced",
+    answer: "Discontinuous measurement",
+    definition: "behavior is sampled instead of measured in full, using intervals or moments.",
+    scenario:
+      "Because full observation is difficult during a busy classroom routine, the RBT uses intervals rather than tracking every second of behavior.",
+    purpose: "To estimate behavior by sampling instead of recording every instance fully.",
+    explanation:
+      "Discontinuous measurement includes methods like interval recording and momentary time sampling when continuous data are less practical.",
+  },
+  {
+    id: "assessment_direct",
+    topic: "assessment",
+    difficulty: "beginner",
+    answer: "Direct assessment",
+    definition: "the team observes and records the learner's actual behavior rather than relying only on reports from others.",
+    scenario:
+      "Instead of using only interview information, the BCBA watches sessions and reviews data collected live by the RBT.",
+    purpose: "To gather information by directly observing the learner's behavior.",
+    explanation:
+      "Direct assessment provides stronger evidence than indirect report alone because the behavior is observed as it happens.",
+  },
+  {
+    id: "assessment_paired_stimulus",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Paired-stimulus assessment",
+    definition: "two items are presented at a time and the learner chooses between them repeatedly.",
+    scenario:
+      "The RBT presents bubbles versus a toy car, then bubbles versus a snack, rotating pairs to see which items the learner selects most often.",
+    purpose: "To compare choices between two options at a time to rank preferences.",
+    explanation:
+      "Paired-stimulus assessment helps produce a detailed preference hierarchy by comparing items in pairs.",
+  },
+  {
+    id: "assessment_mswo",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "MSWO assessment",
+    definition: "multiple items are presented together, and each chosen item is removed before the next selection.",
+    scenario:
+      "A learner chooses from five available items, and after each choice the selected item is taken away before the next choice round.",
+    purpose: "To rank preferences efficiently by removing each selected item after it is chosen.",
+    explanation:
+      "MSWO stands for multiple stimulus without replacement and is a common efficient way to rank several preferred items.",
+  },
+  {
+    id: "assessment_free_operant",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Free-operant assessment",
+    definition: "several items are made available at once and the observer records how long or how often the learner engages with each.",
+    scenario:
+      "The learner enters a play area with multiple materials available, and the RBT records which items hold the learner's attention the longest.",
+    purpose: "To identify preferences by observing natural engagement with multiple available items.",
+    explanation:
+      "Free-operant assessment reduces repeated item removal and can be useful for learners who resist frequent transitions.",
+  },
+  {
+    id: "assessment_fba",
+    topic: "assessment",
+    difficulty: "advanced",
+    answer: "Functional behavior assessment",
+    definition: "multiple assessment methods are combined to identify why problem behavior is happening.",
+    scenario:
+      "The BCBA reviews interviews, ABC data, and direct observations before designing a plan for severe aggression.",
+    purpose: "To identify the likely function of problem behavior using multiple assessment methods.",
+    explanation:
+      "A functional behavior assessment integrates information from several sources to guide treatment planning.",
+  },
+  {
+    id: "skill_dtt",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Discrete trial teaching",
+    definition: "instruction is delivered in structured repeated trials with a cue, response, consequence, and brief pause before the next trial.",
+    scenario:
+      "At the table, the RBT runs repeated receptive identification trials with immediate feedback after each response.",
+    purpose: "To teach skills through structured repeated teaching trials.",
+    explanation:
+      "Discrete trial teaching uses a clear trial format and is often used for early or foundational skill instruction.",
+  },
+  {
+    id: "skill_net",
+    topic: "skill_acquisition",
+    difficulty: "intermediate",
+    answer: "Natural environment teaching",
+    definition: "instruction is embedded into ongoing routines, play, and learner motivation rather than only table work.",
+    scenario:
+      "During play with trains, the RBT captures motivation to teach requesting, turn taking, and simple labels.",
+    purpose: "To teach skills within natural routines and learner motivation.",
+    explanation:
+      "Natural environment teaching helps skills feel more functional because teaching happens in meaningful daily contexts.",
+  },
+  {
+    id: "skill_forward_chaining",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Forward chaining",
+    definition: "the first step in a task chain is taught first, and additional steps are added in order over time.",
+    scenario:
+      "When teaching handwashing, the learner first masters turning on the water before later steps are added.",
+    purpose: "To teach a chained skill by starting with the earliest step.",
+    explanation:
+      "Forward chaining teaches the sequence from the beginning toward the end, adding steps in order.",
+  },
+  {
+    id: "skill_backward_chaining",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Backward chaining",
+    definition: "the final step of a task chain is taught first so the learner contacts the terminal reinforcer at the end of each trial.",
+    scenario:
+      "During shoe tying, the RBT completes most of the routine and lets the learner finish the last step independently.",
+    purpose: "To teach a chained skill by starting with the final step.",
+    explanation:
+      "Backward chaining lets the learner contact the natural end result of the task after completing the last link.",
+  },
+  {
+    id: "skill_time_delay",
+    topic: "skill_acquisition",
+    difficulty: "advanced",
+    answer: "Time delay",
+    definition: "the RBT systematically increases the pause before giving a prompt so the learner has a chance to respond independently.",
+    scenario:
+      "At first the learner is prompted immediately after the instruction, but later the RBT waits a few seconds before helping.",
+    purpose: "To transfer responding to the natural cue by delaying prompts over time.",
+    explanation:
+      "Time delay gradually creates space for independent responding before the prompt is delivered.",
+  },
+  {
+    id: "behavior_dra_specific",
+    topic: "behavior_reduction",
+    difficulty: "intermediate",
+    answer: "Differential reinforcement of alternative behavior",
+    definition: "reinforcement is delivered for an appropriate alternative response that serves the same need as the problem behavior.",
+    scenario:
+      "A learner is reinforced for asking for help appropriately instead of throwing materials when work is difficult.",
+    purpose: "To strengthen an appropriate alternative response that can replace problem behavior.",
+    explanation:
+      "DRA focuses on reinforcing a more appropriate alternative that can take the place of the problem behavior.",
+  },
+  {
+    id: "behavior_escape_extinction",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Escape extinction",
+    definition: "problem behavior no longer results in postponing or avoiding the demand that previously maintained it.",
+    scenario:
+      "A learner screams during work demands, and staff continue the task sequence according to plan while also prompting an appropriate break request.",
+    purpose: "To reduce escape-maintained behavior by no longer allowing the task to be removed because of the problem behavior.",
+    explanation:
+      "Escape extinction means the demand is not removed following the problem behavior when escape was the maintaining reinforcer.",
+  },
+  {
+    id: "behavior_extinction_burst",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Extinction burst",
+    definition: "problem behavior briefly increases in frequency, duration, or intensity after reinforcement is first withheld.",
+    scenario:
+      "After attention is no longer delivered for yelling, the learner yells even louder and more often for a short period.",
+    purpose: "To recognize the temporary worsening that can happen when extinction first starts.",
+    explanation:
+      "An extinction burst is a temporary increase in behavior that may occur before the response decreases over time.",
+  },
+  {
+    id: "behavior_spontaneous_recovery",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Spontaneous recovery",
+    definition: "a previously reduced behavior briefly returns after a period of improvement or absence.",
+    scenario:
+      "After several days without property destruction, one short episode happens again even though the overall trend had improved.",
+    purpose: "To identify the temporary return of a previously reduced behavior.",
+    explanation:
+      "Spontaneous recovery is the brief reappearance of a response after it had decreased or stopped.",
+  },
+  {
+    id: "behavior_planned_ignoring",
+    topic: "behavior_reduction",
+    difficulty: "beginner",
+    answer: "Planned ignoring",
+    definition: "attention is intentionally withheld for a behavior that is maintained by attention, as specified in the plan.",
+    scenario:
+      "A learner whines for attention, and staff withhold eye contact and conversation until appropriate communication occurs.",
+    purpose: "To reduce attention-maintained behavior by withholding attention according to the plan.",
+    explanation:
+      "Planned ignoring is used only when attention is the reinforcer and when the procedure is safe and written into the plan.",
+  },
+  {
+    id: "documentation_data_summary",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Data summary reporting",
+    definition: "session performance is condensed into a brief factual overview for review by the supervisor or team.",
+    scenario:
+      "At the end of treatment, the RBT reports that the learner completed 18 trials, responded independently on 14, and engaged in aggression twice.",
+    purpose: "To give the team a concise factual overview of session performance.",
+    explanation:
+      "Data summary reporting helps supervisors review progress quickly without replacing the underlying detailed records.",
+  },
+  {
+    id: "documentation_timestamp",
+    topic: "documentation",
+    difficulty: "beginner",
+    answer: "Time-stamped session documentation",
+    definition: "records include when important events, transitions, or services occurred.",
+    scenario:
+      "The RBT notes when session began, when aggression occurred, when a break was given, and when the session ended.",
+    purpose: "To document when important events or services occurred during session.",
+    explanation:
+      "Time-stamped documentation improves clarity when the sequence and timing of events matter.",
+  },
+  {
+    id: "documentation_caregiver_log",
+    topic: "documentation",
+    difficulty: "beginner",
+    answer: "Caregiver communication log",
+    definition: "important information shared with or received from caregivers is recorded clearly and professionally.",
+    scenario:
+      "A caregiver reports poor sleep before session, and the RBT documents the update and shares it with the supervisor.",
+    purpose: "To record important communication with caregivers in a professional way.",
+    explanation:
+      "Caregiver communication logs help the team track important information that may affect treatment or session interpretation.",
+  },
+  {
+    id: "documentation_preference_update",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Preference update note",
+    definition: "changes in preferred items or motivation are documented so teaching and reinforcement can be adjusted.",
+    scenario:
+      "A learner no longer works for stickers but responds well to drawing materials, and the RBT records that change for the team.",
+    purpose: "To document changes in what the learner is motivated to work for.",
+    explanation:
+      "Preference update notes help the team adjust reinforcement procedures as learner motivation changes.",
+  },
+  {
+    id: "documentation_severity_rating",
+    topic: "documentation",
+    difficulty: "advanced",
+    answer: "Behavior severity rating",
+    definition: "the intensity or seriousness of a behavior episode is recorded using the program's defined scale.",
+    scenario:
+      "Aggression is scored as mild, moderate, or severe based on the agency's operational criteria after each incident.",
+    purpose: "To document how intense or serious each behavior episode was.",
+    explanation:
+      "Severity ratings help the team monitor whether the intensity of behavior is changing over time, not just its frequency.",
+  },
+  {
+    id: "professional_mandated_reporting",
+    topic: "professional_conduct",
+    difficulty: "advanced",
+    answer: "Mandated reporting",
+    definition: "suspected abuse, neglect, or serious harm concerns are reported through the legally required process.",
+    scenario:
+      "An RBT hears statements and sees injuries that raise concern for abuse and follows the required reporting process immediately.",
+    purpose: "To fulfill legal and ethical duties when abuse or neglect is suspected.",
+    explanation:
+      "Mandated reporting requires prompt action through the required channels when abuse or neglect is suspected.",
+  },
+  {
+    id: "professional_record_honesty",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Accurate record keeping",
+    definition: "the RBT documents what actually happened rather than filling in missing details from memory or assumption.",
+    scenario:
+      "A staff member suggests guessing the last few trial scores after a busy session, but the RBT records only what was actually observed.",
+    purpose: "To keep records truthful and accurate.",
+    explanation:
+      "Accurate record keeping is essential because treatment decisions depend on honest and reliable documentation.",
+  },
+  {
+    id: "professional_following_plan",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Following the treatment plan",
+    definition: "the RBT implements procedures as written instead of improvising new interventions independently.",
+    scenario:
+      "Even when a session is difficult, the RBT follows the written prompting and reinforcement procedures rather than inventing a new strategy.",
+    purpose: "To keep implementation aligned with the supervisor's written plan.",
+    explanation:
+      "Following the treatment plan protects treatment integrity and keeps decisions within the supervisor's role.",
+  },
+  {
+    id: "professional_caregiver_respect",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Respectful caregiver communication",
+    definition: "the RBT communicates concerns and updates professionally, calmly, and within role boundaries.",
+    scenario:
+      "A caregiver is frustrated, and the RBT responds respectfully, shares objective information, and avoids arguing or offering unsupervised treatment advice.",
+    purpose: "To maintain professional and respectful communication with caregivers.",
+    explanation:
+      "Respectful caregiver communication supports collaboration while keeping the RBT within scope and professional tone.",
+  },
+  {
+    id: "professional_social_media",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Social media professionalism",
+    definition: "the RBT avoids posting client-related information or interacting online in ways that blur professional boundaries.",
+    scenario:
+      "An RBT declines a caregiver's social media friend request and never posts photos or stories that could identify a client.",
+    purpose: "To protect confidentiality and boundaries in online spaces.",
+    explanation:
+      "Professional conduct extends to social media, where confidentiality and boundaries still apply.",
+  },
 ];
 
 function shuffleStable(items, seedValue) {
