@@ -1127,6 +1127,366 @@ const questionConcepts = [
     explanation:
       "Professional conduct extends to social media, where confidentiality and boundaries still apply.",
   },
+  {
+    id: "measurement_celeration",
+    topic: "measurement",
+    difficulty: "advanced",
+    answer: "Celeration",
+    definition: "the team analyzes how quickly the rate of behavior is accelerating or decelerating over time.",
+    scenario:
+      "A supervisor reviews whether independent reading responses are increasing faster each week rather than only looking at the raw count.",
+    purpose: "To describe the rate of change in behavior over time.",
+    explanation:
+      "Celeration focuses on how behavior is speeding up or slowing down across time, not only on the current count.",
+  },
+  {
+    id: "measurement_event_recording",
+    topic: "measurement",
+    difficulty: "beginner",
+    answer: "Event recording",
+    definition: "each occurrence of a discrete behavior is marked as it happens during observation.",
+    scenario:
+      "Every time a learner claps hands, the RBT clicks a counter to mark another instance.",
+    purpose: "To record each occurrence of a discrete observable behavior.",
+    explanation:
+      "Event recording is most useful when behavior has a clear beginning and end and each occurrence can be counted reliably.",
+  },
+  {
+    id: "measurement_response_ratio",
+    topic: "measurement",
+    difficulty: "advanced",
+    answer: "Response ratio",
+    definition: "two related behavior counts are compared to each other rather than viewed separately.",
+    scenario:
+      "A team compares the number of independent requests to prompted requests to see whether independence is improving.",
+    purpose: "To compare two related response types directly.",
+    explanation:
+      "Response ratio can show change in balance between response classes, such as independent versus prompted performance.",
+  },
+  {
+    id: "measurement_accuracy",
+    topic: "measurement",
+    difficulty: "beginner",
+    answer: "Accuracy recording",
+    definition: "responses are scored based on whether they were correct or incorrect.",
+    scenario:
+      "During receptive identification, the RBT records whether each trial response matched the correct item.",
+    purpose: "To measure how correct the learner's responding is.",
+    explanation:
+      "Accuracy recording is commonly used in teaching programs when the quality of the response matters more than frequency alone.",
+  },
+  {
+    id: "measurement_opportunity_based",
+    topic: "measurement",
+    difficulty: "intermediate",
+    answer: "Opportunity-based recording",
+    definition: "behavior is measured relative to the number of available opportunities to respond.",
+    scenario:
+      "A learner had only six chances to greet peers during a short outing, so the team scores greetings based on those opportunities rather than total session length.",
+    purpose: "To measure behavior relative to the number of chances the learner had to respond.",
+    explanation:
+      "Opportunity-based recording is helpful when response chances vary and a raw count would be misleading.",
+  },
+  {
+    id: "assessment_descriptive",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Descriptive assessment",
+    definition: "behavior is observed in the natural environment and patterns are described without experimental manipulation.",
+    scenario:
+      "The BCBA reviews observations from classroom and home sessions to look for patterns before testing any hypotheses formally.",
+    purpose: "To describe naturally occurring patterns around behavior in real settings.",
+    explanation:
+      "Descriptive assessment provides useful contextual information but does not establish function as strongly as experimental analysis.",
+  },
+  {
+    id: "assessment_target_behavior_selection",
+    topic: "assessment",
+    difficulty: "beginner",
+    answer: "Target behavior selection",
+    definition: "the team chooses a specific measurable behavior to assess before collecting data.",
+    scenario:
+      "Instead of saying a learner is disruptive, the team decides to track shouting louder than conversational voice during instruction.",
+    purpose: "To choose a clear specific behavior to assess and measure.",
+    explanation:
+      "Careful target behavior selection makes later assessment and intervention more precise and useful.",
+  },
+  {
+    id: "assessment_ecological_review",
+    topic: "assessment",
+    difficulty: "advanced",
+    answer: "Ecological assessment",
+    definition: "the broader environment, routines, materials, and social context are reviewed to understand support needs.",
+    scenario:
+      "Before changing a plan, the team reviews classroom noise level, seating arrangement, available supports, and staff interactions around the learner.",
+    purpose: "To understand how environmental context may influence behavior and support needs.",
+    explanation:
+      "Ecological assessment looks beyond the learner alone and examines how the surrounding environment may affect performance.",
+  },
+  {
+    id: "assessment_task_analysis_probe",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Task analysis probe",
+    definition: "the team tests which individual steps in a multi-step routine the learner can already do independently.",
+    scenario:
+      "Before teaching laundry, the RBT checks which parts of the washing routine the learner can already complete without help.",
+    purpose: "To identify which steps in a chained skill are already mastered.",
+    explanation:
+      "Task analysis probes help the team place instruction at the correct step within a larger routine.",
+  },
+  {
+    id: "assessment_barrier_review",
+    topic: "assessment",
+    difficulty: "advanced",
+    answer: "Barrier assessment",
+    definition: "the team examines variables that may interfere with learning, such as prompt dependence or weak motivation.",
+    scenario:
+      "A learner has many mastered targets but still struggles to generalize and initiates little, so the BCBA reviews barriers to progress.",
+    purpose: "To identify variables that may be interfering with learning progress.",
+    explanation:
+      "Barrier assessment helps explain why progress may be slow even when instruction is ongoing.",
+  },
+  {
+    id: "skill_incidental_teaching",
+    topic: "skill_acquisition",
+    difficulty: "intermediate",
+    answer: "Incidental teaching",
+    definition: "teaching is arranged around naturally occurring opportunities initiated by the learner.",
+    scenario:
+      "A learner reaches for bubbles, and the RBT uses that moment to teach a fuller request before giving access.",
+    purpose: "To teach language or other skills within learner-initiated natural opportunities.",
+    explanation:
+      "Incidental teaching uses naturally occurring motivation and interaction moments to build skills.",
+  },
+  {
+    id: "skill_stimulus_fading",
+    topic: "skill_acquisition",
+    difficulty: "advanced",
+    answer: "Stimulus fading",
+    definition: "an extra cue built into materials is gradually reduced so the natural cue controls responding.",
+    scenario:
+      "A picture is first highlighted to make it stand out, and later the highlight is gradually reduced as the learner responds correctly.",
+    purpose: "To transfer control from an added cue to the natural stimulus.",
+    explanation:
+      "Stimulus fading removes extra prompts built into materials rather than delaying or reducing physical prompts alone.",
+  },
+  {
+    id: "skill_prompt_hierarchy",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Prompt hierarchy",
+    definition: "prompts are organized from less intrusive to more intrusive or vice versa for consistent teaching.",
+    scenario:
+      "A program specifies gesture, model, then partial physical prompts so every staff member teaches the same way.",
+    purpose: "To keep prompting systematic and consistent across instruction.",
+    explanation:
+      "A prompt hierarchy creates a predictable sequence of assistance levels during teaching.",
+  },
+  {
+    id: "skill_reinforcer_pairing",
+    topic: "skill_acquisition",
+    difficulty: "intermediate",
+    answer: "Reinforcer pairing",
+    definition: "neutral items or people are repeatedly associated with preferred events so they become more valuable to the learner.",
+    scenario:
+      "A new therapist consistently joins preferred play and delivers favorite items so the learner begins approaching that therapist more readily.",
+    purpose: "To build value in a person, stimulus, or item by pairing it with preferred events.",
+    explanation:
+      "Pairing can help establish new conditioned reinforcers or increase rapport in early teaching.",
+  },
+  {
+    id: "skill_transfer_trial",
+    topic: "skill_acquisition",
+    difficulty: "advanced",
+    answer: "Transfer trial",
+    definition: "after a prompted correct response, a quick follow-up opportunity checks whether control transfers to a less prompted trial.",
+    scenario:
+      "A learner answers correctly after a model prompt, and the RBT immediately runs another trial with less help to test independence.",
+    purpose: "To check whether stimulus control is shifting toward a less prompted response.",
+    explanation:
+      "Transfer trials help confirm that prompting is leading toward independent responding rather than prompt dependence.",
+  },
+  {
+    id: "behavior_redirection",
+    topic: "behavior_reduction",
+    difficulty: "beginner",
+    answer: "Redirection",
+    definition: "the RBT interrupts the current course of action and guides the learner toward a more appropriate behavior.",
+    scenario:
+      "A learner begins banging blocks loudly, and the RBT redirects to stacking them and praising calmer play.",
+    purpose: "To shift the learner from an inappropriate response to a more appropriate one.",
+    explanation:
+      "Redirection is often used to move behavior toward a safer or more functional alternative in the moment.",
+  },
+  {
+    id: "behavior_response_cost",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Response cost",
+    definition: "a reinforcer or token is removed contingent on problem behavior according to the written plan.",
+    scenario:
+      "A learner loses one token from a token board after aggression as described in the behavior plan.",
+    purpose: "To reduce behavior by removing a valued reinforcer contingent on that behavior.",
+    explanation:
+      "Response cost is a punishment-based procedure and should be used only when authorized and clearly planned.",
+  },
+  {
+    id: "behavior_contingency_review",
+    topic: "behavior_reduction",
+    difficulty: "intermediate",
+    answer: "Contingency review",
+    definition: "the learner is reminded of the rule that links behavior with a specific consequence before responding.",
+    scenario:
+      "Before independent work begins, the RBT calmly reminds the learner that asking for help appropriately leads to support, while yelling does not.",
+    purpose: "To clarify the rule connecting behavior and consequences before behavior occurs.",
+    explanation:
+      "Contingency review can reduce confusion by making the response-consequence relationship explicit ahead of time.",
+  },
+  {
+    id: "behavior_choice_making",
+    topic: "behavior_reduction",
+    difficulty: "beginner",
+    answer: "Choice making",
+    definition: "the learner is offered meaningful options to reduce problem behavior and increase cooperation.",
+    scenario:
+      "Before a transition, the learner chooses whether to carry the red folder or the blue folder to the next room.",
+    purpose: "To increase cooperation and reduce problem behavior by offering meaningful choices.",
+    explanation:
+      "Choice making is an antecedent-based support that can increase engagement and reduce resistance.",
+  },
+  {
+    id: "behavior_behavioral_momentum",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Behavioral momentum",
+    definition: "compliance with easier responses is used to increase the likelihood of compliance with a harder one.",
+    scenario:
+      "After a learner quickly follows several simple instructions, the RBT presents a more difficult cleanup demand.",
+    purpose: "To build momentum from easy responses before a more difficult task.",
+    explanation:
+      "Behavioral momentum relies on a series of likely responses to increase later compliance.",
+  },
+  {
+    id: "documentation_absence_note",
+    topic: "documentation",
+    difficulty: "beginner",
+    answer: "Absence or cancellation documentation",
+    definition: "missed sessions, shortened sessions, or cancellations are recorded with the relevant factual details.",
+    scenario:
+      "A session ends early because of a school assembly, and the RBT records the shortened duration and reason.",
+    purpose: "To document when scheduled services were missed or changed.",
+    explanation:
+      "Absence and cancellation notes help keep service records accurate and explain gaps in data or treatment time.",
+  },
+  {
+    id: "documentation_material_change",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Program material change note",
+    definition: "a record is made when materials or setup differ from usual and may affect performance.",
+    scenario:
+      "A learner usually uses picture cards, but today a device was unavailable, so the RBT documents the alternate materials used.",
+    purpose: "To note environmental or material changes that may affect session performance.",
+    explanation:
+      "Documenting material changes gives context for interpreting differences in learner performance.",
+  },
+  {
+    id: "documentation_behavior_frequency_summary",
+    topic: "documentation",
+    difficulty: "beginner",
+    answer: "Behavior frequency summary",
+    definition: "a note reports how many times a target behavior occurred during the session.",
+    scenario:
+      "At session end, the RBT records that elopement occurred three times and aggression occurred once.",
+    purpose: "To summarize the number of times target behaviors occurred.",
+    explanation:
+      "Behavior frequency summaries help the team review key behavior counts without reading every raw event note.",
+  },
+  {
+    id: "documentation_reinforcement_log",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Reinforcement log",
+    definition: "the RBT records what reinforcers were used and how the learner responded to them.",
+    scenario:
+      "The team is testing several reinforcers, so the RBT tracks which ones increased correct responding most effectively.",
+    purpose: "To document which reinforcers were used and how effective they appeared.",
+    explanation:
+      "Reinforcement logs can help the team adjust motivational systems based on what is working best.",
+  },
+  {
+    id: "documentation_setting_event_note",
+    topic: "documentation",
+    difficulty: "advanced",
+    answer: "Setting event note",
+    definition: "events that may influence behavior but happened earlier or outside session are recorded for context.",
+    scenario:
+      "A caregiver reports poor sleep and illness before session, and the RBT documents that context because it may affect responding.",
+    purpose: "To record contextual events that may influence behavior during session.",
+    explanation:
+      "Setting event notes help the team interpret unusual responding when outside factors may be contributing.",
+  },
+  {
+    id: "professional_dual_relationship",
+    topic: "professional_conduct",
+    difficulty: "advanced",
+    answer: "Dual relationship avoidance",
+    definition: "the RBT avoids taking on multiple roles with the same family that could affect objectivity or boundaries.",
+    scenario:
+      "A caregiver asks the RBT to tutor the sibling privately after hours, and the RBT declines because it would create overlapping roles.",
+    purpose: "To prevent overlapping roles that could impair professional judgment.",
+    explanation:
+      "Avoiding dual relationships helps maintain clear boundaries and protects the integrity of services.",
+  },
+  {
+    id: "professional_private_information_security",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Information security",
+    definition: "client records, devices, and messages are kept secure so unauthorized people cannot access them.",
+    scenario:
+      "The RBT locks a tablet with client data, logs out of shared devices, and avoids leaving printed records unattended.",
+    purpose: "To protect private information from unauthorized access.",
+    explanation:
+      "Information security is part of confidentiality and includes both physical and digital safeguards.",
+  },
+  {
+    id: "professional_supervisor_notification",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Supervisor notification",
+    definition: "important clinical, ethical, or safety issues are reported to the supervisor promptly.",
+    scenario:
+      "A learner begins a new medication and shows unusual behavior changes, so the RBT informs the supervisor the same day.",
+    purpose: "To keep the supervisor informed about important events affecting treatment or safety.",
+    explanation:
+      "Prompt supervisor notification supports safe decision-making and keeps the team aligned.",
+  },
+  {
+    id: "professional_scope_refusal",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Appropriate refusal outside scope",
+    definition: "the RBT declines requests outside role boundaries and redirects them to the supervisor or proper professional.",
+    scenario:
+      "A family asks the RBT to diagnose why a learner is anxious, and the RBT explains that diagnostic decisions are outside the RBT role.",
+    purpose: "To maintain role boundaries when asked to do work outside the RBT scope.",
+    explanation:
+      "Appropriate refusal protects the learner and keeps responsibilities within the correct professional role.",
+  },
+  {
+    id: "professional_professionalism_under_stress",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Professional composure",
+    definition: "the RBT maintains calm, respectful, and role-appropriate behavior even during stressful interactions.",
+    scenario:
+      "A caregiver criticizes session progress in frustration, and the RBT stays calm, responds respectfully, and shares objective information only.",
+    purpose: "To maintain professionalism during difficult or stressful interactions.",
+    explanation:
+      "Professional composure helps protect rapport, keeps communication productive, and supports ethical conduct.",
+  },
 ];
 
 function shuffleStable(items, seedValue) {
