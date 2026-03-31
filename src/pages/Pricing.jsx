@@ -219,8 +219,11 @@ export default function Pricing() {
           Pick the level of support that fits your study pace.
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-slate-500 dark:text-slate-400">
-          Guests can explore the landing page, free members get guided daily practice,
-          and Premium unlocks the full RBT Genius experience with Stripe checkout.
+          Guests can review the landing and pricing, free members get daily study tools,
+          and Premium unlocks unlimited practice, AI tutor, timed mock exams, and analytics.
+        </p>
+        <p className="mx-auto mt-4 inline-flex max-w-2xl rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300">
+          The 40-hour course is planned for a future release and is not included in current plans yet.
         </p>
         {isAuthenticated ? (
           <p className="mx-auto mt-4 inline-flex rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]">
@@ -369,7 +372,7 @@ export default function Pricing() {
             </h2>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               A quick view of what someone sees before registering, after creating a free account,
-              and after upgrading.
+              and after upgrading. Anything not live yet is marked as coming soon.
             </p>
           </div>
 

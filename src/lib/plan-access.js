@@ -100,6 +100,13 @@ export const ACCESS_COMPARISON = [
     premium: "Full readiness and performance analytics",
   },
   {
+    id: "forty_hour_course",
+    label: "40-hour course",
+    guest: "Coming soon",
+    free: "Coming soon",
+    premium: "Coming soon",
+  },
+  {
     id: "billing",
     label: "Billing tools",
     guest: "Not needed",
