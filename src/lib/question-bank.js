@@ -1941,6 +1941,121 @@ function getTopicAlternatives(concept, field) {
   ).slice(0, 3);
 }
 
+function includesAny(value, keywords) {
+  return keywords.some((keyword) => value.includes(keyword));
+}
+
+function buildPatternSupport(concept, questionKind) {
+  const answer = String(concept.answer || "").toLowerCase();
+  const conceptId = String(concept.id || "").toLowerCase();
+  const topic = concept.topic;
+  let examPattern = "";
+  let examClue = "";
+  let commonTrap = "";
+
+  if (questionKind === "definition") {
+    examPattern = "Definition match";
+    examClue =
+      "Match the exact wording in the stem to the technical definition instead of choosing the term that only sounds familiar.";
+    commonTrap =
+      "Do not pick the broadest ABA term just because it sounds related. Match the defining feature exactly.";
+  } else if (questionKind === "purpose") {
+    examPattern = "Goal discrimination";
+    examClue =
+      "Ask what the procedure is trying to accomplish. BACB-style stems often reward the clearest goal, not the nicest-sounding answer.";
+    commonTrap =
+      "Do not answer based on what the procedure looks like on the surface. Choose the option that best matches its actual purpose.";
+  } else {
+    examPattern = "Scenario clue";
+    examClue =
+      "Find the one detail in the scenario that tells you what changed, what was measured, or what the RBT actually did.";
+    commonTrap =
+      "Do not overread the story. BACB-style scenarios usually pivot on a single operational clue.";
+  }
+
+  if (topic === "measurement") {
+    examPattern = questionKind === "purpose" ? "Measurement purpose" : "Measurement discrimination";
+    examClue =
+      includesAny(answer, ["duration", "mean duration"])
+        ? "Look for how long the behavior lasts. Time length points to duration, not count."
+        : includesAny(answer, ["latency", "interresponse time"])
+          ? "Look for when the timer starts and stops. Delay to start is latency; time between responses is interresponse time."
+          : includesAny(answer, ["partial interval", "whole interval", "momentary"])
+            ? "Look for interval rules. Any time in the interval, the whole interval, or only at the exact check moment changes the answer."
+            : includesAny(answer, ["rate", "frequency", "count", "event"])
+              ? "Ask whether the question wants a raw count or a count standardized by time or opportunity."
+              : "Measurement questions usually hinge on exactly what is being observed: count, time, interval, product, or graph feature.";
+    commonTrap =
+      includesAny(answer, ["rate", "frequency", "count", "event"])
+        ? "A frequent trap is choosing frequency when the exam really wants rate or percentage because time or opportunity count matters."
+        : includesAny(answer, ["trend", "level", "variability", "immediacy", "visual analysis"])
+          ? "Do not confuse graph vocabulary. Trend is direction, level is height, variability is scatter, and immediacy is change right after the phase shift."
+          : "The common trap is picking a measurement system that sounds close but measures a different dimension of behavior.";
+  } else if (topic === "assessment") {
+    examPattern = questionKind === "purpose" ? "Assessment goal" : "Assessment evidence";
+    examClue =
+      includesAny(answer, ["abc", "descriptive", "scatterplot", "pattern"])
+        ? "Look for what information is being gathered: antecedents, consequences, time-of-day patterns, or natural-setting observations."
+        : includesAny(answer, ["preference", "reinforcer", "paired-stimulus", "mswo", "free-operant", "single-stimulus", "multiple-stimulus"])
+          ? "Distinguish between finding what is preferred and proving that it actually functions as reinforcement."
+          : "Assessment questions usually ask what kind of information the team is trying to gather before changing treatment.";
+    commonTrap =
+      includesAny(answer, ["preference", "reinforcer"])
+        ? "Do not treat preference and reinforcement as the same thing. Preferred does not always mean reinforcing."
+        : "A common trap is choosing an intervention term when the stem is still only gathering information.";
+  } else if (topic === "skill_acquisition") {
+    examPattern = questionKind === "purpose" ? "Teaching objective" : "Teaching procedure";
+    examClue =
+      includesAny(answer, ["prompt", "physical", "gesture", "verbal", "model"])
+        ? "Ask what kind of help is being provided and how intrusive it is."
+        : includesAny(answer, ["reinforcement", "ratio", "interval", "token"])
+          ? "Look at how reinforcement is delivered: every response, some responses, after time passes, or through tokens and backup reinforcers."
+          : includesAny(answer, ["chaining", "task analysis"])
+            ? "Look for whether the learner is being taught a sequence of steps and how much of the chain is practiced."
+            : "Skill acquisition questions usually turn on what teaching procedure is being used to build independent responding.";
+    commonTrap =
+      includesAny(answer, ["prompt", "fading", "stimulus control"])
+        ? "Do not confuse the prompt type with the larger strategy for fading prompts and transferring control."
+        : includesAny(answer, ["positive reinforcement", "negative reinforcement"])
+          ? "Do not answer based on whether the consequence feels good or bad. Ask whether something was added or removed and whether behavior increased later."
+          : "The common trap is choosing a related teaching tool instead of the exact procedure described.";
+  } else if (topic === "behavior_reduction") {
+    examPattern = questionKind === "purpose" ? "Behavior reduction goal" : "Function-based behavior support";
+    examClue =
+      includesAny(answer, ["functional communication", "replacement", "attention-maintained", "escape-maintained", "tangible-maintained"])
+        ? "Look for whether the learner is being taught a safer response that serves the same function."
+        : includesAny(answer, ["extinction", "attention extinction", "tangible extinction", "escape extinction", "burst"])
+          ? "Look for the reinforcer being withheld after the behavior. Extinction is about what consequence no longer follows the behavior."
+          : includesAny(answer, ["dro", "dri", "dra", "drl"])
+            ? "Ask which alternative is being reinforced: any other behavior, an incompatible behavior, an appropriate alternative, or a lower rate."
+            : "Behavior reduction questions often hinge on function, replacement behavior, and what consequence is or is not being delivered.";
+    commonTrap =
+      includesAny(answer, ["extinction"])
+        ? "Do not confuse extinction with punishment. Extinction means the maintaining reinforcer is no longer delivered."
+        : includesAny(answer, ["dro", "dri", "dra", "drl"])
+          ? "A classic trap is mixing up the differential reinforcement variants because they all sound similar."
+          : "The common trap is choosing a generic consequence strategy instead of the function-matched procedure in the stem.";
+  } else if (topic === "documentation") {
+    examPattern = questionKind === "purpose" ? "Documentation purpose" : "Objective documentation";
+    examClue =
+      "Look for whether the note is objective, timely, and limited to relevant facts about behavior, treatment, communication, or safety.";
+    commonTrap =
+      "Do not choose language that sounds helpful but adds opinions, guesses, or unnecessary detail not supported by observation.";
+  } else if (topic === "professional_conduct") {
+    examPattern = questionKind === "purpose" ? "Role boundary goal" : "Scope and ethics judgment";
+    examClue =
+      "Ask what keeps the RBT within scope, protects dignity or confidentiality, and routes clinical decisions back to supervision when needed.";
+    commonTrap =
+      "The common trap is choosing the answer that seems proactive but actually steps outside the RBT role or crosses a boundary.";
+  }
+
+  return {
+    exam_pattern: examPattern,
+    exam_clue: examClue,
+    common_trap: commonTrap,
+  };
+}
+
 function buildQuestionSeedSet(concept) {
   const answerChoices = [concept.answer, ...getTopicAlternatives(concept, "answer")];
   const purposeChoices = [concept.purpose, ...getTopicAlternatives(concept, "purpose")];
@@ -1960,6 +2075,7 @@ function buildQuestionSeedSet(concept) {
     {
       id: `${concept.id}_definition`,
       concept_id: concept.id,
+      ...buildPatternSupport(concept, "definition"),
       text: `Which concept is being described as ${concept.definition}`,
       topic: concept.topic,
       difficulty: concept.difficulty,
@@ -1970,6 +2086,7 @@ function buildQuestionSeedSet(concept) {
     {
       id: `${concept.id}_scenario`,
       concept_id: concept.id,
+      ...buildPatternSupport(concept, "scenario"),
       text: `${concept.scenario} Which concept is the best match?`,
       topic: concept.topic,
       difficulty: concept.difficulty,
@@ -1980,6 +2097,7 @@ function buildQuestionSeedSet(concept) {
     {
       id: `${concept.id}_purpose`,
       concept_id: concept.id,
+      ...buildPatternSupport(concept, "purpose"),
       text: `What is the main goal of ${concept.answer}?`,
       topic: concept.topic,
       difficulty: concept.difficulty,

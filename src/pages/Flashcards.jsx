@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Filter,
   RotateCcw,
+  Search,
+  ShieldAlert,
   Shuffle,
   ThumbsDown,
   ThumbsUp,
@@ -249,7 +251,7 @@ export default function Flashcards() {
             Flashcards Game 🎴
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Review RBT concepts with interactive flashcards.
+            Review the same shared RBT bank in memorization mode, with pattern clues and common traps.
           </p>
         </div>
         <div className="flex gap-2">
@@ -394,6 +396,11 @@ export default function Flashcards() {
                   {currentCard.topic.replace(/_/g, " ")}
                 </Badge>
                 <Badge variant="outline">{currentCard.difficulty}</Badge>
+                {currentCard.exam_pattern ? (
+                  <Badge variant="outline" className="border-[#1E5EFF]/20 text-[#1E5EFF]">
+                    {currentCard.exam_pattern}
+                  </Badge>
+                ) : null}
               </div>
             </div>
 
@@ -446,13 +453,44 @@ export default function Flashcards() {
                       </div>
 
                       {currentCard.explanation ? (
-                        <div className="rounded-lg bg-blue-50 p-4 dark:bg-slate-900">
+                        <div className="space-y-3 rounded-lg bg-blue-50 p-4 dark:bg-slate-900">
                           <p className="mb-1 text-xs font-semibold text-[#1E5EFF]">
                             Explanation:
                           </p>
                           <p className="text-sm text-slate-700 dark:text-slate-200">
                             {currentCard.explanation}
                           </p>
+
+                          {currentCard.exam_pattern ? (
+                            <div className="grid gap-3 pt-1 md:grid-cols-3">
+                              <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                                  Pattern
+                                </p>
+                                <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-100">
+                                  {currentCard.exam_pattern}
+                                </p>
+                              </div>
+                              <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
+                                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                                  <Search className="h-3.5 w-3.5" />
+                                  Clue
+                                </div>
+                                <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                                  {currentCard.exam_clue}
+                                </p>
+                              </div>
+                              <div className="rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+                                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
+                                  <ShieldAlert className="h-3.5 w-3.5" />
+                                  Common Trap
+                                </div>
+                                <p className="mt-2 text-sm leading-relaxed text-amber-800 dark:text-amber-100/85">
+                                  {currentCard.common_trap}
+                                </p>
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>

@@ -569,6 +569,33 @@ export default function Practice() {
               : `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`}
           </div>
 
+          <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200 md:grid-cols-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                Pattern
+              </p>
+              <p className="mt-2 leading-relaxed">
+                Learn the type of exam move the question is testing, not just the answer.
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                Clue
+              </p>
+              <p className="mt-2 leading-relaxed">
+                Train your eye to spot the single detail that points to the correct concept.
+              </p>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
+                Common Trap
+              </p>
+              <p className="mt-2 leading-relaxed">
+                See the distractor the exam wants you to pick, and why it is wrong.
+              </p>
+            </div>
+          </div>
+
           <Button
             onClick={handleStartSession}
             className="w-full gap-2 rounded-xl py-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90"
