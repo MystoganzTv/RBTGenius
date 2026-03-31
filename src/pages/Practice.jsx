@@ -43,7 +43,6 @@ import {
 } from "@/lib/plan-access";
 import {
   PRACTICE_BATCH_SIZE,
-  practiceBankOptions,
   topicLabels,
   TOTAL_PRACTICE_QUESTIONS,
 } from "@/lib/question-bank";
@@ -180,7 +179,6 @@ function QuestionNavigator({
 export default function Practice() {
   const [topicFilter, setTopicFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
-  const [bankFilter, setBankFilter] = useState("all");
   const [reviewFilter, setReviewFilter] = useState("all");
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
   const [questionSeed, setQuestionSeed] = useState(null);
@@ -210,7 +208,6 @@ export default function Practice() {
       questionSeed,
       topicFilter,
       difficultyFilter,
-      bankFilter,
     ],
     queryFn: () =>
       api.listQuestions({
@@ -218,7 +215,6 @@ export default function Practice() {
         seed: questionSeed,
         topic: topicFilter,
         difficulty: difficultyFilter,
-        bank: bankFilter,
         limit: PRACTICE_BATCH_SIZE,
       }),
     initialData: [],
@@ -266,11 +262,10 @@ export default function Practice() {
         const topicMatch = topicFilter === "all" || question.topic === topicFilter;
         const difficultyMatch =
           difficultyFilter === "all" || question.difficulty === difficultyFilter;
-        const bankMatch = bankFilter === "all" || question.bank_id === bankFilter;
 
-        return topicMatch && difficultyMatch && bankMatch;
+        return topicMatch && difficultyMatch;
       }),
-    [bankFilter, difficultyFilter, sessionQuestions, topicFilter],
+    [difficultyFilter, sessionQuestions, topicFilter],
   );
 
   const questions = useMemo(
@@ -320,7 +315,6 @@ export default function Practice() {
     if (savedSession) {
       setTopicFilter(savedSession.topicFilter || "all");
       setDifficultyFilter(savedSession.difficultyFilter || "all");
-      setBankFilter(savedSession.bankFilter || "all");
       setReviewFilter(savedSession.reviewFilter || "all");
       setCurrentQuestionId(savedSession.currentQuestionId || null);
       setQuestionSeed(savedSession.questionSeed || null);
@@ -341,7 +335,6 @@ export default function Practice() {
       started,
       topicFilter,
       difficultyFilter,
-      bankFilter,
       reviewFilter,
       questionSeed,
       questions: sessionQuestions,
@@ -349,7 +342,6 @@ export default function Practice() {
       responses,
     });
   }, [
-    bankFilter,
     currentQuestionId,
     difficultyFilter,
     questionSeed,
@@ -501,12 +493,12 @@ export default function Practice() {
             Practice Questions
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Choose your topic, bank, and difficulty to start practicing.
+            Choose your topic and difficulty to start practicing.
           </p>
         </div>
 
         <div className="space-y-6 rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-800 dark:bg-slate-950">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Topic
@@ -520,25 +512,6 @@ export default function Practice() {
                   {Object.entries(topicLabels).map(([key, label]) => (
                     <SelectItem key={key} value={key}>
                       {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Question Bank
-              </label>
-              <Select value={bankFilter} onValueChange={setBankFilter}>
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="All Banks" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Banks</SelectItem>
-                  {practiceBankOptions.map((bank) => (
-                    <SelectItem key={bank.id} value={bank.id}>
-                      {bank.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -728,12 +701,6 @@ export default function Practice() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span>
-              {bankFilter === "all"
-                ? `${practiceBankOptions.length} banks selected`
-                : practiceBankOptions.find((bank) => bank.id === bankFilter)?.label ||
-                  bankFilter}
-            </span>
             {practiceRemaining !== null && practiceRemaining !== undefined ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 font-semibold text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
                 <Crown className="h-3 w-3" />

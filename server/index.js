@@ -118,15 +118,13 @@ function requireAdmin(req, res, next) {
 function applyQuestionFilters(questions, query) {
   const topic = query.topic || "all";
   const difficulty = query.difficulty || "all";
-  const bank = query.bank || "all";
   const limit = Number(query.limit || 0);
   const offset = Math.max(0, Number(query.offset || 0));
 
   const filtered = questions.filter((question) => {
     const topicMatch = topic === "all" || question.topic === topic;
     const difficultyMatch = difficulty === "all" || question.difficulty === difficulty;
-    const bankMatch = bank === "all" || question.bank_id === bank;
-    return topicMatch && difficultyMatch && bankMatch;
+    return topicMatch && difficultyMatch;
   });
 
   if (limit > 0) {

@@ -24,12 +24,12 @@ import { createPageUrl } from "@/utils";
 const featureCards = [
   {
     title: "Practice With a Curated Bank",
-    description: "Work through a curated official-style bank organized for steady progress.",
+    description: `Work through ${TOTAL_PRACTICE_QUESTIONS} curated official-style questions organized for steady progress.`,
     Icon: Target,
   },
   {
     title: "Take Realistic Mock Exams",
-    description: "Simulate the exam experience with timed tests pulled from the same question bank.",
+    description: `Simulate the exam experience with timed tests pulled from the same ${TOTAL_PRACTICE_QUESTIONS}-question bank.`,
     Icon: ClipboardCheck,
   },
   {
@@ -43,7 +43,7 @@ const premiumPreviewPanels = [
   {
     label: "Premium Preview",
     title: "Smarter exam prep",
-    subtitle: "Practice, flashcards, mock exams, and AI support in one place.",
+    subtitle: `Practice, flashcards, mock exams, and AI support built on the same ${TOTAL_PRACTICE_QUESTIONS}-question bank.`,
     accentClassName:
       "bg-emerald-500/14 text-emerald-300",
     Icon: Brain,

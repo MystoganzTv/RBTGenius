@@ -2112,24 +2112,6 @@ export const baseQuestions = questionConcepts.flatMap(buildQuestionSeedSet);
 export const TOTAL_PRACTICE_QUESTIONS = baseQuestions.length;
 export const OFFICIAL_CONCEPT_COUNT = questionConcepts.length;
 
-const PRACTICE_BANK_COUNT = Math.max(
-  1,
-  Math.ceil(TOTAL_PRACTICE_QUESTIONS / PRACTICE_BATCH_SIZE),
-);
-
-export const practiceBankOptions = Array.from(
-  { length: PRACTICE_BANK_COUNT },
-  (_, index) => {
-    const bankNumber = index + 1;
-    const padded = String(bankNumber).padStart(2, "0");
-
-    return {
-      id: `bank-${padded}`,
-      label: `Bank ${padded}`,
-    };
-  },
-);
-
 export const PRACTICE_TOPIC_TOTALS = baseQuestions.reduce(
   (result, question) => ({
     ...result,
@@ -2177,17 +2159,6 @@ function shuffleWithRandom(items, random) {
   return nextItems;
 }
 
-function getPracticeBankMeta(index) {
-  const option = practiceBankOptions[index % practiceBankOptions.length];
-
-  return {
-    bank_id: option.id,
-    bank_label: option.label,
-    group_id: option.id,
-    group_label: option.label,
-  };
-}
-
 function cloneQuestion(question) {
   return {
     ...question,
@@ -2228,8 +2199,8 @@ function buildQuestionPool({
 function withPracticeMetadata(question, index) {
   return {
     ...cloneQuestion(question),
-    ...getPracticeBankMeta(index),
     original_id: question.original_id || question.id,
+    practice_index: index + 1,
   };
 }
 

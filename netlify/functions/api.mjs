@@ -121,15 +121,13 @@ function getQuestionBank(mode = "practice", options = {}) {
 function applyQuestionFilters(questions, searchParams) {
   const topic = searchParams.get("topic") || "all";
   const difficulty = searchParams.get("difficulty") || "all";
-  const bank = searchParams.get("bank") || "all";
   const limit = Number(searchParams.get("limit") || 0);
   const offset = Math.max(0, Number(searchParams.get("offset") || 0));
 
   const filtered = questions.filter((question) => {
     const topicMatch = topic === "all" || question.topic === topic;
     const difficultyMatch = difficulty === "all" || question.difficulty === difficulty;
-    const bankMatch = bank === "all" || question.bank_id === bank;
-    return topicMatch && difficultyMatch && bankMatch;
+    return topicMatch && difficultyMatch;
   });
 
   if (limit > 0) {
