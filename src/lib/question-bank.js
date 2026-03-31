@@ -1,3 +1,5 @@
+import { additionalOfficialQuestionConcepts } from "./question-bank-official-expansion.js";
+
 export const topicLabels = {
   measurement: "Measurement",
   assessment: "Assessment",
@@ -1908,9 +1910,10 @@ const allQuestionConcepts = [
   },
 ];
 
-const questionConcepts = allQuestionConcepts.filter((concept) =>
-  OFFICIAL_CONCEPT_IDS.has(concept.id),
-);
+const questionConcepts = [
+  ...allQuestionConcepts.filter((concept) => OFFICIAL_CONCEPT_IDS.has(concept.id)),
+  ...additionalOfficialQuestionConcepts,
+];
 
 function shuffleStable(items, seedValue) {
   return shuffleWithRandom(items, createRandom(seedValue));
