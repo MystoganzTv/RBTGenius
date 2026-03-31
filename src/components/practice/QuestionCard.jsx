@@ -19,6 +19,8 @@ export default function QuestionCard({
   selectedAnswer = null,
   isSubmitted = false,
   isFlagged = false,
+  correctAnswer = null,
+  explanation = "",
   onSelectAnswer,
   onAnswer,
   onNext,
@@ -29,14 +31,14 @@ export default function QuestionCard({
       return;
     }
 
-    onAnswer?.(selectedAnswer, selectedAnswer === question.correct_answer);
+    onAnswer?.(selectedAnswer);
   };
 
   const handleNext = () => {
     onNext?.();
   };
 
-  const isCorrect = selectedAnswer === question?.correct_answer;
+  const isCorrect = selectedAnswer === correctAnswer;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
@@ -103,7 +105,7 @@ export default function QuestionCard({
         <div className="space-y-3">
           {(question?.options || []).map((option) => {
             const isThis = selectedAnswer === option.label;
-            const isCorrectAnswer = option.label === question?.correct_answer;
+            const isCorrectAnswer = option.label === correctAnswer;
             let optionStyle =
               "border-slate-200 hover:border-[#1E5EFF]/30 hover:bg-[#1E5EFF]/3 dark:border-slate-800 dark:hover:bg-[#1E5EFF]/10";
             let optionTextStyle = "text-slate-900 dark:text-slate-100";
@@ -176,7 +178,7 @@ export default function QuestionCard({
           </Button>
         ) : (
           <div className="space-y-4">
-            {question?.explanation ? (
+            {explanation ? (
               <div className="rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
                 <div className="mb-2 flex items-center gap-2">
                   <Lightbulb className="h-4 w-4 text-[#FFB800]" />
@@ -185,7 +187,7 @@ export default function QuestionCard({
                   </span>
                 </div>
                 <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  {question.explanation}
+                  {explanation}
                 </p>
               </div>
             ) : null}

@@ -7,28 +7,87 @@ export const topicLabels = {
   professional_conduct: "Professional Conduct",
 };
 
-export const TOTAL_PRACTICE_QUESTIONS = 3000;
-const PRACTICE_BANK_COUNT = 10;
+export const PRACTICE_BATCH_SIZE = 24;
 
-export const practiceBankOptions = Array.from(
-  { length: PRACTICE_BANK_COUNT },
-  (_, index) => {
-    const bankNumber = index + 1;
-    const padded = String(bankNumber).padStart(2, "0");
+const OFFICIAL_CONCEPT_IDS = new Set([
+  "measurement_frequency",
+  "measurement_duration",
+  "measurement_latency",
+  "measurement_partial_interval",
+  "measurement_whole_interval",
+  "measurement_momentary_time_sampling",
+  "measurement_permanent_product",
+  "measurement_rate",
+  "measurement_trial_by_trial",
+  "measurement_ioa",
+  "measurement_continuous",
+  "measurement_discontinuous",
+  "assessment_abc",
+  "assessment_operational_definition",
+  "assessment_preference",
+  "assessment_reinforcer",
+  "assessment_baseline",
+  "assessment_scatterplot",
+  "assessment_indirect",
+  "assessment_direct",
+  "assessment_interview",
+  "assessment_paired_stimulus",
+  "assessment_mswo",
+  "assessment_fba",
+  "skill_least_to_most",
+  "skill_prompt_fading",
+  "skill_shaping",
+  "skill_task_analysis",
+  "skill_total_task",
+  "skill_forward_chaining",
+  "skill_backward_chaining",
+  "skill_dtt",
+  "skill_net",
+  "skill_discrimination_training",
+  "skill_errorless_teaching",
+  "skill_generalization",
+  "skill_maintenance",
+  "skill_time_delay",
+  "behavior_extinction",
+  "behavior_fct",
+  "behavior_antecedent",
+  "behavior_blocking",
+  "behavior_noncontingent_reinforcement",
+  "behavior_dro",
+  "behavior_dri",
+  "behavior_rird",
+  "behavior_high_p",
+  "behavior_dra_specific",
+  "behavior_escape_extinction",
+  "behavior_planned_ignoring",
+  "behavior_extinction_burst",
+  "documentation_notes",
+  "documentation_immediate_entry",
+  "documentation_incident_report",
+  "documentation_integrity",
+  "documentation_prompt_levels",
+  "documentation_trial_by_trial",
+  "documentation_abc_note",
+  "documentation_mastery_tracking",
+  "documentation_service_verification",
+  "documentation_data_summary",
+  "documentation_timestamp",
+  "documentation_caregiver_log",
+  "professional_scope",
+  "professional_supervision",
+  "professional_confidentiality",
+  "professional_boundaries",
+  "professional_safety",
+  "professional_assent",
+  "professional_dignity",
+  "professional_communication",
+  "professional_cultural_responsiveness",
+  "professional_conflict_of_interest",
+  "professional_mandated_reporting",
+  "professional_record_honesty",
+]);
 
-    return {
-      id: `bank-${padded}`,
-      label: `Bank ${padded}`,
-    };
-  },
-);
-
-export const PRACTICE_TOPIC_TOTALS = Object.keys(topicLabels).reduce((result, key) => {
-  result[key] = 0;
-  return result;
-}, {});
-
-const questionConcepts = [
+const allQuestionConcepts = [
   {
     id: "measurement_frequency",
     topic: "measurement",
@@ -1849,6 +1908,10 @@ const questionConcepts = [
   },
 ];
 
+const questionConcepts = allQuestionConcepts.filter((concept) =>
+  OFFICIAL_CONCEPT_IDS.has(concept.id),
+);
+
 function shuffleStable(items, seedValue) {
   return shuffleWithRandom(items, createRandom(seedValue));
 }
@@ -1925,99 +1988,39 @@ function buildQuestionSeedSet(concept) {
 }
 
 export const baseQuestions = questionConcepts.flatMap(buildQuestionSeedSet);
+export const TOTAL_PRACTICE_QUESTIONS = baseQuestions.length;
+export const OFFICIAL_CONCEPT_COUNT = questionConcepts.length;
 
-function groupSeedQuestionsByConcept(seedValue) {
-  const grouped = new Map();
+const PRACTICE_BANK_COUNT = Math.max(
+  1,
+  Math.ceil(TOTAL_PRACTICE_QUESTIONS / PRACTICE_BATCH_SIZE),
+);
 
-  baseQuestions.forEach((question) => {
-    const conceptId = question.concept_id || question.id;
-    const conceptQuestions = grouped.get(conceptId) || [];
-    conceptQuestions.push(question);
-    grouped.set(conceptId, conceptQuestions);
-  });
+export const practiceBankOptions = Array.from(
+  { length: PRACTICE_BANK_COUNT },
+  (_, index) => {
+    const bankNumber = index + 1;
+    const padded = String(bankNumber).padStart(2, "0");
 
-  return new Map(
-    [...grouped.entries()].map(([conceptId, conceptQuestions]) => [
-      conceptId,
-      shuffleStable(conceptQuestions, `${seedValue}:${conceptId}`),
-    ]),
-  );
-}
+    return {
+      id: `bank-${padded}`,
+      label: `Bank ${padded}`,
+    };
+  },
+);
 
-function buildSeedSequence(size, seedValue) {
-  const groupedSeeds = groupSeedQuestionsByConcept(seedValue);
-  const conceptIds = shuffleStable([...groupedSeeds.keys()], `${seedValue}:concept-order`);
-  const selectedSeeds = [];
-  let round = 0;
+export const PRACTICE_TOPIC_TOTALS = baseQuestions.reduce(
+  (result, question) => ({
+    ...result,
+    [question.topic]: (result[question.topic] || 0) + 1,
+  }),
+  Object.keys(topicLabels).reduce((result, key) => {
+    result[key] = 0;
+    return result;
+  }, {}),
+);
 
-  while (selectedSeeds.length < size && conceptIds.length > 0) {
-    conceptIds.forEach((conceptId) => {
-      if (selectedSeeds.length >= size) {
-        return;
-      }
-
-      const conceptQuestions = groupedSeeds.get(conceptId) || [];
-      if (conceptQuestions.length === 0) {
-        return;
-      }
-
-      selectedSeeds.push(conceptQuestions[round % conceptQuestions.length]);
-    });
-
-    round += 1;
-  }
-
-  return selectedSeeds;
-}
-
-for (let index = 0; index < TOTAL_PRACTICE_QUESTIONS; index += 1) {
-  const topic = baseQuestions[index % baseQuestions.length]?.topic;
-  if (topic) {
-    PRACTICE_TOPIC_TOTALS[topic] += 1;
-  }
-}
-
-const practiceScenarioPrefixes = [
-  "During a clinic session,",
-  "During home-based therapy,",
-  "While collecting data,",
-  "When supporting a skill acquisition program,",
-  "During supervision review,",
-  "In a community outing,",
-  "While implementing the treatment plan,",
-  "At the start of session,",
-  "During a transition between activities,",
-  "While preparing session notes,",
-];
-
-const practiceScenarioSuffixes = [
-  "Choose the best response.",
-  "Identify the most appropriate action.",
-  "Select the option most aligned with RBT practice.",
-  "Pick the answer that best matches ABA principles.",
-  "Choose the response that protects treatment integrity.",
-];
-
-const flashcardScenarioPrefixes = [
-  "During a clinic session,",
-  "At the start of therapy,",
-  "While collecting data,",
-  "During a home visit,",
-  "When reviewing behavior plans,",
-  "In a school-based session,",
-  "During skills training,",
-  "While supporting a transition,",
-  "During supervision follow-up,",
-  "When documenting session notes,",
-];
-
-const flashcardScenarioSuffixes = [
-  "Choose the best response.",
-  "Pick the most appropriate action.",
-  "Select the answer that best follows ABA principles.",
-  "Choose the option most consistent with RBT practice.",
-  "Pick the response that best supports treatment integrity.",
-];
+const questionLookup = new Map(baseQuestions.map((question) => [question.id, question]));
 
 function hashString(value) {
   let hash = 2166136261;
@@ -2053,10 +2056,6 @@ function shuffleWithRandom(items, random) {
   return nextItems;
 }
 
-function randomItem(items, random) {
-  return items[Math.floor(random() * items.length)];
-}
-
 function getPracticeBankMeta(index) {
   const option = practiceBankOptions[index % practiceBankOptions.length];
 
@@ -2068,108 +2067,138 @@ function getPracticeBankMeta(index) {
   };
 }
 
-function remixOptions(options, correctAnswer, variantKey) {
-  const random = createRandom(`options:${variantKey}`);
-  const shuffled = shuffleWithRandom(options, random);
-  const answerLabels = ["A", "B", "C", "D"];
-  let nextCorrectAnswer = correctAnswer;
+function cloneQuestion(question) {
+  return {
+    ...question,
+    options: question.options.map((option) => ({ ...option })),
+  };
+}
 
-  const nextOptions = shuffled.map((option, index) => {
-    const relabeledOption = {
-      ...option,
-      label: answerLabels[index],
-    };
-
-    if (option.label === correctAnswer) {
-      nextCorrectAnswer = relabeledOption.label;
+function uniqueQuestions(questions) {
+  const seen = new Set();
+  return questions.filter((question) => {
+    if (seen.has(question.id)) {
+      return false;
     }
 
-    return relabeledOption;
+    seen.add(question.id);
+    return true;
+  });
+}
+
+function buildQuestionPool({
+  seedValue,
+  excludeIds = [],
+  sourceQuestions = baseQuestions,
+}) {
+  const blockedIds = new Set(excludeIds);
+  const preferred = shuffleStable(sourceQuestions, `${seedValue}:preferred`).filter(
+    (question) => !blockedIds.has(question.id),
+  );
+
+  if (preferred.length >= sourceQuestions.length || blockedIds.size === 0) {
+    return preferred;
+  }
+
+  const fallback = shuffleStable(sourceQuestions, `${seedValue}:fallback`);
+  return uniqueQuestions([...preferred, ...fallback]);
+}
+
+function withPracticeMetadata(question, index) {
+  return {
+    ...cloneQuestion(question),
+    ...getPracticeBankMeta(index),
+    original_id: question.original_id || question.id,
+  };
+}
+
+export function getQuestionById(questionId) {
+  return questionLookup.get(questionId) || null;
+}
+
+export function getQuestionsByIds(questionIds = []) {
+  return questionIds
+    .map((questionId) => getQuestionById(questionId))
+    .filter(Boolean)
+    .map(cloneQuestion);
+}
+
+export function sanitizeQuestion(question, mode = "practice") {
+  const cloned = cloneQuestion(question);
+
+  if (mode === "flashcards") {
+    return cloned;
+  }
+
+  const {
+    correct_answer: _correctAnswer,
+    explanation: _explanation,
+    ...safeQuestion
+  } = cloned;
+
+  return safeQuestion;
+}
+
+export function sanitizeQuestions(questions, mode = "practice") {
+  return questions.map((question) => sanitizeQuestion(question, mode));
+}
+
+export function evaluateQuestionAnswer(questionId, selectedAnswer) {
+  const question = getQuestionById(questionId);
+
+  if (!question) {
+    return null;
+  }
+
+  return {
+    question_id: question.id,
+    selected_answer: selectedAnswer || "",
+    is_correct: selectedAnswer === question.correct_answer,
+    correct_answer: question.correct_answer,
+    explanation: question.explanation,
+    topic: question.topic,
+  };
+}
+
+export function buildPracticeQuestionBank(
+  size = TOTAL_PRACTICE_QUESTIONS,
+  seed = "practice-default",
+  options = {},
+) {
+  const pool = buildQuestionPool({
+    seedValue: `practice:${seed}:${size}`,
+    excludeIds: options.excludeIds,
   });
 
-  return {
-    options: nextOptions,
-    correct_answer: nextCorrectAnswer,
-  };
+  return pool
+    .slice(0, Math.min(size, TOTAL_PRACTICE_QUESTIONS))
+    .map((question, index) => withPracticeMetadata(question, index));
 }
 
-function buildQuestionVariant(
-  seed,
-  index,
-  prefixes,
-  suffixes,
-  prefixId,
-  metadata = {},
+export function buildFlashcardBank(
+  size = TOTAL_PRACTICE_QUESTIONS,
+  seed = "flashcards-default",
 ) {
-  const variantKey = `${prefixId}:${seed.id}:${index + 1}`;
-  const textRandom = createRandom(`text:${variantKey}`);
-  const prefix = randomItem(prefixes, textRandom);
-  const suffix = randomItem(suffixes, textRandom);
-  const variantNumber = index + 1;
-  const remixed = remixOptions(seed.options, seed.correct_answer, variantKey);
-
-  return {
-    ...seed,
-    ...remixed,
-    ...metadata,
-    id: `${prefixId}_${seed.id}_${variantNumber}`,
-    text: `${prefix} ${seed.text} ${suffix}`,
-    original_id: seed.id,
-  };
-}
-
-export function buildPracticeQuestionBank(size = TOTAL_PRACTICE_QUESTIONS, seed = "practice-default") {
-  return buildSeedSequence(size, `practice-seeds:${seed}:${size}`).map(
-    (seedQuestion, index) =>
-      buildQuestionVariant(
-        seedQuestion,
-        index,
-        practiceScenarioPrefixes,
-        practiceScenarioSuffixes,
-        "practice",
-        getPracticeBankMeta(index),
-      ),
-  );
-}
-
-export function buildFlashcardBank(size = 300, seed = "flashcards-default") {
-  const generatedCards = Array.from({ length: size }, (_, index) =>
-    buildQuestionVariant(
-      baseQuestions[index % baseQuestions.length],
-      index,
-      flashcardScenarioPrefixes,
-      flashcardScenarioSuffixes,
-      "flashcard",
-    ),
-  );
-
-  return shuffleWithRandom(generatedCards, createRandom(`flashcards-order:${seed}:${size}`));
+  return shuffleStable(baseQuestions, `flashcards:${seed}:${size}`)
+    .slice(0, Math.min(size, TOTAL_PRACTICE_QUESTIONS))
+    .map((question) => cloneQuestion(question));
 }
 
 export function buildMockExamQuestionSet(
   size = 85,
   sourceQuestions = null,
   seed = `mock-${Date.now()}`,
+  options = {},
 ) {
-  const selectedSeeds =
+  const pool =
     Array.isArray(sourceQuestions) && sourceQuestions.length > 0
-      ? shuffleStable(sourceQuestions, `mock-source:${seed}`).slice(0, size)
-      : buildSeedSequence(size, `mock-seeds:${seed}`);
+      ? uniqueQuestions(sourceQuestions)
+      : buildQuestionPool({
+          seedValue: `mock:${seed}:${size}`,
+          excludeIds: options.excludeIds,
+        });
 
-  const orderedSelection = selectedSeeds.map((seedQuestion, index) =>
-    buildQuestionVariant(
-      seedQuestion,
-      index,
-      practiceScenarioPrefixes,
-      practiceScenarioSuffixes,
-      "mock",
-      getPracticeBankMeta(index),
-    ),
-  );
-
-  return orderedSelection.map((question, index) => ({
-    ...question,
-    id: `${question.id}_mock_${index + 1}`,
-    original_id: question.original_id || question.id,
-  }));
+  return pool
+    .slice(0, Math.min(size, pool.length))
+    .map((question, index) => withPracticeMetadata(question, index));
 }

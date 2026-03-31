@@ -1,8 +1,11 @@
 import express from "express";
 import {
   computeProgress,
+  evaluateQuestionAnswer,
   getQuestionBank,
   readDb,
+  sanitizeQuestions,
+  TOTAL_PRACTICE_QUESTIONS,
   updateDb,
 } from "./lib/store.js";
 import { createSessionToken, hashPassword, verifyPassword } from "./lib/auth.js";
@@ -32,6 +35,7 @@ import {
   getEntitlements,
   isPremiumPlan,
 } from "../src/lib/plan-access.js";
+import { topicLabels } from "../src/lib/question-bank.js";
 import { createTutorReply } from "./lib/tutor.js";
 
 const app = express();
@@ -116,6 +120,7 @@ function applyQuestionFilters(questions, query) {
   const difficulty = query.difficulty || "all";
   const bank = query.bank || "all";
   const limit = Number(query.limit || 0);
+  const offset = Math.max(0, Number(query.offset || 0));
 
   const filtered = questions.filter((question) => {
     const topicMatch = topic === "all" || question.topic === topic;
@@ -125,10 +130,10 @@ function applyQuestionFilters(questions, query) {
   });
 
   if (limit > 0) {
-    return filtered.slice(0, limit);
+    return filtered.slice(offset, offset + limit);
   }
 
-  return filtered;
+  return offset > 0 ? filtered.slice(offset) : filtered;
 }
 
 function createId(prefix) {
@@ -157,6 +162,32 @@ function buildUserAccessState(db, user) {
     entitlements,
     billing: getBillingConfig(user),
   };
+}
+
+function getSeenPracticeQuestionIds(db, userId) {
+  return [
+    ...new Set(
+      db.attempts
+        .filter(
+          (attempt) =>
+            attempt.user_id === userId && (!attempt.source || attempt.source === "practice"),
+        )
+        .map((attempt) => attempt.question_id)
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function getSeenMockQuestionIds(db, userId) {
+  return [
+    ...new Set(
+      db.mockExams
+        .filter((exam) => exam.user_id === userId)
+        .flatMap((exam) => exam.answers || [])
+        .map((answer) => answer.question_id)
+        .filter(Boolean),
+    ),
+  ];
 }
 
 function buildProfilePayload(db, user) {
@@ -532,8 +563,38 @@ app.post("/api/auth/logout", requireUser, (req, res) => {
 
 app.get("/api/questions", (req, res) => {
   const mode = req.query.mode || "practice";
-  const questions = getQuestionBank(mode, { seed: req.query.seed });
-  res.json(applyQuestionFilters(questions, req.query));
+
+  if (mode === "flashcards") {
+    const questions = getQuestionBank(mode, {
+      seed: req.query.seed,
+      size: TOTAL_PRACTICE_QUESTIONS,
+    });
+    res.json(applyQuestionFilters(sanitizeQuestions(questions, mode), req.query));
+    return;
+  }
+
+  requireUser(req, res, () => {
+    if (mode === "mock" && !isPremiumPlan(req.currentUser.plan)) {
+      sendPremiumRequired(res, "mock_exams");
+      return;
+    }
+
+    const db = readDb();
+    const size =
+      Number(req.query.limit || 0) ||
+      (mode === "mock" ? 85 : TOTAL_PRACTICE_QUESTIONS);
+    const excludeIds =
+      mode === "mock"
+        ? getSeenMockQuestionIds(db, req.currentUser.id)
+        : getSeenPracticeQuestionIds(db, req.currentUser.id);
+    const questions = getQuestionBank(mode, {
+      seed: req.query.seed,
+      size,
+      excludeIds,
+    });
+
+    res.json(applyQuestionFilters(sanitizeQuestions(questions, mode), req.query));
+  });
 });
 
 app.get("/api/practice/session", requireUser, (req, res) => {
@@ -589,11 +650,25 @@ app.post("/api/question-attempts", requireUser, (req, res) => {
     return;
   }
 
+  const evaluation = evaluateQuestionAnswer(
+    req.body?.question_id,
+    req.body?.selected_answer,
+  );
+
+  if (!evaluation) {
+    res.status(400).json({ message: "Question not found" });
+    return;
+  }
+
   const payload = {
     id: createId("attempt"),
     user_id: req.currentUser.id,
     created_at: new Date().toISOString(),
-    ...req.body,
+    question_id: evaluation.question_id,
+    selected_answer: evaluation.selected_answer,
+    is_correct: evaluation.is_correct,
+    topic: evaluation.topic,
+    source: req.body?.source || "practice",
   };
 
   updateDb((current) => ({
@@ -604,6 +679,8 @@ app.post("/api/question-attempts", requireUser, (req, res) => {
   const nextDb = readDb();
   res.status(201).json({
     ...payload,
+    correct_answer: evaluation.correct_answer,
+    explanation: evaluation.explanation,
     entitlements: buildUserAccessState(nextDb, req.currentUser).entitlements,
   });
 });
@@ -624,11 +701,48 @@ app.post("/api/mock-exams", requireUser, (req, res) => {
     return;
   }
 
+  const questionIds = Array.isArray(req.body?.question_ids) ? req.body.question_ids : [];
+  const answers = req.body?.answers || {};
+  const questions = questionIds
+    .map((questionId) => evaluateQuestionAnswer(questionId, answers[questionId]))
+    .filter(Boolean);
+
+  if (questions.length === 0) {
+    res.status(400).json({ message: "Mock exam questions are required" });
+    return;
+  }
+
+  const correct = questions.filter((answer) => answer.is_correct).length;
+  const score = Math.round((correct / questions.length) * 100);
+  const passed = score >= 80;
+  const domainScores = {};
+
+  Object.keys(topicLabels).forEach((key) => {
+    const topicQuestions = questions.filter((question) => question.topic === key);
+    const topicCorrect = topicQuestions.filter((question) => question.is_correct).length;
+
+    domainScores[key] =
+      topicQuestions.length > 0
+        ? Math.round((topicCorrect / topicQuestions.length) * 100)
+        : 0;
+  });
+
   const payload = {
     id: createId("mock_exam"),
     user_id: req.currentUser.id,
     created_at: new Date().toISOString(),
-    ...req.body,
+    score,
+    total_questions: questions.length,
+    correct_answers: correct,
+    time_taken_minutes: Number(req.body?.time_taken_minutes || 0),
+    status: "completed",
+    answers: questions.map(({ question_id, selected_answer, is_correct }) => ({
+      question_id,
+      selected_answer,
+      is_correct,
+    })),
+    passed,
+    domain_scores: domainScores,
   };
 
   updateDb((current) => ({
@@ -646,7 +760,7 @@ app.get("/api/dashboard", requireUser, (req, res) => {
     progress,
     entitlements,
     billing,
-    allQuestions: getQuestionBank("practice"),
+    allQuestionsCount: TOTAL_PRACTICE_QUESTIONS,
     exams: db.mockExams.filter((exam) => exam.user_id === req.currentUser.id),
   });
 });

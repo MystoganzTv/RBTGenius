@@ -155,7 +155,7 @@ export default function Analytics() {
         <StatCard
           title="Bank Accuracy"
           value={`${bankAccuracy}%`}
-          subtitle={`${totalCorrect} correct out of 3000`}
+          subtitle={`${totalCorrect} correct out of ${TOTAL_PRACTICE_QUESTIONS}`}
           icon={Target}
           color="green"
         />
@@ -182,7 +182,7 @@ export default function Analytics() {
               Domain Coverage
             </h3>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Answered out of each domain's share of the 3000-question bank.
+              Answered out of each domain's share of the curated bank.
             </p>
             {analyticsQuery.isLoading ? (
               <span className="text-xs text-slate-400">Loading...</span>

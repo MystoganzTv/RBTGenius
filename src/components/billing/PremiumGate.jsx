@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getGateCopy } from "@/lib/plan-access";
+import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 
@@ -36,7 +37,7 @@ export default function PremiumGate({
           {(bullets.length > 0
             ? bullets
             : [
-                "Unlimited practice from the full 3000-question bank",
+                `Unlimited practice from the curated ${TOTAL_PRACTICE_QUESTIONS}-question bank`,
                 "Full analytics and mock exams",
                 "Unlimited AI tutor conversations",
               ]

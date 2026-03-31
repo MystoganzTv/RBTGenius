@@ -17,13 +17,14 @@ import { Button } from "@/components/ui/button";
 import PublicSiteFooter from "@/components/public/PublicSiteFooter";
 import { useTheme } from "@/hooks/use-theme";
 import { ACCESS_COMPARISON } from "@/lib/plan-access";
+import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 
 const featureCards = [
   {
-    title: "Practice With a Large Bank",
-    description: "Work through thousands of RBT-style questions organized for steady progress.",
+    title: "Practice With a Curated Bank",
+    description: "Work through a curated official-style bank organized for steady progress.",
     Icon: Target,
   },
   {
@@ -57,7 +58,7 @@ const premiumPreviewPanels = [
             <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Question bank
             </p>
-            <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>3000</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{TOTAL_PRACTICE_QUESTIONS}</p>
             <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
           </div>
           <div
@@ -93,7 +94,7 @@ const premiumPreviewPanels = [
             <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               Question Bank
             </p>
-            <p className={`mt-3 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>3000</p>
+            <p className={`mt-3 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{TOTAL_PRACTICE_QUESTIONS}</p>
             <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
           </div>
           <div

@@ -41,7 +41,12 @@ import {
   FREE_DAILY_PRACTICE_LIMIT,
   isPremiumPlan,
 } from "@/lib/plan-access";
-import { practiceBankOptions, topicLabels } from "@/lib/question-bank";
+import {
+  PRACTICE_BATCH_SIZE,
+  practiceBankOptions,
+  topicLabels,
+  TOTAL_PRACTICE_QUESTIONS,
+} from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
 import { createPageUrl } from "@/utils";
 
@@ -179,6 +184,7 @@ export default function Practice() {
   const [reviewFilter, setReviewFilter] = useState("all");
   const [currentQuestionId, setCurrentQuestionId] = useState(null);
   const [questionSeed, setQuestionSeed] = useState(null);
+  const [sessionQuestions, setSessionQuestions] = useState([]);
   const [responses, setResponses] = useState({});
   const [started, setStarted] = useState(false);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
@@ -198,16 +204,34 @@ export default function Practice() {
     }
   }, [profileData]);
 
-  const { data: allQuestions = [], isLoading } = useQuery({
-    queryKey: ["practice-questions", questionSeed],
+  const { data: fetchedQuestions = [], isLoading } = useQuery({
+    queryKey: [
+      "practice-questions",
+      questionSeed,
+      topicFilter,
+      difficultyFilter,
+      bankFilter,
+    ],
     queryFn: () =>
       api.listQuestions({
         mode: "practice",
         seed: questionSeed,
+        topic: topicFilter,
+        difficulty: difficultyFilter,
+        bank: bankFilter,
+        limit: PRACTICE_BATCH_SIZE,
       }),
     initialData: [],
-    enabled: started && Boolean(questionSeed),
+    enabled: started && Boolean(questionSeed) && sessionQuestions.length === 0,
   });
+
+  useEffect(() => {
+    if (!started || sessionQuestions.length > 0 || fetchedQuestions.length === 0) {
+      return;
+    }
+
+    setSessionQuestions(fetchedQuestions);
+  }, [fetchedQuestions, sessionQuestions.length, started]);
 
   const attemptMutation = useMutation({
     mutationFn: api.createAttempt,
@@ -238,7 +262,7 @@ export default function Practice() {
 
   const baseFilteredQuestions = useMemo(
     () =>
-      allQuestions.filter((question) => {
+      sessionQuestions.filter((question) => {
         const topicMatch = topicFilter === "all" || question.topic === topicFilter;
         const difficultyMatch =
           difficultyFilter === "all" || question.difficulty === difficultyFilter;
@@ -246,7 +270,7 @@ export default function Practice() {
 
         return topicMatch && difficultyMatch && bankMatch;
       }),
-    [allQuestions, bankFilter, difficultyFilter, topicFilter],
+    [bankFilter, difficultyFilter, sessionQuestions, topicFilter],
   );
 
   const questions = useMemo(
@@ -300,6 +324,7 @@ export default function Practice() {
       setReviewFilter(savedSession.reviewFilter || "all");
       setCurrentQuestionId(savedSession.currentQuestionId || null);
       setQuestionSeed(savedSession.questionSeed || null);
+      setSessionQuestions(savedSession.questions || []);
       setResponses(savedSession.responses || {});
       setStarted(Boolean(savedSession.started));
     }
@@ -319,6 +344,7 @@ export default function Practice() {
       bankFilter,
       reviewFilter,
       questionSeed,
+      questions: sessionQuestions,
       currentQuestionId,
       responses,
     });
@@ -329,6 +355,7 @@ export default function Practice() {
     questionSeed,
     responses,
     reviewFilter,
+    sessionQuestions,
     sessionHydrated,
     started,
     topicFilter,
@@ -345,6 +372,7 @@ export default function Practice() {
   }, [currentQuestionId, questions, started]);
 
   const resetSessionState = () => {
+    setSessionQuestions([]);
     setResponses({});
     setCurrentQuestionId(null);
     setQuestionSeed(null);
@@ -378,7 +406,7 @@ export default function Practice() {
     }));
   };
 
-  const handleAnswer = async (answer, isCorrect) => {
+  const handleAnswer = async (answer) => {
     if (!currentQuestion) {
       return;
     }
@@ -396,8 +424,6 @@ export default function Practice() {
       const payload = await attemptMutation.mutateAsync({
         question_id: currentQuestion.id,
         selected_answer: answer,
-        is_correct: isCorrect,
-        topic: currentQuestion.topic,
         source: "practice",
       });
 
@@ -407,7 +433,9 @@ export default function Practice() {
           ...current[currentQuestion.id],
           selectedAnswer: answer,
           submitted: true,
-          isCorrect,
+          isCorrect: Boolean(payload?.is_correct),
+          correctAnswer: payload?.correct_answer || "",
+          explanation: payload?.explanation || "",
         },
       }));
 
@@ -537,8 +565,8 @@ export default function Practice() {
 
           <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700 dark:text-slate-200">
             {isPremiumPlan(entitlements?.plan)
-              ? "Premium unlocks unlimited answers across the full 3,000-question randomized bank."
-              : `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the same 3,000-question bank.`}
+              ? `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`
+              : `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`}
           </div>
 
           <Button
@@ -779,6 +807,8 @@ export default function Practice() {
         selectedAnswer={currentResponse.selectedAnswer || null}
         isSubmitted={Boolean(currentResponse.submitted)}
         isFlagged={Boolean(currentResponse.flagged)}
+        correctAnswer={currentResponse.correctAnswer || ""}
+        explanation={currentResponse.explanation || ""}
         onSelectAnswer={handleSelectAnswer}
         onToggleFlag={handleToggleFlag}
         onAnswer={handleAnswer}

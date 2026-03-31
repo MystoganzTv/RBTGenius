@@ -16,10 +16,13 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import {
   ACCESS_COMPARISON,
+  FREE_DAILY_PRACTICE_LIMIT,
+  FREE_DAILY_TUTOR_LIMIT,
   PLAN_CATALOG,
   PLAN_IDS,
   isPremiumPlan,
 } from "@/lib/plan-access";
+import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { cn } from "@/lib/utils";
@@ -28,14 +31,14 @@ import { createPageUrl } from "@/utils";
 const planFeatureMap = {
   [PLAN_IDS.FREE]: [
     "Create an account and sync progress",
-    "10 answered practice questions each day",
-    "5 AI tutor messages each day",
+    `${FREE_DAILY_PRACTICE_LIMIT} answered practice questions each day`,
+    `${FREE_DAILY_TUTOR_LIMIT} AI tutor messages each day`,
     "Flashcards and dashboard included",
     "No mock exams",
     "No analytics",
   ],
   [PLAN_IDS.PREMIUM_MONTHLY]: [
-    "Unlimited practice from the 3000-question bank",
+    `Unlimited practice from the curated ${TOTAL_PRACTICE_QUESTIONS}-question bank`,
     "Unlimited AI tutor conversations",
     "Full mock exams",
     "Full analytics and readiness tracking",

@@ -101,12 +101,10 @@ export default function Dashboard() {
   });
 
   const progress = data?.progress || emptyProgress;
-  const allQuestions = data?.allQuestions || [];
   const exams = data?.exams || [];
 
   const totalQuestions = progress?.total_questions_completed || 0;
-  const totalQuestionsAvailable =
-    progress?.total_questions_available || allQuestions.length || 3000;
+  const totalQuestionsAvailable = progress?.total_questions_available || data?.allQuestionsCount || 0;
   const bankCoverage = progress?.bank_coverage_percent || 0;
   const bankAccuracy = progress?.bank_accuracy || 0;
   const streak = progress?.study_streak_days || 0;

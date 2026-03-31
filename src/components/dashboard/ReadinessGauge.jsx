@@ -1,3 +1,5 @@
+import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
+
 export default function ReadinessGauge({
   score = 0,
   questionCount = 0,
@@ -81,9 +83,9 @@ export default function ReadinessGauge({
         </span>
         <p className="mt-1 text-center text-xs text-slate-400 dark:text-slate-500">
           {examCount > 0
-            ? `Guided by ${examCount} mock exam${examCount === 1 ? "" : "s"} and your 3000-question bank coverage`
+            ? `Guided by ${examCount} mock exam${examCount === 1 ? "" : "s"} and your ${TOTAL_PRACTICE_QUESTIONS}-question bank coverage`
             : hasStrongSignal
-              ? "Coverage-adjusted from your 3000-question bank"
+              ? `Coverage-adjusted from your ${TOTAL_PRACTICE_QUESTIONS}-question bank`
               : "Early estimate based on very limited bank coverage"}
         </p>
       </div>

@@ -40,7 +40,7 @@ function buildAchievements({
       id: "coverage-10",
       emoji: "🗺️",
       label: "10% Covered",
-      description: "Cover at least 10% of the 3000-question bank.",
+      description: `Cover at least 10% of the ${TOTAL_PRACTICE_QUESTIONS}-question bank.`,
       unlocked: bankCoveragePercent >= 10,
     },
     {

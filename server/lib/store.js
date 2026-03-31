@@ -6,6 +6,11 @@ import {
   buildFlashcardBank,
   buildMockExamQuestionSet,
   buildPracticeQuestionBank,
+  evaluateQuestionAnswer,
+  getQuestionsByIds,
+  PRACTICE_BATCH_SIZE,
+  sanitizeQuestions,
+  TOTAL_PRACTICE_QUESTIONS,
 } from "../../src/lib/question-bank.js";
 import {
   computeProgress,
@@ -54,21 +59,30 @@ export function getUserFromToken(token) {
 }
 
 export function getQuestionBank(mode = "practice", options = {}) {
-  const { seed } = options;
+  const { seed, size, excludeIds } = options;
 
   if (mode === "flashcards") {
-    return buildFlashcardBank(300, seed);
+    return buildFlashcardBank(size || TOTAL_PRACTICE_QUESTIONS, seed);
   }
 
   if (mode === "mock") {
-    return buildMockExamQuestionSet(85, null, seed);
+    return buildMockExamQuestionSet(size || 85, null, seed, { excludeIds });
   }
 
   if (mode === "base") {
     return baseQuestions;
   }
 
-  return buildPracticeQuestionBank(3000, seed);
+  return buildPracticeQuestionBank(size || TOTAL_PRACTICE_QUESTIONS, seed, {
+    excludeIds,
+  });
 }
 
-export { computeProgress };
+export {
+  computeProgress,
+  evaluateQuestionAnswer,
+  getQuestionsByIds,
+  PRACTICE_BATCH_SIZE,
+  sanitizeQuestions,
+  TOTAL_PRACTICE_QUESTIONS,
+};

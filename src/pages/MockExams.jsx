@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { isPremiumPlan } from "@/lib/plan-access";
 import { toast } from "@/components/ui/use-toast";
-import { topicLabels } from "@/lib/question-bank";
 import { cn } from "@/lib/utils";
 
 const TOTAL_QUESTIONS = 85;
@@ -56,7 +55,9 @@ export default function MockExams() {
 
   const saveMutation = useMutation({
     mutationFn: saveMockExamResult,
-    onSuccess: () => {
+    onSuccess: (result) => {
+      setExamResult(result);
+      setExamState("completed");
       queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
     },
@@ -84,48 +85,15 @@ export default function MockExams() {
   };
 
   const handleFinishExam = useCallback(() => {
-    const correct = Object.entries(answers).filter(([questionId, answer]) => {
-      const question = questions.find((item) => item.id === questionId);
-      return question && answer === question.correct_answer;
-    }).length;
+    if (saveMutation.isPending || questions.length === 0) {
+      return;
+    }
 
-    const score =
-      questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
-    const passed = score >= PASS_SCORE;
-
-    const domainScores = {};
-    Object.keys(topicLabels).forEach((key) => {
-      const topicQuestions = questions.filter((question) => question.topic === key);
-      const topicCorrect = topicQuestions.filter(
-        (question) => answers[question.id] === question.correct_answer,
-      ).length;
-
-      domainScores[key] =
-        topicQuestions.length > 0
-          ? Math.round((topicCorrect / topicQuestions.length) * 100)
-          : 0;
-    });
-
-    const result = {
-      score,
-      total_questions: questions.length,
-      correct_answers: correct,
+    saveMutation.mutate({
+      question_ids: questions.map((question) => question.id),
+      answers,
       time_taken_minutes: EXAM_DURATION_MINUTES - Math.floor(timeLeft / 60),
-      status: "completed",
-      answers: Object.entries(answers).map(([questionId, selectedAnswer]) => ({
-        question_id: questionId,
-        selected_answer: selectedAnswer,
-        is_correct:
-          questions.find((question) => question.id === questionId)?.correct_answer ===
-          selectedAnswer,
-      })),
-      passed,
-      domain_scores: domainScores,
-    };
-
-    setExamResult(result);
-    setExamState("completed");
-    saveMutation.mutate(result);
+    });
   }, [answers, questions, saveMutation, timeLeft]);
 
   useEffect(() => {
@@ -347,7 +315,7 @@ export default function MockExams() {
     );
   }
 
-  if (isLoading || questions.length === 0 || !currentQuestion) {
+  if (isLoading || saveMutation.isPending || questions.length === 0 || !currentQuestion) {
     return (
       <div className="mx-auto max-w-3xl py-12 text-center">
         <div className="animate-pulse">
