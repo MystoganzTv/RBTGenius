@@ -1487,6 +1487,366 @@ const questionConcepts = [
     explanation:
       "Professional composure helps protect rapport, keeps communication productive, and supports ethical conduct.",
   },
+  {
+    id: "measurement_standard_celeration_chart",
+    topic: "measurement",
+    difficulty: "advanced",
+    answer: "Standard celeration charting",
+    definition: "behavior data are displayed on a chart designed to show frequency change over time on a standard scale.",
+    scenario:
+      "A supervisor wants to compare accelerating and decelerating response trends across multiple weeks using a standard visual format.",
+    purpose: "To display frequency changes over time on a standard chart format.",
+    explanation:
+      "Standard celeration charting is used when the team wants a consistent visual analysis of changing response rates over time.",
+  },
+  {
+    id: "measurement_magnitude",
+    topic: "measurement",
+    difficulty: "intermediate",
+    answer: "Magnitude recording",
+    definition: "the intensity or force of a response is measured rather than just its frequency.",
+    scenario:
+      "A learner slams a door with varying force, and the team wants to track how strong the response is during each incident.",
+    purpose: "To measure how intense or forceful a behavior is.",
+    explanation:
+      "Magnitude recording is useful when the force or intensity of a response matters clinically, not only how often it occurs.",
+  },
+  {
+    id: "measurement_topography",
+    topic: "measurement",
+    difficulty: "beginner",
+    answer: "Topography description",
+    definition: "behavior is identified by its observable form or shape rather than by its presumed function.",
+    scenario:
+      "The team defines hand flapping by the visible movement pattern rather than by guessing why the learner is doing it.",
+    purpose: "To describe behavior based on what it looks like observably.",
+    explanation:
+      "Topography focuses on the physical form of the response and avoids assumptions about motivation or function.",
+  },
+  {
+    id: "measurement_sampling_limitations",
+    topic: "measurement",
+    difficulty: "advanced",
+    answer: "Sampling limitation awareness",
+    definition: "the team recognizes that interval and momentary measures estimate behavior and can over- or underrepresent what really happened.",
+    scenario:
+      "A supervisor reminds staff that interval data may not perfectly reflect the actual duration of off-task behavior during class.",
+    purpose: "To interpret sampled behavior data with appropriate caution.",
+    explanation:
+      "Discontinuous measurement can be efficient, but the team must remember that it estimates behavior rather than capturing it fully.",
+  },
+  {
+    id: "measurement_data_review_frequency",
+    topic: "measurement",
+    difficulty: "intermediate",
+    answer: "Ongoing data review",
+    definition: "collected data are reviewed regularly so the team can detect trends and respond quickly.",
+    scenario:
+      "A BCBA checks weekly graphs with the RBT to decide whether prompting and reinforcement levels need adjustment.",
+    purpose: "To review data often enough to guide timely treatment decisions.",
+    explanation:
+      "Ongoing data review keeps treatment responsive and prevents the team from missing important trends.",
+  },
+  {
+    id: "assessment_hypothesis_statement",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Hypothesis statement",
+    definition: "assessment results are summarized into a likely explanation of what maintains the behavior.",
+    scenario:
+      "After interviews and ABC data, the team concludes that tantrums most likely occur to escape difficult tasks.",
+    purpose: "To summarize the likely function of behavior after assessment.",
+    explanation:
+      "A hypothesis statement organizes assessment findings into a clear working explanation that can guide intervention.",
+  },
+  {
+    id: "assessment_medical_rule_out",
+    topic: "assessment",
+    difficulty: "advanced",
+    answer: "Medical rule-out consideration",
+    definition: "the team considers whether pain, illness, or medical issues may be affecting behavior before assuming a behavioral function only.",
+    scenario:
+      "A learner suddenly begins severe self-injury after a long history without it, so the team recommends checking for possible medical contributors.",
+    purpose: "To consider whether medical issues may be contributing to behavior change.",
+    explanation:
+      "Medical rule-out consideration is important when abrupt or unusual behavior change may reflect health factors rather than only environmental contingencies.",
+  },
+  {
+    id: "assessment_observation_sampling",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Observation sampling across contexts",
+    definition: "the learner is observed in more than one setting or routine to compare patterns.",
+    scenario:
+      "Staff collect observation data during table work, recess, and transitions to see whether problem behavior clusters in one context.",
+    purpose: "To compare behavior patterns across different settings or routines.",
+    explanation:
+      "Observation sampling across contexts helps the team avoid drawing conclusions from one narrow situation only.",
+  },
+  {
+    id: "assessment_skill_probe",
+    topic: "assessment",
+    difficulty: "beginner",
+    answer: "Probe assessment",
+    definition: "the learner is tested briefly on a target without teaching during the same trial to see current performance level.",
+    scenario:
+      "Before starting instruction, the RBT presents a few target words without prompting to see whether any are already known.",
+    purpose: "To check current skill level before or between teaching periods.",
+    explanation:
+      "Probe assessments help the team measure current performance without turning the assessment into active teaching.",
+  },
+  {
+    id: "assessment_data_based_decision",
+    topic: "assessment",
+    difficulty: "advanced",
+    answer: "Data-based assessment decision making",
+    definition: "assessment conclusions are based on recorded data patterns rather than impression alone.",
+    scenario:
+      "Even though staff feel behavior is worse in the afternoon, the BCBA reviews actual counts across times of day before deciding.",
+    purpose: "To base assessment conclusions on recorded evidence rather than impression alone.",
+    explanation:
+      "Assessment decisions should rely on patterns in data instead of memory, intuition, or isolated incidents.",
+  },
+  {
+    id: "skill_choral_responding",
+    topic: "skill_acquisition",
+    difficulty: "intermediate",
+    answer: "Choral responding",
+    definition: "multiple learners respond at the same time after a shared instruction.",
+    scenario:
+      "During a group lesson, the RBT asks everyone to say the color together before providing feedback.",
+    purpose: "To increase active responding during group instruction.",
+    explanation:
+      "Choral responding can increase participation and practice opportunities when several learners are taught together.",
+  },
+  {
+    id: "skill_model_prompt",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Model prompt",
+    definition: "the instructor demonstrates the correct response for the learner to imitate.",
+    scenario:
+      "When teaching clapping, the RBT claps first so the learner can copy the action.",
+    purpose: "To show the learner what the correct response looks like.",
+    explanation:
+      "A model prompt provides an example of the target response and is commonly used in imitation and motor teaching.",
+  },
+  {
+    id: "skill_gesture_prompt",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Gesture prompt",
+    definition: "the instructor points, nods, or motions toward the correct response without physically guiding the learner.",
+    scenario:
+      "The RBT points toward the correct picture card after giving the instruction.",
+    purpose: "To direct attention toward the correct response with a simple motion.",
+    explanation:
+      "Gesture prompts are less intrusive than model or physical prompts and can help maintain independence.",
+  },
+  {
+    id: "skill_verbal_prompt",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Verbal prompt",
+    definition: "the instructor provides spoken assistance to increase the chance of the correct response.",
+    scenario:
+      "After asking a learner to label an item, the RBT says the first sound of the word to help.",
+    purpose: "To increase correct responding through spoken assistance.",
+    explanation:
+      "Verbal prompts can range from full answers to partial cues and should be faded so the learner does not become prompt dependent.",
+  },
+  {
+    id: "skill_response_generalization",
+    topic: "skill_acquisition",
+    difficulty: "advanced",
+    answer: "Response generalization",
+    definition: "one trained skill leads to the emergence of related but untrained appropriate responses.",
+    scenario:
+      "After being taught to ask for help verbally, a learner also begins appropriately asking for assistance with new materials never directly trained.",
+    purpose: "To support the emergence of related appropriate responses beyond direct training.",
+    explanation:
+      "Response generalization occurs when training one response produces new but related appropriate behaviors.",
+  },
+  {
+    id: "behavior_drr",
+    topic: "behavior_reduction",
+    difficulty: "intermediate",
+    answer: "Differential reinforcement of reduced rates",
+    definition: "reinforcement is delivered when a behavior occurs less often than before but is not expected to drop to zero.",
+    scenario:
+      "A learner who frequently asks repetitive questions earns reinforcement when the total number decreases to a manageable level during session.",
+    purpose: "To reduce a behavior to a lower acceptable rate rather than eliminate it entirely.",
+    explanation:
+      "DRR is useful when the behavior is acceptable in moderation but problematic at very high rates.",
+  },
+  {
+    id: "behavior_satiation_awareness",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Satiation awareness",
+    definition: "the team monitors whether a reinforcer may be losing value because the learner has recently had too much of it.",
+    scenario:
+      "A learner stops working for crackers late in session after already receiving many of them, so staff consider whether motivation has decreased.",
+    purpose: "To recognize when repeated access may reduce reinforcer effectiveness.",
+    explanation:
+      "Satiation can make reinforcers less effective and may change how well behavior plans work over the course of a session.",
+  },
+  {
+    id: "behavior_abolishing_operation",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Abolishing operation",
+    definition: "an event temporarily decreases the value of a reinforcer and makes related behavior less likely.",
+    scenario:
+      "After a learner has just had a full snack, requests for that same food decrease sharply during teaching.",
+    purpose: "To identify events that temporarily reduce the value of a reinforcer.",
+    explanation:
+      "An abolishing operation decreases both the effectiveness of a reinforcer and the likelihood of behaviors that previously produced it.",
+  },
+  {
+    id: "behavior_establishing_operation",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Establishing operation",
+    definition: "an event temporarily increases the value of a reinforcer and makes related behavior more likely.",
+    scenario:
+      "After a long period without attention, a learner begins calling out more often to get staff interaction.",
+    purpose: "To identify events that temporarily increase the value of a reinforcer.",
+    explanation:
+      "An establishing operation increases the effectiveness of a reinforcer and the likelihood of behaviors that have produced it before.",
+  },
+  {
+    id: "behavior_precorrection",
+    topic: "behavior_reduction",
+    difficulty: "beginner",
+    answer: "Precorrection",
+    definition: "the expected behavior is reminded or practiced immediately before a situation where problem behavior is likely.",
+    scenario:
+      "Right before entering the cafeteria, the RBT reminds and practices walking feet and quiet voice.",
+    purpose: "To remind and practice the expected behavior before a high-risk situation.",
+    explanation:
+      "Precorrection is an antecedent strategy that can reduce problem behavior by clarifying expectations in advance.",
+  },
+  {
+    id: "documentation_session_objective",
+    topic: "documentation",
+    difficulty: "beginner",
+    answer: "Objective session summary",
+    definition: "the overall session note includes factual details about targets run, behavior observed, and key outcomes without interpretation beyond the data.",
+    scenario:
+      "A note states that 4 targets were run, aggression occurred twice, and independent requests increased compared with the previous session.",
+    purpose: "To summarize the session factually and clearly for supervisor review.",
+    explanation:
+      "Objective session summaries help the team see the key events and data from a session without relying on subjective impressions.",
+  },
+  {
+    id: "documentation_signature_compliance",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Signature compliance",
+    definition: "required signatures or acknowledgments are collected according to policy when documentation calls for them.",
+    scenario:
+      "After delivering authorized services, the RBT ensures the required verification signature is obtained before closing the note.",
+    purpose: "To keep documentation compliant with required verification procedures.",
+    explanation:
+      "Signature compliance is important when agencies or payers require confirmation that services were delivered as documented.",
+  },
+  {
+    id: "documentation_revision_note",
+    topic: "documentation",
+    difficulty: "advanced",
+    answer: "Late-entry or revision documentation",
+    definition: "if a record must be corrected, the change is clearly identified rather than hidden or overwritten.",
+    scenario:
+      "The RBT notices a time entry error and adds a clearly labeled correction rather than silently altering the record.",
+    purpose: "To correct records transparently and maintain documentation integrity.",
+    explanation:
+      "Transparent revisions protect record accuracy and show that corrections were made ethically.",
+  },
+  {
+    id: "documentation_program_change_alert",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Program change alert note",
+    definition: "a note highlights when the team must review a target because data suggest a meaningful change in performance.",
+    scenario:
+      "Independent responding drops sharply across several sessions, so the RBT flags the target for supervisor review in the session documentation.",
+    purpose: "To alert the team when a program may need review based on data changes.",
+    explanation:
+      "Program change alert notes help important performance shifts get reviewed quickly instead of being overlooked.",
+  },
+  {
+    id: "documentation_environmental_context",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Environmental context note",
+    definition: "the RBT documents unusual environmental variables that may have influenced behavior or performance.",
+    scenario:
+      "Construction noise outside the classroom disrupted instruction, so the RBT notes that context in the record.",
+    purpose: "To document unusual environmental conditions that may affect session results.",
+    explanation:
+      "Environmental context notes help supervisors interpret data more accurately when the setting was not typical.",
+  },
+  {
+    id: "professional_chain_of_command",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Following chain of command",
+    definition: "concerns and requests are directed through the appropriate supervisory structure instead of bypassing it.",
+    scenario:
+      "When a caregiver asks for treatment changes, the RBT directs the request to the supervising BCBA rather than making changes independently.",
+    purpose: "To route concerns and decisions through the appropriate supervisory structure.",
+    explanation:
+      "Following chain of command helps maintain clear responsibility and keeps clinical decision-making with the proper supervisor.",
+  },
+  {
+    id: "professional_nonjudgmental_language",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Nonjudgmental language",
+    definition: "the RBT describes behavior and family interactions without blame, sarcasm, or emotionally loaded wording.",
+    scenario:
+      "Instead of writing that a caregiver was difficult, the RBT notes that the caregiver declined two suggested practice opportunities.",
+    purpose: "To keep communication respectful, objective, and professional.",
+    explanation:
+      "Nonjudgmental language protects professionalism and makes records more factual and useful.",
+  },
+  {
+    id: "professional_consistency",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Consistent professional behavior",
+    definition: "the RBT behaves professionally across sessions, settings, and team interactions rather than only when supervised closely.",
+    scenario:
+      "Whether in clinic or community sessions, the RBT uses the same respectful tone, confidentiality practices, and treatment procedures.",
+    purpose: "To maintain professional standards consistently across settings and interactions.",
+    explanation:
+      "Professional conduct should be consistent, not dependent on who is watching or which setting the RBT is in.",
+  },
+  {
+    id: "professional_documentation_timeliness",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Timely documentation",
+    definition: "records are completed promptly enough to remain accurate and clinically useful.",
+    scenario:
+      "The RBT finishes notes shortly after session rather than waiting until much later when details may be forgotten.",
+    purpose: "To keep documentation accurate by completing it promptly.",
+    explanation:
+      "Timely documentation supports accuracy, compliance, and better communication with the treatment team.",
+  },
+  {
+    id: "professional_ethics_consultation",
+    topic: "professional_conduct",
+    difficulty: "advanced",
+    answer: "Ethics consultation",
+    definition: "when an ethical situation is unclear, the RBT seeks guidance rather than guessing or acting alone.",
+    scenario:
+      "A boundary situation feels ambiguous, so the RBT consults the supervisor before taking further action.",
+    purpose: "To seek guidance when an ethical situation is unclear.",
+    explanation:
+      "Ethics consultation helps the RBT respond thoughtfully and within role instead of improvising in uncertain situations.",
+  },
 ];
 
 function shuffleStable(items, seedValue) {
