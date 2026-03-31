@@ -407,6 +407,366 @@ const questionConcepts = [
     explanation:
       "Potential abuse or urgent safety concerns must be escalated immediately according to policy and law.",
   },
+  {
+    id: "measurement_rate",
+    topic: "measurement",
+    difficulty: "intermediate",
+    answer: "Rate recording",
+    definition: "the count of behavior is compared against the amount of observation time.",
+    scenario:
+      "One session lasts 15 minutes and another lasts 30, so the team wants a measure that allows fair comparison of how often calling out occurred.",
+    purpose: "To compare behavior frequency across unequal observation periods.",
+    explanation:
+      "Rate recording standardizes counts by time, which is useful when observation periods differ in length.",
+  },
+  {
+    id: "measurement_whole_interval",
+    topic: "measurement",
+    difficulty: "intermediate",
+    answer: "Whole interval recording",
+    definition: "the interval is scored only if the behavior lasted for the entire interval.",
+    scenario:
+      "An RBT marks on-task behavior only when the learner stayed engaged during the full 20-second interval.",
+    purpose: "To identify whether behavior lasted through an entire interval.",
+    explanation:
+      "Whole interval recording requires the behavior to occur for the entire interval before it is scored.",
+  },
+  {
+    id: "measurement_momentary_time_sampling",
+    topic: "measurement",
+    difficulty: "intermediate",
+    answer: "Momentary time sampling",
+    definition: "the observer checks for behavior only at specific moments in time.",
+    scenario:
+      "Every minute, the RBT glances up to see whether the learner is seated at that exact moment.",
+    purpose: "To check whether behavior is happening at a specific instant.",
+    explanation:
+      "Momentary time sampling reduces continuous observation demands by checking behavior at preset moments.",
+  },
+  {
+    id: "measurement_trial_by_trial",
+    topic: "measurement",
+    difficulty: "beginner",
+    answer: "Trial-by-trial data",
+    definition: "the RBT records the outcome of each teaching opportunity separately.",
+    scenario:
+      "During a table session, the RBT marks correct, incorrect, or prompted for every individual trial.",
+    purpose: "To record performance on each teaching opportunity separately.",
+    explanation:
+      "Trial-by-trial data are useful during structured teaching because each opportunity is scored individually.",
+  },
+  {
+    id: "measurement_ioa",
+    topic: "measurement",
+    difficulty: "advanced",
+    answer: "Interobserver agreement",
+    definition: "two observers collect data on the same behavior and compare how closely their records match.",
+    scenario:
+      "A BCBA observes alongside the RBT to confirm they are both recording aggression in the same way.",
+    purpose: "To check whether two observers recorded behavior consistently.",
+    explanation:
+      "Interobserver agreement helps verify that behavior definitions and data collection are reliable.",
+  },
+  {
+    id: "assessment_indirect",
+    topic: "assessment",
+    difficulty: "beginner",
+    answer: "Indirect assessment",
+    definition: "information about behavior is gathered through interviews, checklists, or rating forms.",
+    scenario:
+      "Before observing directly, the team asks caregivers and teachers structured questions about when problem behavior usually happens.",
+    purpose: "To gather information about behavior from interviews, forms, or rating scales.",
+    explanation:
+      "Indirect assessment provides useful background information but does not replace direct observation.",
+  },
+  {
+    id: "assessment_interview",
+    topic: "assessment",
+    difficulty: "beginner",
+    answer: "Caregiver interview",
+    definition: "the team speaks with someone familiar with the learner to gather history and context.",
+    scenario:
+      "A parent describes common triggers, routines, and preferences before a new case begins.",
+    purpose: "To collect background information from someone who knows the learner well.",
+    explanation:
+      "Interviews can clarify routines, concerns, and context that may not be visible during one observation alone.",
+  },
+  {
+    id: "assessment_reinforcer",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Reinforcer assessment",
+    definition: "the team tests whether an item actually increases responding rather than only being preferred.",
+    scenario:
+      "A learner likes stickers, but the RBT checks whether stickers really increase correct responding during teaching.",
+    purpose: "To confirm whether a preferred item actually increases responding.",
+    explanation:
+      "Something can be preferred without functioning as a reinforcer, so direct testing may be needed.",
+  },
+  {
+    id: "assessment_skill",
+    topic: "assessment",
+    difficulty: "intermediate",
+    answer: "Skill assessment",
+    definition: "the learner's current strengths and deficits are tested across target areas.",
+    scenario:
+      "Before writing new goals, the BCBA reviews which receptive and expressive skills the learner already performs independently.",
+    purpose: "To identify which component skills are already mastered and which still need teaching.",
+    explanation:
+      "Skill assessments help the team choose targets that fit the learner's current repertoire.",
+  },
+  {
+    id: "assessment_functional_analysis",
+    topic: "assessment",
+    difficulty: "advanced",
+    answer: "Functional analysis",
+    definition: "conditions are systematically arranged to test which consequences may maintain the behavior.",
+    scenario:
+      "Under BCBA oversight, different test conditions are run to see whether escape, attention, or tangibles are driving the behavior.",
+    purpose: "To test which consequence is maintaining the behavior under controlled conditions.",
+    explanation:
+      "A functional analysis experimentally tests behavior function rather than inferring it only from descriptive data.",
+  },
+  {
+    id: "skill_discrimination_training",
+    topic: "skill_acquisition",
+    difficulty: "intermediate",
+    answer: "Discrimination training",
+    definition: "the learner is taught to respond one way to a relevant cue and differently when that cue is absent.",
+    scenario:
+      "A learner is reinforced for touching the red card when asked for red, but not for touching other colors.",
+    purpose: "To teach the learner to respond differently to relevant cues.",
+    explanation:
+      "Discrimination training builds accurate responding under the correct stimulus conditions.",
+  },
+  {
+    id: "skill_errorless_teaching",
+    topic: "skill_acquisition",
+    difficulty: "intermediate",
+    answer: "Errorless teaching",
+    definition: "the RBT provides enough support immediately to reduce the chance of mistakes during early learning.",
+    scenario:
+      "When introducing a new receptive label, the RBT prompts right away so the learner contacts success from the start.",
+    purpose: "To minimize mistakes during initial instruction by providing immediate support.",
+    explanation:
+      "Errorless teaching is often used early in instruction so the learner practices the correct response more often than errors.",
+  },
+  {
+    id: "skill_token_economy",
+    topic: "skill_acquisition",
+    difficulty: "beginner",
+    answer: "Token economy",
+    definition: "the learner earns conditioned reinforcers that can later be exchanged for a backup item or activity.",
+    scenario:
+      "A learner earns stars for completed tasks and trades five stars for extra drawing time.",
+    purpose: "To build motivation by pairing target behavior with tokens that can be exchanged later.",
+    explanation:
+      "A token economy uses tokens as conditioned reinforcers linked to a later backup reinforcer.",
+  },
+  {
+    id: "skill_generalization",
+    topic: "skill_acquisition",
+    difficulty: "advanced",
+    answer: "Generalization programming",
+    definition: "instruction is planned so a skill transfers across people, materials, and settings.",
+    scenario:
+      "After a learner mands in the clinic, the team practices the same skill at home and with different staff members.",
+    purpose: "To help a skill transfer across people, settings, and materials.",
+    explanation:
+      "Generalization programming is intentional and helps a learned skill show up outside the original teaching setup.",
+  },
+  {
+    id: "skill_maintenance",
+    topic: "skill_acquisition",
+    difficulty: "intermediate",
+    answer: "Maintenance programming",
+    definition: "previously learned skills are scheduled for periodic review after mastery.",
+    scenario:
+      "A target is already mastered, but the learner still practices it once a week so the skill stays strong.",
+    purpose: "To keep a learned skill strong after initial mastery.",
+    explanation:
+      "Maintenance ensures mastered skills continue over time instead of dropping once formal teaching stops.",
+  },
+  {
+    id: "behavior_noncontingent_reinforcement",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Noncontingent reinforcement",
+    definition: "reinforcement is delivered on a time-based schedule rather than after the target behavior.",
+    scenario:
+      "To reduce attention-seeking interruptions, the learner receives scheduled attention every few minutes regardless of behavior.",
+    purpose: "To reduce motivation for problem behavior by delivering reinforcement on a schedule.",
+    explanation:
+      "Noncontingent reinforcement can reduce the value of the reinforcer that was previously maintaining the problem behavior.",
+  },
+  {
+    id: "behavior_dro",
+    topic: "behavior_reduction",
+    difficulty: "intermediate",
+    answer: "Differential reinforcement of other behavior",
+    definition: "reinforcement is delivered when the problem behavior has not happened for a set period.",
+    scenario:
+      "A learner earns praise and a token each time a two-minute interval passes without yelling.",
+    purpose: "To reinforce periods in which the problem behavior does not occur.",
+    explanation:
+      "DRO focuses on reinforcing the absence of the target behavior for a defined interval.",
+  },
+  {
+    id: "behavior_dri",
+    topic: "behavior_reduction",
+    difficulty: "intermediate",
+    answer: "Differential reinforcement of incompatible behavior",
+    definition: "reinforcement is delivered for a response that cannot occur at the same time as the problem behavior.",
+    scenario:
+      "A learner is reinforced for keeping hands in pockets while walking, which cannot happen at the same time as hitting.",
+    purpose: "To reinforce a behavior that cannot happen at the same time as the problem behavior.",
+    explanation:
+      "DRI works by strengthening a response that is physically incompatible with the problem behavior.",
+  },
+  {
+    id: "behavior_rird",
+    topic: "behavior_reduction",
+    difficulty: "advanced",
+    answer: "Response interruption and redirection",
+    definition: "the problem response is interrupted and the learner is redirected to an appropriate alternative.",
+    scenario:
+      "A learner begins scripting repetitively, and the RBT interrupts briefly and redirects to answering simple social questions.",
+    purpose: "To interrupt repetitive behavior and redirect toward a more appropriate response.",
+    explanation:
+      "Response interruption and redirection is commonly used for repetitive responses when specified in the plan.",
+  },
+  {
+    id: "behavior_high_p",
+    topic: "behavior_reduction",
+    difficulty: "intermediate",
+    answer: "High-probability request sequence",
+    definition: "several easy requests are presented before a difficult one to build momentum.",
+    scenario:
+      "Before asking a learner to start handwriting, the RBT presents three easy motor responses the learner almost always follows.",
+    purpose: "To build behavioral momentum before presenting a low-probability demand.",
+    explanation:
+      "A high-probability sequence can increase compliance by creating momentum with easy requests first.",
+  },
+  {
+    id: "documentation_prompt_levels",
+    topic: "documentation",
+    difficulty: "beginner",
+    answer: "Prompt level documentation",
+    definition: "records show how much assistance was needed on each response.",
+    scenario:
+      "A data sheet includes whether each answer was independent, verbally prompted, modeled, or physically prompted.",
+    purpose: "To show how much assistance the learner needed on each response.",
+    explanation:
+      "Prompt level documentation helps the team evaluate independence and when prompts can be faded.",
+  },
+  {
+    id: "documentation_trial_by_trial",
+    topic: "documentation",
+    difficulty: "beginner",
+    answer: "Trial-by-trial documentation",
+    definition: "performance is scored separately for each teaching opportunity rather than only at the end of session.",
+    scenario:
+      "The RBT records correct, incorrect, and prompted for every card sort trial during DTT.",
+    purpose: "To capture learner performance on each teaching opportunity separately.",
+    explanation:
+      "Trial-by-trial documentation gives a more detailed record of performance during structured instruction.",
+  },
+  {
+    id: "documentation_abc_note",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "ABC narrative note",
+    definition: "a significant behavior episode is summarized by describing antecedent, behavior, and consequence in sequence.",
+    scenario:
+      "After an elopement episode, the RBT writes what happened before, exactly what the learner did, and what followed.",
+    purpose: "To summarize the context of a significant behavior episode in sequence.",
+    explanation:
+      "An ABC narrative note is helpful when the team needs contextual detail around an important incident.",
+  },
+  {
+    id: "documentation_mastery_tracking",
+    topic: "documentation",
+    difficulty: "intermediate",
+    answer: "Mastery criterion tracking",
+    definition: "ongoing records are compared against the program's stated mastery requirement.",
+    scenario:
+      "The BCBA checks whether a target has met 90 percent independent correct responding across three sessions.",
+    purpose: "To determine whether a target meets the program's mastery requirement.",
+    explanation:
+      "Mastery tracking prevents staff from moving on too early or keeping a target too long without criteria.",
+  },
+  {
+    id: "documentation_service_verification",
+    topic: "documentation",
+    difficulty: "advanced",
+    answer: "Service verification documentation",
+    definition: "records confirm the date, time, location, and delivery of authorized services.",
+    scenario:
+      "At the end of session, the RBT confirms attendance, service time, and required signatures according to agency policy.",
+    purpose: "To confirm when and where authorized services were delivered.",
+    explanation:
+      "Service verification documentation supports compliance, scheduling accuracy, and billing integrity.",
+  },
+  {
+    id: "professional_assent",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Assent monitoring",
+    definition: "the RBT watches for signs the learner is willing or unwilling to participate and responds appropriately.",
+    scenario:
+      "A learner pushes materials away and withdraws, so the RBT pauses and communicates this to the supervisor.",
+    purpose: "To watch for signs the learner is willing or unwilling to participate.",
+    explanation:
+      "Monitoring assent supports ethical treatment and can guide when to pause, adjust, or seek support.",
+  },
+  {
+    id: "professional_dignity",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Client dignity",
+    definition: "services are delivered in a way that protects privacy, respect, and humane treatment.",
+    scenario:
+      "An RBT avoids discussing toileting goals in front of other families and uses respectful language during all care routines.",
+    purpose: "To protect the learner's privacy, respect, and humane treatment.",
+    explanation:
+      "Client dignity means treating the learner respectfully and avoiding unnecessarily intrusive or embarrassing practices.",
+  },
+  {
+    id: "professional_communication",
+    topic: "professional_conduct",
+    difficulty: "beginner",
+    answer: "Timely communication",
+    definition: "important treatment information is shared promptly with the right members of the team.",
+    scenario:
+      "A medication change is reported by the caregiver, and the RBT documents it and alerts the supervisor before session goals continue.",
+    purpose: "To share important treatment information promptly with the supervisor and team.",
+    explanation:
+      "Timely communication helps the team respond quickly to changes that may affect treatment or safety.",
+  },
+  {
+    id: "professional_cultural_responsiveness",
+    topic: "professional_conduct",
+    difficulty: "intermediate",
+    answer: "Cultural responsiveness",
+    definition: "services are delivered with awareness of the family's values, language, and context.",
+    scenario:
+      "The team adapts examples and routines so teaching fits the family's language preferences and daily practices.",
+    purpose: "To provide services in a way that respects the family's values and context.",
+    explanation:
+      "Cultural responsiveness helps treatment stay respectful, relevant, and collaborative for the family.",
+  },
+  {
+    id: "professional_conflict_of_interest",
+    topic: "professional_conduct",
+    difficulty: "advanced",
+    answer: "Conflict-of-interest prevention",
+    definition: "the RBT avoids personal arrangements that could impair professional judgment or objectivity.",
+    scenario:
+      "A caregiver offers extra cash for off-the-clock childcare, and the RBT declines because it would blur the professional relationship.",
+    purpose: "To avoid personal arrangements that could impair professional judgment.",
+    explanation:
+      "Preventing conflicts of interest protects objectivity and reduces the risk of boundary problems.",
+  },
 ];
 
 function shuffleStable(items, seedValue) {
