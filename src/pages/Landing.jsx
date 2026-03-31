@@ -41,7 +41,7 @@ const featureCards = [
 
 const premiumPreviewPanels = [
   {
-    label: "Premium Preview",
+    label: "Study Preview",
     title: "Smarter exam prep",
     subtitle: `Practice, flashcards, mock exams, and AI support built on the same ${TOTAL_PRACTICE_QUESTIONS}-question bank.`,
     accentClassName:
@@ -214,7 +214,7 @@ const premiumPreviewPanels = [
     ),
   },
   {
-    label: "Premium Preview",
+    label: "Study Preview",
     title: "Ask the AI coach",
     subtitle: "Get quick explanations, study prompts, and targeted help when you get stuck.",
     accentClassName:
@@ -269,6 +269,49 @@ const premiumPreviewPanels = [
         </div>
       </div>
     ),
+  },
+];
+
+const offeringCards = [
+  {
+    eyebrow: "Available now",
+    title: "Practice",
+    description: `Work through the shared ${TOTAL_PRACTICE_QUESTIONS}-question bank with topic and difficulty filters.`,
+    Icon: Target,
+    className:
+      "border-[#2D6BFF]/16 bg-[#2D6BFF]/7 text-[#1E5EFF] dark:border-[#2D6BFF]/24 dark:bg-[#2D6BFF]/10 dark:text-[#8EB0FF]",
+  },
+  {
+    eyebrow: "Available now",
+    title: "Flashcards",
+    description: "Study the same shared bank in memory mode with pattern clues and common traps.",
+    Icon: Brain,
+    className:
+      "border-emerald-300/35 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300",
+  },
+  {
+    eyebrow: "Available now",
+    title: "AI Tutor",
+    description: "Ask for explanations, examples, study prompts, and one-question-at-a-time quiz help.",
+    Icon: MessageSquareMore,
+    className:
+      "border-violet-300/35 bg-violet-50 text-violet-700 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-300",
+  },
+  {
+    eyebrow: "Premium",
+    title: "Mock Exams and Analytics",
+    description: "Take timed 85-question mock exams and unlock readiness, coverage, and domain trends.",
+    Icon: LayoutDashboard,
+    className:
+      "border-amber-300/40 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300",
+  },
+  {
+    eyebrow: "Coming soon",
+    title: "40-Hour Course",
+    description: "Planned for a future release. It is not included in the current membership yet.",
+    Icon: GraduationCap,
+    className:
+      "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300",
   },
 ];
 
@@ -399,8 +442,8 @@ export default function Landing() {
               Study with structure, not guesswork.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-6 sm:text-xl">
-              RBT Genius helps future technicians practice consistently, take realistic mock exams,
-              and track meaningful progress across the full learning journey.
+              RBT Genius helps future technicians practice consistently, review with flashcards,
+              use the AI tutor, take realistic mock exams, and track progress across exam prep.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
@@ -433,11 +476,12 @@ export default function Landing() {
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(45,107,255,0.10),transparent_23%),radial-gradient(circle_at_34%_74%,rgba(139,92,246,0.08),transparent_22%)] blur-3xl" />
             <div className="mx-auto mb-3 hidden max-w-[22rem] text-center sm:mb-4 sm:max-w-[34rem] sm:text-left">
               <div className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-[11px] font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B] sm:text-sm">
-                <Crown className="h-3.5 w-3.5" />
-                Premium Preview
+                <Sparkles className="h-3.5 w-3.5" />
+                Study Preview
               </div>
               <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400 sm:max-w-md">
-                A quick look at the premium tools you unlock with mock exams, AI support, and deeper study workflows.
+                A quick look at what exists today: shared-bank practice, flashcards, AI tutor,
+                premium mock exams, and readiness tracking.
               </p>
             </div>
             <div className="relative mx-auto max-w-[22rem] sm:hidden">
@@ -454,8 +498,8 @@ export default function Landing() {
                   >
                     <div className="mb-3 flex justify-start">
                       <span className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-[11px] font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
-                        <Crown className="h-3.5 w-3.5" />
-                        Premium Preview
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Study Preview
                       </span>
                     </div>
                     <div
@@ -708,6 +752,41 @@ export default function Landing() {
 
         <section className="mt-14 rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950 sm:mt-16 sm:p-8">
           <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/10 dark:text-[#8EB0FF]">
+              <Sparkles className="h-4 w-4" />
+              What you get today
+            </div>
+            <h2 className="mt-5 text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
+              The current offer, without padding.
+            </h2>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500 dark:text-slate-400">
+              Today RBT Genius sells a shared question bank across practice, flashcards, and
+              mock exams, plus AI tutoring and readiness analytics. The 40-hour course is not
+              live yet, so it is shown here as a future release only.
+            </p>
+          </div>
+
+          <div className="mt-8 grid gap-4 lg:grid-cols-5">
+            {offeringCards.map(({ eyebrow, title, description, Icon, className }) => (
+              <div
+                key={title}
+                className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-900/60"
+              >
+                <div className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border ${className}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                  {eyebrow}
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-14 rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950 sm:mt-16 sm:p-8">
+          <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-4 py-2 text-sm font-medium text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
               <Crown className="h-4 w-4" />
               Guest, Free, and Premium
@@ -716,7 +795,8 @@ export default function Landing() {
               See what changes when you upgrade.
             </h2>
             <p className="mt-3 text-base leading-7 text-slate-500 dark:text-slate-400">
-              Guests can explore the app, free members get daily guided practice, and Premium unlocks unlimited prep with full analytics and mock exams.
+              Guests can review the landing and pricing, free members get guided daily study tools,
+              and Premium unlocks unlimited prep with full analytics and mock exams.
             </p>
           </div>
 
