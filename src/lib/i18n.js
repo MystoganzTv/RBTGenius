@@ -1,3 +1,5 @@
+import { questionConceptLookup } from "./question-bank.js";
+
 const UI_TRANSLATIONS = {
   "Dashboard": "Panel",
   "Practice": "Práctica",
@@ -129,6 +131,11 @@ const UI_TRANSLATIONS = {
   "Thinking...": "Pensando...",
   "Upgrade to Premium for more tutor messages today": "Mejora a Premium para más mensajes del tutor hoy",
   "Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.": "Las cuentas gratis pueden enviar 5 mensajes al tutor IA por día. Mejora para continuar hoy.",
+  "Premium unlocks unlimited answers across the curated 600-question official-style bank.": "Premium desbloquea respuestas ilimitadas en el banco curado de 600 preguntas con estilo oficial.",
+  "Free accounts can answer 15 practice questions per day across the curated 600-question official-style bank.": "Las cuentas gratis pueden responder 15 preguntas de práctica por día dentro del banco curado de 600 preguntas con estilo oficial.",
+  "Learn the type of exam move the question is testing, not just the answer.": "Aprende qué patrón del examen está evaluando la pregunta, no solo la respuesta.",
+  "Train your eye to spot the single detail that points to the correct concept.": "Entrena tu ojo para detectar el detalle que apunta al concepto correcto.",
+  "See the distractor the exam wants you to pick, and why it is wrong.": "Identifica el distractor que el examen quiere que elijas y entiende por qué está mal.",
   "Go to Dashboard": "Ir al panel",
   "Log In": "Iniciar sesión",
   "Support email": "Correo de soporte",
@@ -337,25 +344,6 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Assessment questions usually ask what kind of information the team is trying to gather before changing treatment.", "Las preguntas de evaluación suelen preguntar qué tipo de información intenta reunir el equipo antes de cambiar el tratamiento."],
   ["Skill acquisition questions usually turn on what teaching procedure is being used to build independent responding.", "Las preguntas de adquisición de habilidades suelen girar en torno a qué procedimiento de enseñanza se usa para construir respuestas independientes."],
   ["Behavior reduction questions often hinge on function, replacement behavior, and what consequence is or is not being delivered.", "Las preguntas de reducción de conducta suelen depender de la función, la conducta de reemplazo y qué consecuencia se está o no se está entregando."],
-  ["Because", "Porque"],
-  ["To ", "Para "],
-  ["To measure", "Para medir"],
-  ["To identify", "Para identificar"],
-  ["To describe", "Para describir"],
-  ["To summarize", "Para resumir"],
-  ["To evaluate", "Para evaluar"],
-  ["To keep", "Para mantener"],
-  ["To seek", "Para buscar"],
-  ["To express", "Para expresar"],
-  ["To capture", "Para captar"],
-  ["To note", "Para registrar"],
-  ["To understand", "Para comprender"],
-  ["To make", "Para hacer"],
-  ["To transfer", "Para transferir"],
-  ["To build", "Para construir"],
-  ["To teach", "Para enseñar"],
-  ["To ensure", "Para asegurar"],
-  ["To maintain", "Para mantener"],
   ["Positive reinforcement", "Reforzamiento positivo"],
   ["Negative reinforcement", "Reforzamiento negativo"],
   ["Frequency recording", "Registro de frecuencia"],
@@ -419,40 +407,126 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Next question on", "Siguiente pregunta sobre"],
 ];
 
-const WORD_REPLACEMENTS = [
-  ["behavior", "conducta"],
+const WORD_REPLACEMENTS = [];
+
+const QUESTION_SENTENCE_REPLACEMENTS = [
+  ["An RBT", "Un RBT"],
+  ["A BCBA", "Un BCBA"],
+  ["A supervisor", "Un supervisor"],
+  ["the RBT", "el RBT"],
+  ["the BCBA", "el BCBA"],
+  ["the team", "el equipo"],
+  ["a learner", "un aprendiz"],
+  ["the learner", "el aprendiz"],
   ["learner", "aprendiz"],
+  ["target behavior", "conducta objetivo"],
+  ["problem behavior", "conducta problema"],
+  ["behavior episode", "episodio de conducta"],
+  ["behavior episodes", "episodios de conducta"],
+  ["behaviors", "conductas"],
+  ["behavior", "conducta"],
+  ["during the observation period", "durante el periodo de observación"],
+  ["during observation", "durante la observación"],
+  ["during the session", "durante la sesión"],
+  ["during session", "durante la sesión"],
+  ["during each interval", "durante cada intervalo"],
+  ["counts each instance of", "cuenta cada ocurrencia de"],
+  ["measures how long", "mide cuánto dura"],
+  ["measures the time between", "mide el tiempo entre"],
+  ["wants to know", "quiere saber"],
+  ["wants to measure", "quiere medir"],
+  ["wants the exact number of times", "quiere el número exacto de veces que"],
+  ["the team wants to", "el equipo quiere"],
+  ["the team needs", "el equipo necesita"],
+  ["is used when", "se usa cuando"],
+  ["helps the team", "ayuda al equipo"],
+  ["exact count", "conteo exacto"],
+  ["how many times", "cuántas veces"],
+  ["before a new intervention starts", "antes de que comience una nueva intervención"],
+  ["before introducing", "antes de introducir"],
+  ["after the instruction is given", "después de que se da la instrucción"],
+  ["at any time during that interval", "en cualquier momento de ese intervalo"],
+  ["from start to finish", "de inicio a fin"],
+  ["the start of the response", "el inicio de la respuesta"],
+  ["instead of watching it happen live", "en lugar de observarla en vivo"],
+  ["if needed", "si es necesario"],
+  ["over time", "con el tiempo"],
+  ["current performance", "desempeño actual"],
+  ["current behavior levels", "niveles actuales de conducta"],
+  ["different staff", "distinto personal"],
+  ["the same way", "de la misma manera"],
+  ["data", "datos"],
+  ["note", "nota"],
+  ["notes", "notas"],
   ["session", "sesión"],
   ["sessions", "sesiones"],
-  ["team", "equipo"],
   ["supervisor", "supervisor"],
+];
+
+const QUESTION_WORD_REPLACEMENTS = [
+  ["the", "el"],
+  ["a", "una"],
+  ["an", "un"],
+  ["of", "de"],
+  ["to", "a"],
+  ["and", "y"],
+  ["or", "o"],
+  ["when", "cuando"],
+  ["while", "mientras"],
+  ["before", "antes de"],
+  ["after", "después de"],
+  ["during", "durante"],
+  ["with", "con"],
+  ["without", "sin"],
+  ["for", "para"],
+  ["into", "en"],
+  ["from", "desde"],
+  ["through", "mediante"],
+  ["each", "cada"],
+  ["exact", "exacto"],
+  ["count", "conteo"],
+  ["times", "veces"],
+  ["time", "tiempo"],
+  ["needs", "necesita"],
+  ["need", "necesita"],
+  ["uses", "usa"],
+  ["use", "usar"],
+  ["happened", "ocurrió"],
+  ["happens", "ocurre"],
+  ["occurs", "ocurre"],
+  ["starts", "comienza"],
+  ["start", "comenzar"],
+  ["lasts", "dura"],
+  ["measure", "medir"],
+  ["measures", "mide"],
+  ["capture", "captar"],
+  ["captures", "capta"],
+  ["describe", "describir"],
+  ["describes", "describe"],
+  ["understand", "comprender"],
+  ["identify", "identificar"],
+  ["collect", "recoger"],
+  ["record", "registrar"],
+  ["records", "registros"],
+  ["correct", "correcta"],
+  ["incorrect", "incorrecta"],
   ["response", "respuesta"],
   ["responses", "respuestas"],
-  ["graph", "gráfica"],
-  ["data", "datos"],
-  ["skill", "habilidad"],
-  ["skills", "habilidades"],
-  ["teaching", "enseñanza"],
+  ["instruction", "instrucción"],
   ["prompt", "ayuda"],
   ["prompts", "ayudas"],
-  ["independence", "independencia"],
-  ["reinforcer", "reforzador"],
-  ["reinforcers", "reforzadores"],
-  ["consequence", "consecuencia"],
-  ["consequences", "consecuencias"],
-  ["caregiver", "cuidador"],
-  ["caregivers", "cuidadores"],
-  ["treatment", "tratamiento"],
-  ["objective", "objetivo"],
-  ["professional", "profesional"],
-  ["correctly", "correctamente"],
-  ["incorrect", "incorrecto"],
-  ["correct", "correcto"],
-  ["future", "futuro"],
-  ["question", "pregunta"],
-  ["questions", "preguntas"],
-  ["answer", "respuesta"],
-  ["answers", "respuestas"],
+  ["cue", "señal"],
+  ["problem", "problema"],
+  ["appropriate", "apropiada"],
+  ["alternative", "alternativa"],
+  ["communication", "comunicación"],
+  ["function", "función"],
+  ["reinforcement", "reforzamiento"],
+  ["duration", "duración"],
+  ["frequency", "frecuencia"],
+  ["rate", "tasa"],
+  ["table", "mesa"],
+  ["hits", "golpea"],
 ];
 
 function replaceCaseInsensitive(text, search, replacement) {
@@ -467,6 +541,36 @@ function replaceCaseInsensitive(text, search, replacement) {
 
     return replacement;
   });
+}
+
+function applyQuestionSentenceReplacements(text) {
+  let translated = String(text || "");
+
+  QUESTION_SENTENCE_REPLACEMENTS.forEach(([english, spanish]) => {
+    translated = replaceCaseInsensitive(translated, english, spanish);
+  });
+
+  QUESTION_WORD_REPLACEMENTS.forEach(([english, spanish]) => {
+    translated = translated.replace(
+      new RegExp(`\\b${english.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"),
+      (match) => {
+        if (match === match.toUpperCase()) {
+          return spanish.toUpperCase();
+        }
+
+        if (match[0] === match[0].toUpperCase()) {
+          return spanish.charAt(0).toUpperCase() + spanish.slice(1);
+        }
+
+        return spanish;
+      },
+    );
+  });
+
+  return translated
+    .replace(/\s+([?.!,;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 export function translateToSpanish(text) {
@@ -503,16 +607,87 @@ export function translateToSpanish(text) {
     .trim();
 }
 
+function stripTrailingPeriod(text) {
+  return String(text || "").trim().replace(/[.]\s*$/, "");
+}
+
+function translatePurposeText(text) {
+  const trimmed = String(text || "").trim();
+  const directMap = UI_TRANSLATIONS[trimmed];
+  if (directMap) {
+    return directMap;
+  }
+
+  const purposeMatch = trimmed.match(/^To\s+(.+?)[.]?$/i);
+  if (!purposeMatch) {
+    return applyQuestionSentenceReplacements(translateToSpanish(trimmed));
+  }
+
+  const remainder = purposeMatch[1].trim();
+  const translatedRemainder = applyQuestionSentenceReplacements(translateToSpanish(remainder));
+  return `Para ${translatedRemainder.charAt(0).toLowerCase()}${translatedRemainder.slice(1)}`;
+}
+
+function translateQuestionSentence(text) {
+  return applyQuestionSentenceReplacements(translateToSpanish(text));
+}
+
+function translateQuestionText(text) {
+  const value = String(text || "").trim();
+  if (!value) {
+    return "";
+  }
+
+  const definitionMatch = value.match(/^Which concept is being described as (.+)$/i);
+  if (definitionMatch) {
+    return `¿Qué concepto se describe como ${stripTrailingPeriod(translateQuestionSentence(definitionMatch[1]))}?`;
+  }
+
+  const scenarioMatch = value.match(/^(.+)\s+Which concept is the best match\?$/i);
+  if (scenarioMatch) {
+    return `${translateQuestionSentence(scenarioMatch[1].trim())} ¿Qué concepto encaja mejor?`;
+  }
+
+  const purposeMatch = value.match(/^What is the main goal of (.+)\?$/i);
+  if (purposeMatch) {
+    return `¿Cuál es el objetivo principal de ${stripTrailingPeriod(translateQuestionSentence(purposeMatch[1]))}?`;
+  }
+
+  return translateQuestionSentence(value);
+}
+
+function translateExplanationText(text) {
+  const value = String(text || "").trim();
+  if (!value) {
+    return "";
+  }
+
+  const purposeSplit = value.match(/^(.+?)\s+The main goal is\s+(.+)$/i);
+  if (purposeSplit) {
+    return `${translateQuestionSentence(purposeSplit[1])} El objetivo principal es ${stripTrailingPeriod(translatePurposeText(purposeSplit[2])).toLowerCase()}.`;
+  }
+
+  return translateQuestionSentence(value);
+}
+
+function translateOptionText(optionText, question) {
+  if (!optionText) {
+    return "";
+  }
+
+  if (question?.id?.endsWith("_purpose")) {
+    return translatePurposeText(optionText);
+  }
+
+  return translateToSpanish(optionText);
+}
+
 export function localizeText(text, language) {
   const english = String(text || "");
   const spanish = translateToSpanish(english);
 
   if (language === "es") {
     return { primary: spanish || english, secondary: "" };
-  }
-
-  if (language === "dual") {
-    return { primary: spanish || english, secondary: english };
   }
 
   return { primary: english, secondary: "" };
@@ -547,18 +722,59 @@ export function localizeQuestion(question, language) {
     return null;
   }
 
+  const concept = questionConceptLookup[question.concept_id];
+  const questionKind = question.id?.split("_").pop();
+  const spanishQuestionText = concept
+    ? questionKind === "definition"
+      ? `¿Qué concepto se describe como ${stripTrailingPeriod(translateQuestionSentence(concept.definition))}?`
+      : questionKind === "scenario"
+        ? `${translateQuestionSentence(concept.scenario)} ¿Qué concepto encaja mejor?`
+        : questionKind === "purpose"
+          ? `¿Cuál es el objetivo principal de ${stripTrailingPeriod(translateQuestionSentence(concept.answer))}?`
+          : translateQuestionText(question.text)
+    : translateQuestionText(question.text);
+  const spanishExplanation = concept
+    ? questionKind === "purpose"
+      ? `${translateQuestionSentence(concept.explanation)} El objetivo principal es ${stripTrailingPeriod(translatePurposeText(concept.purpose)).toLowerCase()}.`
+      : translateQuestionSentence(concept.explanation)
+    : translateExplanationText(question.explanation);
+
+  const localizedText =
+    language === "es"
+      ? { primary: spanishQuestionText, secondary: "" }
+      : localizeText(question.text, language);
+  const localizedExplanation =
+    language === "es"
+      ? { primary: spanishExplanation, secondary: "" }
+      : localizeText(question.explanation, language);
+  const localizedExamPattern =
+    language === "es"
+      ? { primary: translateUi(question.exam_pattern, "es"), secondary: "" }
+      : localizeText(question.exam_pattern, language);
+  const localizedExamClue =
+    language === "es"
+      ? { primary: translateToSpanish(question.exam_clue), secondary: "" }
+      : localizeText(question.exam_clue, language);
+  const localizedCommonTrap =
+    language === "es"
+      ? { primary: translateToSpanish(question.common_trap), secondary: "" }
+      : localizeText(question.common_trap, language);
+
   return {
     ...question,
     localizedTopic: translateTopic(question.topic, language),
     localizedDifficulty: translateDifficulty(question.difficulty, language),
-    localizedText: localizeText(question.text, language),
-    localizedExplanation: localizeText(question.explanation, language),
-    localizedExamPattern: localizeText(question.exam_pattern, language),
-    localizedExamClue: localizeText(question.exam_clue, language),
-    localizedCommonTrap: localizeText(question.common_trap, language),
+    localizedText,
+    localizedExplanation,
+    localizedExamPattern,
+    localizedExamClue,
+    localizedCommonTrap,
     options: (question.options || []).map((option) => ({
       ...option,
-      localizedText: localizeText(option.text, language),
+      localizedText:
+        language === "es"
+          ? { primary: translateOptionText(option.text, question), secondary: "" }
+          : localizeText(option.text, language),
     })),
   };
 }

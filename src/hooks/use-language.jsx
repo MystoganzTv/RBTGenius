@@ -11,12 +11,12 @@ function resolveInitialLanguage() {
   }
 
   const saved = window.localStorage.getItem(STORAGE_KEY);
-  if (saved === "en" || saved === "es" || saved === "dual") {
+  if (saved === "en" || saved === "es") {
     return saved;
   }
 
   const browserLanguage = window.navigator?.language?.toLowerCase?.() || "";
-  return browserLanguage.startsWith("es") ? "dual" : DEFAULT_LANGUAGE;
+  return browserLanguage.startsWith("es") ? "es" : DEFAULT_LANGUAGE;
 }
 
 export function LanguageProvider({ children }) {
@@ -37,7 +37,6 @@ export function LanguageProvider({ children }) {
       setLanguage,
       isEnglish: language === "en",
       isSpanish: language === "es",
-      isDualLanguage: language === "dual",
     }),
     [language],
   );

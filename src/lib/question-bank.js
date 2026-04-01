@@ -1915,6 +1915,11 @@ const questionConcepts = [
   ...additionalOfficialQuestionConcepts,
 ];
 
+export const questionConceptLookup = questionConcepts.reduce((result, concept) => {
+  result[concept.id] = concept;
+  return result;
+}, {});
+
 function shuffleStable(items, seedValue) {
   return shuffleWithRandom(items, createRandom(seedValue));
 }

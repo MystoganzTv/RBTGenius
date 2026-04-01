@@ -6,7 +6,6 @@ import { useLanguage } from "@/hooks/use-language";
 const options = [
   { id: "en", label: "EN" },
   { id: "es", label: "ES" },
-  { id: "dual", label: "DUAL" },
 ];
 
 export default function LanguageSwitcher({ compact = false }) {
