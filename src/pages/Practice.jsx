@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
 import {
   FREE_DAILY_PRACTICE_LIMIT,
@@ -46,6 +47,7 @@ import {
   topicLabels,
   TOTAL_PRACTICE_QUESTIONS,
 } from "@/lib/question-bank";
+import { translateDifficulty, translateTopic, translateUi } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { createPageUrl } from "@/utils";
 
@@ -93,6 +95,7 @@ function QuestionNavigator({
   currentQuestionId,
   onSelectQuestion,
 }) {
+  const { language } = useLanguage();
   const answeredCount = questions.filter(
     (question) => getResponseState(question.id, responses).submitted,
   ).length;
@@ -101,28 +104,31 @@ function QuestionNavigator({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Question Navigator</SheetTitle>
+          <SheetTitle>{translateUi("Question Navigator", language)}</SheetTitle>
           <SheetDescription>
-            Jump to any question and review your flagged or unanswered items.
+            {translateUi(
+              "Jump to any question and review your flagged or unanswered items.",
+              language,
+            )}
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-5">
           <div className="grid grid-cols-3 gap-3 text-xs">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-slate-500 dark:text-slate-400">Total</p>
+              <p className="text-slate-500 dark:text-slate-400">{translateUi("Total", language)}</p>
               <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
                 {questions.length}
               </p>
             </div>
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-              <p className="text-emerald-700">Answered</p>
+              <p className="text-emerald-700">{translateUi("Answered", language)}</p>
               <p className="mt-1 text-lg font-semibold text-emerald-800">
                 {answeredCount}
               </p>
             </div>
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <p className="text-amber-700">Flagged</p>
+              <p className="text-amber-700">{translateUi("Flagged", language)}</p>
               <p className="mt-1 text-lg font-semibold text-amber-800">
                 {
                   questions.filter(
@@ -177,6 +183,7 @@ function QuestionNavigator({
 }
 
 export default function Practice() {
+  const { language } = useLanguage();
   const [topicFilter, setTopicFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
   const [reviewFilter, setReviewFilter] = useState("all");
@@ -490,10 +497,13 @@ export default function Practice() {
             <HelpCircle className="h-8 w-8 text-[#1E5EFF]" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            Practice Questions
+            {translateUi("Practice Questions", language)}
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Choose your topic and difficulty to start practicing.
+            {translateUi(
+              "Choose your topic and difficulty to start practicing.",
+              language,
+            )}
           </p>
         </div>
 
@@ -501,17 +511,17 @@ export default function Practice() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Topic
+                {translateUi("Topic", language)}
               </label>
               <Select value={topicFilter} onValueChange={setTopicFilter}>
                 <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="All Topics" />
+                  <SelectValue placeholder={translateUi("All Topics", language)} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Topics</SelectItem>
+                  <SelectItem value="all">{translateUi("All Topics", language)}</SelectItem>
                   {Object.entries(topicLabels).map(([key, label]) => (
                     <SelectItem key={key} value={key}>
-                      {label}
+                      {translateTopic(key, language) || label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -520,17 +530,17 @@ export default function Practice() {
 
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Difficulty
+                {translateUi("Difficulty", language)}
               </label>
               <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
                 <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="All Levels" />
+                  <SelectValue placeholder={translateUi("All Levels", language)} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
+                  <SelectItem value="all">{translateUi("All Levels", language)}</SelectItem>
+                  <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
+                  <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
+                  <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -538,33 +548,48 @@ export default function Practice() {
 
           <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700 dark:text-slate-200">
             {isPremiumPlan(entitlements?.plan)
-              ? `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`
-              : `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`}
+              ? translateUi(
+                  `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`,
+                  language,
+                )
+              : translateUi(
+                  `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`,
+                  language,
+                )}
           </div>
 
           <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200 md:grid-cols-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                Pattern
+                {translateUi("Pattern", language)}
               </p>
               <p className="mt-2 leading-relaxed">
-                Learn the type of exam move the question is testing, not just the answer.
+                {translateUi(
+                  "Learn the type of exam move the question is testing, not just the answer.",
+                  language,
+                )}
               </p>
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                Clue
+                {translateUi("Clue", language)}
               </p>
               <p className="mt-2 leading-relaxed">
-                Train your eye to spot the single detail that points to the correct concept.
+                {translateUi(
+                  "Train your eye to spot the single detail that points to the correct concept.",
+                  language,
+                )}
               </p>
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
-                Common Trap
+                {translateUi("Common Trap", language)}
               </p>
               <p className="mt-2 leading-relaxed">
-                See the distractor the exam wants you to pick, and why it is wrong.
+                {translateUi(
+                  "See the distractor the exam wants you to pick, and why it is wrong.",
+                  language,
+                )}
               </p>
             </div>
           </div>
@@ -575,7 +600,7 @@ export default function Practice() {
             style={{ backgroundColor: "#1E5EFF" }}
           >
             <Zap className="h-5 w-5" />
-            Start Practice Session
+            {translateUi("Start Practice Session", language)}
           </Button>
         </div>
       </div>
@@ -599,10 +624,10 @@ export default function Practice() {
         <div className="rounded-2xl border border-slate-100 bg-white p-12 dark:border-slate-800 dark:bg-slate-950">
           <HelpCircle className="mx-auto mb-3 h-12 w-12 text-slate-300" />
           <p className="font-medium text-slate-500 dark:text-slate-400">
-            No questions available for this filter.
+            {translateUi("No questions available for this filter.", language)}
           </p>
           <Button variant="outline" className="mt-4 rounded-xl" onClick={endSession}>
-            Change Filters
+            {translateUi("Change Filters", language)}
           </Button>
         </div>
       </div>
@@ -615,10 +640,13 @@ export default function Practice() {
         <div className="rounded-2xl border border-slate-100 bg-white p-12 dark:border-slate-800 dark:bg-slate-950">
           <Trophy className="mx-auto mb-4 h-16 w-16 text-[#FFB800]" />
           <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            Session Complete!
+            {translateUi("Session Complete!", language)}
           </h2>
           <p className="mt-2 text-slate-500 dark:text-slate-400">
-            You answered {correctCount} out of {answeredCount} correctly.
+            {translateUi(
+              `You answered ${correctCount} out of ${answeredCount} correctly.`,
+              language,
+            )}
           </p>
           <div
             className="mt-4 text-5xl font-bold"
@@ -630,12 +658,12 @@ export default function Practice() {
             {accuracy}%
           </div>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <Badge variant="outline">{flaggedCount} flagged</Badge>
-            <Badge variant="outline">{incorrectCount} incorrect</Badge>
+            <Badge variant="outline">{flaggedCount} {translateUi("flagged", language)}</Badge>
+            <Badge variant="outline">{incorrectCount} {translateUi("incorrect", language)}</Badge>
           </div>
           <div className="mt-6 flex justify-center gap-3">
             <Button variant="outline" className="rounded-xl" onClick={endSession}>
-              New Session
+              {translateUi("New Session", language)}
             </Button>
             <Button
               className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
@@ -645,7 +673,7 @@ export default function Practice() {
                 setReviewFilter("all");
               }}
             >
-              Retry Same Questions
+              {translateUi("Retry Same Questions", language)}
             </Button>
           </div>
         </div>
@@ -658,10 +686,10 @@ export default function Practice() {
       <div className="mx-auto max-w-3xl text-center">
         <div className="rounded-2xl border border-slate-100 bg-white p-12 dark:border-slate-800 dark:bg-slate-950">
           <p className="font-medium text-slate-700 dark:text-slate-200">
-            No questions match the current review filter.
+            {translateUi("No questions match the current review filter.", language)}
           </p>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Try switching back to all questions or another review state.
+            {translateUi("Try switching back to all questions or another review state.", language)}
           </p>
           <div className="mt-4 flex justify-center gap-3">
             <Button
@@ -669,10 +697,10 @@ export default function Practice() {
               className="rounded-xl"
               onClick={() => setReviewFilter("all")}
             >
-              Show All
+              {translateUi("Show All", language)}
             </Button>
             <Button className="rounded-xl" onClick={() => setNavigatorOpen(true)}>
-              Open Navigator
+              {translateUi("Open Navigator", language)}
             </Button>
           </div>
         </div>
@@ -694,17 +722,20 @@ export default function Practice() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-              This Session
+              {translateUi("This Session", language)}
             </h2>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Session-only stats. Your dashboard tracks the bigger picture separately.
+              {translateUi(
+                "Session-only stats. Your dashboard tracks the bigger picture separately.",
+                language,
+              )}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             {practiceRemaining !== null && practiceRemaining !== undefined ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 font-semibold text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
                 <Crown className="h-3 w-3" />
-                {practiceRemaining} free answers left today
+                {translateUi(`${practiceRemaining} free answers left today`, language)}
               </span>
             ) : null}
           </div>
@@ -716,24 +747,26 @@ export default function Practice() {
               <Target className="h-4 w-4 text-[#1E5EFF]" />
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 {accuracy}% session accuracy
+                
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <HelpCircle className="h-4 w-4 text-slate-400 dark:text-slate-500" />
               <span className="text-sm text-slate-500 dark:text-slate-400">
                 {answeredCount}/{baseFilteredQuestions.length} answered this session
+                
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <ShieldAlert className="h-4 w-4 text-rose-400" />
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                {incorrectCount} incorrect
+                {incorrectCount} {translateUi("incorrect", language)}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <Flag className="h-4 w-4 text-amber-500" />
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                {flaggedCount} flagged for review
+                {flaggedCount} {translateUi("flagged for review", language)}
               </span>
             </div>
           </div>
@@ -746,7 +779,7 @@ export default function Practice() {
               onClick={() => setNavigatorOpen(true)}
             >
               <ListChecks className="h-4 w-4" />
-              Navigator
+              {translateUi("Navigator", language)}
             </Button>
             <Button
               variant="outline"
@@ -754,7 +787,7 @@ export default function Practice() {
               className="rounded-xl text-xs"
               onClick={endSession}
             >
-              End Session
+              {translateUi("End Session", language)}
             </Button>
           </div>
         </div>
@@ -772,7 +805,7 @@ export default function Practice() {
                   : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900",
               )}
             >
-              {filter.label}
+              {translateUi(filter.label, language)}
             </button>
           ))}
         </div>
@@ -780,7 +813,10 @@ export default function Practice() {
 
       {practiceLimitReached ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          You reached today&apos;s free practice limit. You can keep reviewing these questions, or upgrade for unlimited answers.
+          {translateUi(
+            "You reached today's free practice limit. You can keep reviewing these questions, or upgrade for unlimited answers.",
+            language,
+          )}
         </div>
       ) : null}
 
@@ -821,18 +857,23 @@ export default function Practice() {
       <Dialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
         <DialogContent className="rounded-3xl sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Free practice limit reached</DialogTitle>
+            <DialogTitle>{translateUi("Free practice limit reached", language)}</DialogTitle>
             <DialogDescription>
-              You have used your {FREE_DAILY_PRACTICE_LIMIT} free practice answers for today.
-              Upgrade to Premium to keep answering without a daily cap.
+              {translateUi(
+                `You have used your ${FREE_DAILY_PRACTICE_LIMIT} free practice answers for today. Upgrade to Premium to keep answering without a daily cap.`,
+                language,
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-            Premium gives you unlimited practice, full mock exams, and complete analytics.
+            {translateUi(
+              "Premium gives you unlimited practice, full mock exams, and complete analytics.",
+              language,
+            )}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" className="rounded-xl" onClick={() => setLimitDialogOpen(false)}>
-              Keep Reviewing
+              {translateUi("Keep Reviewing", language)}
             </Button>
             <Button
               className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
@@ -841,7 +882,7 @@ export default function Practice() {
                 window.location.assign(createPageUrl("Pricing"));
               }}
             >
-              Upgrade to Premium
+              {translateUi("Upgrade to Premium", language)}
             </Button>
           </DialogFooter>
         </DialogContent>

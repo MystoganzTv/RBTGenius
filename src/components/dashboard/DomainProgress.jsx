@@ -1,4 +1,6 @@
 import { MIN_DOMAIN_ATTEMPTS } from "@/lib/backend-core";
+import { useLanguage } from "@/hooks/use-language";
+import { translateTopic, translateUi } from "@/lib/i18n";
 import { PRACTICE_TOPIC_TOTALS } from "@/lib/question-bank";
 
 const domains = [
@@ -15,15 +17,20 @@ const domains = [
 ];
 
 export default function DomainProgress({ mastery = {}, attemptCounts = {} }) {
+  const { language } = useLanguage();
+
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Domain Performance
+            {translateUi("Domain Performance", language)}
           </h3>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Scores become reliable after at least {MIN_DOMAIN_ATTEMPTS} attempts per domain.
+            {translateUi(
+              `Scores become reliable after at least ${MIN_DOMAIN_ATTEMPTS} attempts per domain.`,
+              language,
+            )}
           </p>
         </div>
       </div>
@@ -45,15 +52,15 @@ export default function DomainProgress({ mastery = {}, attemptCounts = {} }) {
             <div key={domain.key}>
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                  {domain.label}
+                  {translateTopic(domain.key, language)}
                 </span>
                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                  {displayValue}
+                  {translateUi(displayValue, language)}
                 </span>
               </div>
               {!hasEnoughData ? (
                 <p className="mb-1 text-[11px] text-slate-400 dark:text-slate-500">
-                  {attempts} of {totalAvailable} answered
+                  {translateUi(`${attempts} of ${totalAvailable} answered`, language)}
                 </p>
               ) : null}
 

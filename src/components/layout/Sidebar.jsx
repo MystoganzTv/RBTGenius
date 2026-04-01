@@ -13,6 +13,8 @@ import {
   LayoutDashboard,
   Sparkles,
 } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
+import { translateUi } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { createPageUrl } from "@/utils";
 
@@ -32,6 +34,7 @@ const adminItems = [
 
 export default function Sidebar({ currentPage, isAdmin = false, plan = "free" }) {
   const [collapsed, setCollapsed] = useState(false);
+  const { language } = useLanguage();
 
   return (
     <aside
@@ -70,7 +73,7 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
             collapsed ? "text-center" : "px-3",
           )}
         >
-          {collapsed ? "•" : "Learning"}
+          {collapsed ? "•" : translateUi("Learning", language)}
         </div>
 
         {navItems.map((item) => {
@@ -94,7 +97,7 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
                 )}
               />
 
-              {!collapsed ? <span>{item.name}</span> : null}
+              {!collapsed ? <span>{translateUi(item.name, language)}</span> : null}
 
               {!collapsed && (item.badge || (item.premium && plan === "free")) ? (
                 <span
@@ -133,7 +136,7 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
                 collapsed ? "text-center" : "px-3",
               )}
             >
-              {collapsed ? "•" : "Admin"}
+              {collapsed ? "•" : translateUi("Admin", language)}
             </div>
 
             {adminItems.map((item) => {
@@ -157,7 +160,7 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
                     )}
                   />
 
-                  {!collapsed ? <span>{item.name}</span> : null}
+                  {!collapsed ? <span>{translateUi(item.name, language)}</span> : null}
 
                   {!collapsed && item.badge ? (
                     <span className="ml-auto rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white dark:bg-slate-100 dark:text-slate-900">

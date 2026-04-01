@@ -31,6 +31,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import BilingualText from "@/components/i18n/BilingualText";
+import { useLanguage } from "@/hooks/use-language";
+import { localizeQuestion, translateDifficulty, translateTopic, translateUi } from "@/lib/i18n";
 import { FREE_FLASHCARD_LIMIT, isPremiumPlan } from "@/lib/plan-access";
 import { createPageUrl } from "@/utils";
 
@@ -43,6 +46,7 @@ async function storeAttempt(attempt) {
 }
 
 export default function Flashcards() {
+  const { language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [masteredCards, setMasteredCards] = useState([]);
@@ -100,6 +104,10 @@ export default function Flashcards() {
     !isPremium && availableQuestions.length > 0 && reviewedCardIds.length >= availableQuestions.length;
 
   const currentCard = filteredQuestions[currentIndex] || null;
+  const localizedCurrentCard = useMemo(
+    () => localizeQuestion(currentCard, language),
+    [currentCard, language],
+  );
 
   useEffect(() => {
     if (filteredQuestions.length === 0) {
@@ -237,7 +245,7 @@ export default function Flashcards() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#1E5EFF] border-t-transparent" />
-          <p className="text-slate-500">Loading flashcards...</p>
+          <p className="text-slate-500">{translateUi("Loading flashcards...", language)}</p>
         </div>
       </div>
     );
@@ -248,20 +256,23 @@ export default function Flashcards() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            Flashcards Game 🎴
+            {translateUi("Flashcards Game 🎴", language)}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Review the same shared RBT bank in memorization mode, with pattern clues and common traps.
+            {translateUi(
+              "Review the same shared RBT bank in memorization mode, with pattern clues and common traps.",
+              language,
+            )}
           </p>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleShuffle} variant="outline" className="gap-2">
             <Shuffle className="h-4 w-4" />
-            Shuffle
+            {translateUi("Shuffle", language)}
           </Button>
           <Button onClick={handleReset} variant="outline" className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            Reset
+            {translateUi("Reset", language)}
           </Button>
         </div>
       </div>
@@ -270,7 +281,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Total Cards</p>
+              <p className="text-xs text-slate-500">{translateUi("Total Cards", language)}</p>
               <p className="text-2xl font-bold text-slate-900">
                 {availableQuestions.length}
               </p>
@@ -281,7 +292,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Mastered</p>
+              <p className="text-xs text-slate-500">{translateUi("Mastered", language)}</p>
               <p className="text-2xl font-bold text-emerald-600">
                 {masteredCards.length}
               </p>
@@ -292,7 +303,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Current Session</p>
+              <p className="text-xs text-slate-500">{translateUi("Current Session", language)}</p>
               <p className="text-2xl font-bold text-[#1E5EFF]">
                 {sessionStats.correct}
               </p>
@@ -303,7 +314,7 @@ export default function Flashcards() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">Need Review</p>
+              <p className="text-xs text-slate-500">{translateUi("Need Review", language)}</p>
               <p className="text-2xl font-bold text-amber-600">
                 {reviewCards.length}
               </p>
@@ -316,7 +327,7 @@ export default function Flashcards() {
       <Card className="p-4">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-slate-700">
-            Overall Progress
+            {translateUi("Overall Progress", language)}
           </span>
           <span className="text-sm font-bold text-[#1E5EFF]">
             {Math.round(progress)}%
@@ -330,17 +341,20 @@ export default function Flashcards() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-900">
-                Free flashcards: {FREE_FLASHCARD_LIMIT} cards per session
+                {translateUi(`Free flashcards: ${FREE_FLASHCARD_LIMIT} cards per session`, language)}
               </p>
               <p className="mt-1 text-sm text-slate-600">
-                Upgrade to Premium to unlock the full flashcard bank and keep reviewing without session limits.
+                {translateUi(
+                  "Upgrade to Premium to unlock the full flashcard bank and keep reviewing without session limits.",
+                  language,
+                )}
               </p>
             </div>
             <Button
               className="rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
               onClick={() => window.location.assign(createPageUrl("Pricing"))}
             >
-              Go Premium
+              {translateUi("Go Premium", language)}
             </Button>
           </div>
         </Card>
@@ -350,35 +364,35 @@ export default function Flashcards() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700">Filters:</span>
+            <span className="text-sm font-medium text-slate-700">{translateUi("Filters:", language)}</span>
           </div>
 
           <Select value={filterTopic} onValueChange={setFilterTopic}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="Topic" />
+              <SelectValue placeholder={translateUi("Topic", language)} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Topics</SelectItem>
-              <SelectItem value="measurement">Measurement</SelectItem>
-              <SelectItem value="assessment">Assessment</SelectItem>
-              <SelectItem value="skill_acquisition">Skill Acquisition</SelectItem>
-              <SelectItem value="behavior_reduction">Behavior Reduction</SelectItem>
-              <SelectItem value="documentation">Documentation</SelectItem>
+              <SelectItem value="all">{translateUi("All Topics", language)}</SelectItem>
+              <SelectItem value="measurement">{translateTopic("measurement", language)}</SelectItem>
+              <SelectItem value="assessment">{translateTopic("assessment", language)}</SelectItem>
+              <SelectItem value="skill_acquisition">{translateTopic("skill_acquisition", language)}</SelectItem>
+              <SelectItem value="behavior_reduction">{translateTopic("behavior_reduction", language)}</SelectItem>
+              <SelectItem value="documentation">{translateTopic("documentation", language)}</SelectItem>
               <SelectItem value="professional_conduct">
-                Professional Conduct
+                {translateTopic("professional_conduct", language)}
               </SelectItem>
             </SelectContent>
           </Select>
 
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Difficulty" />
+              <SelectValue placeholder={translateUi("Difficulty", language)} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
+              <SelectItem value="all">{translateUi("All", language)}</SelectItem>
+              <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
+              <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
+              <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -389,16 +403,16 @@ export default function Flashcards() {
           <div className="w-full max-w-2xl">
             <div className="mb-4 flex items-center justify-between">
               <Badge variant="outline" className="text-xs">
-                Card {currentIndex + 1} of {filteredQuestions.length}
+                {translateUi("Card", language)} {currentIndex + 1} / {filteredQuestions.length}
               </Badge>
               <div className="flex gap-2">
                 <Badge className="bg-[#1E5EFF]/10 text-[#1E5EFF]">
-                  {currentCard.topic.replace(/_/g, " ")}
+                  {translateTopic(currentCard.topic, language)}
                 </Badge>
-                <Badge variant="outline">{currentCard.difficulty}</Badge>
+                <Badge variant="outline">{translateDifficulty(currentCard.difficulty, language)}</Badge>
                 {currentCard.exam_pattern ? (
                   <Badge variant="outline" className="border-[#1E5EFF]/20 text-[#1E5EFF]">
-                    {currentCard.exam_pattern}
+                    {localizedCurrentCard?.localizedExamPattern?.primary}
                   </Badge>
                 ) : null}
               </div>
@@ -416,13 +430,15 @@ export default function Flashcards() {
                 <Card className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1E5EFF] to-[#6366F1] p-8 text-white [backface-visibility:hidden]">
                   <div ref={frontContentRef} className="text-center">
                     <p className="mb-4 text-xs uppercase tracking-wider opacity-80">
-                      Question
+                      {translateUi("Question", language)}
                     </p>
-                    <h2 className="text-2xl font-bold leading-relaxed">
-                      {currentCard.text}
-                    </h2>
+                    <BilingualText
+                      content={localizedCurrentCard?.localizedText}
+                      primaryClassName="text-2xl font-bold leading-relaxed"
+                      secondaryClassName="text-white/70"
+                    />
                     <p className="mt-8 text-xs opacity-60">
-                      Click to view the answer
+                      {translateUi("Click to view the answer", language)}
                     </p>
                   </div>
                 </Card>
@@ -434,10 +450,10 @@ export default function Flashcards() {
                   <div className="flex h-full flex-col justify-between pr-1">
                     <div ref={backContentRef}>
                       <p className="mb-4 text-xs uppercase tracking-wider text-[#1E5EFF]">
-                        Correct Answer
+                        {translateUi("Correct Answer", language)}
                       </p>
                       <div className="mb-6 space-y-3">
-                        {currentCard.options?.map((option) => (
+                        {localizedCurrentCard?.options?.map((option) => (
                           <div
                             key={option.label}
                             className={`rounded-lg p-3 text-slate-900 dark:text-slate-100 ${
@@ -447,7 +463,12 @@ export default function Flashcards() {
                             }`}
                           >
                             <span className="font-semibold">{option.label}.</span>{" "}
-                            {option.text}
+                            <BilingualText
+                              content={option.localizedText}
+                              className="inline-block align-middle"
+                              primaryClassName="inline"
+                              secondaryClassName="inline text-xs"
+                            />
                           </div>
                         ))}
                       </div>
@@ -455,39 +476,50 @@ export default function Flashcards() {
                       {currentCard.explanation ? (
                         <div className="space-y-3 rounded-lg bg-blue-50 p-4 dark:bg-slate-900">
                           <p className="mb-1 text-xs font-semibold text-[#1E5EFF]">
-                            Explanation:
+                            {translateUi("Explanation", language)}:
                           </p>
-                          <p className="text-sm text-slate-700 dark:text-slate-200">
-                            {currentCard.explanation}
-                          </p>
+                          <BilingualText
+                            content={localizedCurrentCard?.localizedExplanation}
+                            primaryClassName="text-sm text-slate-700 dark:text-slate-200"
+                            secondaryClassName="text-slate-500 dark:text-slate-400"
+                          />
 
                           {currentCard.exam_pattern ? (
                             <div className="grid gap-3 pt-1 md:grid-cols-3">
                               <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                                  Pattern
+                                  {translateUi("Pattern", language)}
                                 </p>
-                                <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-100">
-                                  {currentCard.exam_pattern}
-                                </p>
+                                <BilingualText
+                                  content={localizedCurrentCard?.localizedExamPattern}
+                                  className="mt-2"
+                                  primaryClassName="text-sm font-medium text-slate-800 dark:text-slate-100"
+                                  secondaryClassName="text-slate-500 dark:text-slate-400"
+                                />
                               </div>
                               <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
                                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
                                   <Search className="h-3.5 w-3.5" />
-                                  Clue
+                                  {translateUi("Clue", language)}
                                 </div>
-                                <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                                  {currentCard.exam_clue}
-                                </p>
+                                <BilingualText
+                                  content={localizedCurrentCard?.localizedExamClue}
+                                  className="mt-2"
+                                  primaryClassName="text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+                                  secondaryClassName="text-slate-500 dark:text-slate-400"
+                                />
                               </div>
                               <div className="rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
                                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
                                   <ShieldAlert className="h-3.5 w-3.5" />
-                                  Common Trap
+                                  {translateUi("Common Trap", language)}
                                 </div>
-                                <p className="mt-2 text-sm leading-relaxed text-amber-800 dark:text-amber-100/85">
-                                  {currentCard.common_trap}
-                                </p>
+                                <BilingualText
+                                  content={localizedCurrentCard?.localizedCommonTrap}
+                                  className="mt-2"
+                                  primaryClassName="text-sm leading-relaxed text-amber-800 dark:text-amber-100/85"
+                                  secondaryClassName="text-amber-700/80 dark:text-amber-200/70"
+                                />
                               </div>
                             </div>
                           ) : null}
@@ -507,7 +539,7 @@ export default function Flashcards() {
                 className="gap-2 border-amber-200 hover:border-amber-300 hover:bg-amber-50"
               >
                 <ThumbsDown className="h-5 w-5 text-amber-600" />
-                Need Review
+                {translateUi("Need Review", language)}
               </Button>
               <Button
                 onClick={handleMastered}
@@ -515,7 +547,7 @@ export default function Flashcards() {
                 className="gap-2 bg-emerald-600 hover:bg-emerald-700"
               >
                 <ThumbsUp className="h-5 w-5" />
-                Mastered!
+                {translateUi("Mastered!", language)}
               </Button>
             </div>
           </div>

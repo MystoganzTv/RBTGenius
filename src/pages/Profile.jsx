@@ -30,7 +30,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
+import { translateUi } from "@/lib/i18n";
 import {
   FREE_DAILY_PRACTICE_LIMIT,
   FREE_DAILY_TUTOR_LIMIT,
@@ -79,6 +81,7 @@ function formatPaymentDate(value) {
 
 export default function Profile() {
   const { user: authUser, login } = useAuth();
+  const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
@@ -105,6 +108,7 @@ export default function Profile() {
   const currentPlan = planInfo[currentPlanId] || planInfo.free;
   const CurrentPlanIcon = currentPlan.icon;
   const canManageBilling = Boolean(billing.portal_enabled && currentUser?.stripe_customer_id);
+  const t = (value) => translateUi(value, language);
 
   useEffect(() => {
     setFormData({ full_name: currentUser?.full_name || "" });
@@ -119,14 +123,14 @@ export default function Profile() {
       login(updatedUser);
       setEditMode(false);
       toast({
-        title: "Profile updated",
-        description: "Your account details were saved.",
+        title: t("Profile updated"),
+        description: t("Your account details were saved."),
       });
     },
     onError: (error) => {
       toast({
-        title: "Unable to update profile",
-        description: error.message || "Please try again.",
+        title: t("Unable to update profile"),
+        description: t(error.message || "Please try again."),
       });
     },
   });
@@ -140,8 +144,8 @@ export default function Profile() {
     },
     onError: (error) => {
       toast({
-        title: "Unable to start checkout",
-        description: error.message || "Please try again.",
+        title: t("Unable to start checkout"),
+        description: t(error.message || "Please try again."),
       });
     },
   });
@@ -155,8 +159,8 @@ export default function Profile() {
     },
     onError: (error) => {
       toast({
-        title: "Unable to open billing portal",
-        description: error.message || "Please try again.",
+        title: t("Unable to open billing portal"),
+        description: t(error.message || "Please try again."),
       });
     },
   });
@@ -171,15 +175,15 @@ export default function Profile() {
         login(data.user);
       }
       toast({
-        title: "Premium activated",
-        description: `Your account is now on ${getPlanLabel(data?.user?.plan)}.`,
+        title: t("Premium activated"),
+        description: t(`Your account is now on ${getPlanLabel(data?.user?.plan)}.`),
       });
       navigate(createPageUrl("Profile"), { replace: true });
     },
     onError: (error) => {
       toast({
-        title: "Unable to confirm checkout",
-        description: error.message || "Please try again.",
+        title: t("Unable to confirm checkout"),
+        description: t(error.message || "Please try again."),
       });
       navigate(createPageUrl("Profile"), { replace: true });
     },
@@ -195,14 +199,14 @@ export default function Profile() {
       setResetDialogOpen(false);
       setClearTutorOnReset(false);
       toast({
-        title: "Study progress reset",
-        description: "Your study metrics and saved session data were cleared.",
+        title: t("Study progress reset"),
+        description: t("Your study metrics and saved session data were cleared."),
       });
     },
     onError: (error) => {
       toast({
-        title: "Unable to reset progress",
-        description: error.message || "Please try again.",
+        title: t("Unable to reset progress"),
+        description: t(error.message || "Please try again."),
       });
     },
   });
@@ -250,16 +254,16 @@ export default function Profile() {
         <div>
           <h1 className="text-2xl font-bold text-[#0F172A] dark:text-slate-50">My Profile</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Manage your account, usage, and membership.
+            {t("Manage your account, usage, and membership.")}
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="subscription">Membership</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="profile">{t("Profile")}</TabsTrigger>
+          <TabsTrigger value="subscription">{t("Membership")}</TabsTrigger>
+          <TabsTrigger value="payments">{t("Payments")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -291,7 +295,7 @@ export default function Profile() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Full Name
+                  {t("Full Name")}
                 </label>
                 {editMode ? (
                   <Input
@@ -303,25 +307,25 @@ export default function Profile() {
                   />
                 ) : (
                   <p className="mt-1 text-slate-600 dark:text-slate-300">
-                    {currentUser?.full_name || "Not provided"}
+                    {currentUser?.full_name || t("Not provided")}
                   </p>
                 )}
               </div>
 
               <div>
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Email
+                  {t("Email")}
                 </label>
                 <p className="mt-1 text-slate-600 dark:text-slate-300">{currentUser?.email}</p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Role
+                  {t("Role")}
                 </label>
                 <p className="mt-1 flex items-center gap-2 text-slate-600 dark:text-slate-300">
                   <Shield className="h-4 w-4" />
-                  {currentUser?.role === "admin" ? "Administrator" : "User"}
+                  {currentUser?.role === "admin" ? t("Administrator") : t("User")}
                 </p>
               </div>
 
@@ -336,16 +340,16 @@ export default function Profile() {
                       {updateProfileMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        "Save Changes"
+                        t("Save Changes")
                       )}
                     </Button>
                     <Button onClick={() => setEditMode(false)} variant="outline">
-                      Cancel
+                      {t("Cancel")}
                     </Button>
                   </div>
                 ) : (
                   <Button onClick={() => setEditMode(true)} variant="outline">
-                    Edit Profile
+                    {t("Edit Profile")}
                   </Button>
                 )}
               </div>
@@ -354,19 +358,19 @@ export default function Profile() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">Questions Answered</p>
+              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">{t("Questions Answered")}</p>
               <p className="text-2xl font-bold text-[#0F172A] dark:text-slate-50">
                 {progress?.total_questions_completed || 0}
               </p>
             </Card>
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">Study Streak</p>
+              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">{t("Study Streak")}</p>
               <p className="text-2xl font-bold text-[#FFB800]">
-                {progress?.study_streak_days || 0} days
+                {t(`${progress?.study_streak_days || 0} days`)}
               </p>
             </Card>
             <Card className="p-4">
-              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">Study Hours</p>
+              <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">{t("Study Hours")}</p>
               <p className="text-2xl font-bold text-[#1E5EFF]">
                 {progress?.study_hours || 0}h
               </p>
@@ -377,12 +381,10 @@ export default function Profile() {
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="max-w-2xl">
                 <h3 className="text-lg font-bold text-[#0F172A] dark:text-slate-50">
-                  Reset Study Progress
+                  {t("Reset Study Progress")}
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                  Clear your answered questions, mock exam history, readiness, streak, and saved
-                  study sessions if you want a fresh start. Your account and payment history stay
-                  untouched.
+                  {t("Clear your answered questions, mock exam history, readiness, streak, and saved study sessions if you want a fresh start. Your account and payment history stay untouched.")}
                 </p>
                 <div className="mt-4 flex items-start gap-3 rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900">
                   <Checkbox
@@ -395,7 +397,7 @@ export default function Profile() {
                     htmlFor="clear-tutor-on-reset"
                     className="text-sm leading-6 text-slate-600 dark:text-slate-300"
                   >
-                    Also clear AI tutor conversations and start with an empty tutor history.
+                    {t("Also clear AI tutor conversations and start with an empty tutor history.")}
                   </label>
                 </div>
               </div>
@@ -405,7 +407,7 @@ export default function Profile() {
                 className="rounded-2xl md:min-w-[180px]"
                 onClick={() => setResetDialogOpen(true)}
               >
-                Reset Progress
+                {t("Reset Progress")}
               </Button>
             </div>
           </Card>
@@ -416,10 +418,10 @@ export default function Profile() {
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
                 <h3 className="mb-1 text-lg font-bold text-[#0F172A] dark:text-slate-50">
-                  Current Plan
+                  {t("Current Plan")}
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Your access and daily limits update automatically based on this plan.
+                  {t("Your access and daily limits update automatically based on this plan.")}
                 </p>
               </div>
               <Badge className="bg-[#1E5EFF]/10 px-3 py-1 text-sm text-[#1E5EFF]">
@@ -431,12 +433,12 @@ export default function Profile() {
               <div className="space-y-5">
                 <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
                   <h4 className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                    Free plan limits
+                    {t("Free plan limits")}
                   </h4>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                        Practice today
+                        {t("Practice today")}
                       </p>
                       <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-50">
                         {entitlements?.usage?.practice_questions_today || 0}/{FREE_DAILY_PRACTICE_LIMIT}
@@ -444,7 +446,7 @@ export default function Profile() {
                     </div>
                     <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-slate-950">
                       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                        AI tutor today
+                        {t("AI tutor today")}
                       </p>
                       <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-50">
                         {entitlements?.usage?.tutor_messages_today || 0}/{FREE_DAILY_TUTOR_LIMIT}
@@ -486,7 +488,7 @@ export default function Profile() {
                           ) : checkoutReady ? (
                             plan.cta
                           ) : (
-                            "Stripe setup pending"
+                            t("Stripe setup pending")
                           )}
                         </Button>
                       </div>
@@ -500,23 +502,23 @@ export default function Profile() {
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium text-emerald-800 dark:text-emerald-200">
-                      Premium is active
+                      {t("Premium is active")}
                     </span>
                   </div>
-                  <Badge className="bg-emerald-600 text-white">Active</Badge>
+                  <Badge className="bg-emerald-600 text-white">{t("Active")}</Badge>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Practice access</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t("Practice access")}</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-50">
-                      Unlimited
+                      {t("Unlimited")}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-                    <p className="text-xs text-slate-500 dark:text-slate-400">AI tutor</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t("AI tutor")}</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-50">
-                      Unlimited
+                      {t("Unlimited")}
                     </p>
                   </div>
                 </div>
@@ -530,7 +532,7 @@ export default function Profile() {
                     {portalMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      "Manage Billing"
+                      t("Manage Billing")
                     )}
                   </Button>
                   <Button
@@ -552,14 +554,13 @@ export default function Profile() {
                       ]
                     }
                   >
-                    Switch Plan
+                    {t("Switch Plan")}
                   </Button>
                 </div>
 
                 {!canManageBilling ? (
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Billing portal will appear after this membership is linked to a Stripe
-                    customer record.
+                    {t("Billing portal will appear after this membership is linked to a Stripe customer record.")}
                   </p>
                 ) : null}
               </div>
@@ -571,17 +572,17 @@ export default function Profile() {
           <Card className="p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-[#0F172A] dark:text-slate-50">
-                Payment History
+                {t("Payment History")}
               </h3>
               <Button variant="outline" size="sm" onClick={() => refetchProfile()}>
-                Refresh
+                {t("Refresh")}
               </Button>
             </div>
 
             {sortedPayments.length === 0 ? (
               <div className="py-12 text-center">
                 <CreditCard className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-                <p className="text-slate-500 dark:text-slate-400">No payments recorded.</p>
+                <p className="text-slate-500 dark:text-slate-400">{t("No payments recorded.")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -610,8 +611,8 @@ export default function Profile() {
                       <div>
                         <p className="font-medium text-[#0F172A] dark:text-slate-50">
                           {payment.plan === PLAN_IDS.PREMIUM_YEARLY
-                            ? "Premium Yearly"
-                            : "Premium Monthly"}
+                            ? t("Premium Yearly")
+                            : t("Premium Monthly")}
                         </p>
                         <p className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                           <Calendar className="h-3 w-3" />
@@ -629,7 +630,7 @@ export default function Profile() {
                           {payment.status}
                         </p>
                         <p className="text-xs text-slate-400 dark:text-slate-500">
-                          {payment.provider_label || payment.provider || "Billing"}
+                          {t(payment.provider_label || payment.provider || "Billing")}
                         </p>
                       </div>
                     </div>
@@ -646,23 +647,24 @@ export default function Profile() {
           <div className="px-6 py-6">
             <AlertDialogHeader className="space-y-2 text-left">
               <AlertDialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                Reset your study progress?
+                {t("Reset your study progress?")}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                This will remove your question attempts, mock exams, readiness, streak, and saved
-                study sessions. Your account and billing history will remain.
+                {t("This will remove your question attempts, mock exams, readiness, streak, and saved study sessions. Your account and billing history will remain.")}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
             <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-              {clearTutorOnReset
-                ? "AI tutor conversations will also be cleared."
-                : "AI tutor conversations will be kept."}
+              {t(
+                clearTutorOnReset
+                  ? "AI tutor conversations will also be cleared."
+                  : "AI tutor conversations will be kept.",
+              )}
             </div>
           </div>
 
           <AlertDialogFooter className="border-t border-slate-200/80 px-6 py-4 dark:border-slate-800">
-            <AlertDialogCancel className="rounded-2xl">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-2xl">{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleResetProgress}
               className="rounded-2xl bg-red-600 text-white hover:bg-red-700"
@@ -671,7 +673,7 @@ export default function Profile() {
               {resetProgressMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "Reset Progress"
+                t("Reset Progress")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

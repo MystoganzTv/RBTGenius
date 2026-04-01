@@ -17,7 +17,9 @@ import {
 import { Award, BookOpen, Brain, Clock, Target } from "lucide-react";
 import PremiumGate from "@/components/billing/PremiumGate";
 import StatCard from "@/components/dashboard/StatCard";
+import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
+import { translateTopic, translateUi } from "@/lib/i18n";
 import { isPremiumPlan } from "@/lib/plan-access";
 import { MIN_DOMAIN_ATTEMPTS } from "@/lib/backend-core";
 import { PRACTICE_TOPIC_TOTALS, TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
@@ -35,6 +37,7 @@ const topicKeys = Object.keys(topicLabels);
 const COLORS = ["#1E5EFF", "#6366F1", "#10B981", "#FFB800", "#F43F5E", "#8B5CF6"];
 
 export default function Analytics() {
+  const { language } = useLanguage();
   const { data: profileData } = useQuery({
     queryKey: ["profile-data"],
     queryFn: api.getProfile,
@@ -63,6 +66,7 @@ export default function Analytics() {
     TOTAL_PRACTICE_QUESTIONS > 0
       ? Math.round((totalQuestions / TOTAL_PRACTICE_QUESTIONS) * 100)
       : 0;
+  const t = (value) => translateUi(value, language);
 
   const topicData = useMemo(
     () =>
@@ -70,13 +74,13 @@ export default function Analytics() {
         .map((key) => {
           const topicAttempts = attempts.filter((attempt) => attempt.topic === key);
           return {
-            name: topicLabels[key],
+            name: translateTopic(key, language),
             value: topicAttempts.length,
             correct: topicAttempts.filter((attempt) => attempt.is_correct).length,
           };
         })
         .filter((item) => item.value > 0),
-    [attempts],
+    [attempts, language],
   );
 
   const domainCoverageData = useMemo(
@@ -91,7 +95,7 @@ export default function Analytics() {
           answered > 0 ? Math.round((correct / answered) * 100) : 0;
 
         return {
-          name: topicLabels[key],
+          name: translateTopic(key, language),
           answered,
           total,
           coverage: total > 0 ? Math.round((answered / total) * 100) : 0,
@@ -99,7 +103,7 @@ export default function Analytics() {
           hasEnoughData: answered >= MIN_DOMAIN_ATTEMPTS,
         };
       }),
-    [attempts, progress],
+    [attempts, language, progress],
   );
 
   const examScoreData = useMemo(
@@ -127,9 +131,9 @@ export default function Analytics() {
       <PremiumGate
         feature="analytics"
         bullets={[
-          "Readiness tracking that stays more stable over time",
-          "Topic distribution from your real attempt history",
-          "Mock exam trends and deeper performance breakdowns",
+          t("Readiness tracking that stays more stable over time"),
+          t("Topic distribution from your real attempt history"),
+          t("Mock exam trends and deeper performance breakdowns"),
         ]}
       />
     );
@@ -138,9 +142,9 @@ export default function Analytics() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Analytics</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">{t("Analytics")}</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Review patterns across your attempts, domains, and mock exams.
+          {t("Review patterns across your attempts, domains, and mock exams.")}
         </p>
       </div>
 
@@ -179,13 +183,13 @@ export default function Analytics() {
         <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Domain Coverage
+              {t("Domain Coverage")}
             </h3>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Answered out of each domain's share of the curated bank.
+              {t("Answered out of each domain's share of the curated bank.")}
             </p>
             {analyticsQuery.isLoading ? (
-              <span className="text-xs text-slate-400">Loading...</span>
+              <span className="text-xs text-slate-400">{t("Loading...")}</span>
             ) : null}
           </div>
           <ResponsiveContainer width="100%" height={250}>
@@ -202,16 +206,16 @@ export default function Analytics() {
                 formatter={(value, _name, props) => {
                   const item = props?.payload;
                   if (!item) {
-                    return [`${value}%`, "Coverage"];
+                    return [`${value}%`, t("Coverage")];
                   }
 
                   return [
-                    `${item.answered} of ${item.total} answered${
+                    t(`${item.answered} of ${item.total} answered${
                       item.hasEnoughData
                         ? ` • ${item.answeredAccuracy}% answered accuracy`
                         : ""
-                    }`,
-                    "Coverage",
+                    }`),
+                    t("Coverage"),
                   ];
                 }}
                 contentStyle={{
@@ -231,12 +235,14 @@ export default function Analytics() {
               >
                 <p className="font-medium text-slate-700 dark:text-slate-200">{item.name}</p>
                 <p className="mt-1 text-slate-500 dark:text-slate-400">
-                  {item.answered}/{item.total} answered
+                  {t(`${item.answered}/${item.total} answered`)}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400">
-                  {item.hasEnoughData
-                    ? `${item.answeredAccuracy}% answered accuracy`
-                    : `Need ${MIN_DOMAIN_ATTEMPTS - item.answered} more for stable accuracy`}
+                  {t(
+                    item.hasEnoughData
+                      ? `${item.answeredAccuracy}% answered accuracy`
+                      : `Need ${MIN_DOMAIN_ATTEMPTS - item.answered} more for stable accuracy`,
+                  )}
                 </p>
               </div>
             ))}
@@ -245,7 +251,7 @@ export default function Analytics() {
 
         <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
           <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Questions by Topic
+            {t("Questions by Topic")}
           </h3>
           {topicData.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -275,7 +281,7 @@ export default function Analytics() {
           ) : (
             <div className="flex h-[250px] items-center justify-center">
               <p className="text-sm text-slate-400">
-                Keep answering questions to unlock this view.
+                {t("Keep answering questions to unlock this view.")}
               </p>
             </div>
           )}
@@ -296,11 +302,11 @@ export default function Analytics() {
         <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Mock Exam Score Trend
+              {t("Mock Exam Score Trend")}
             </h3>
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <Award className="h-3.5 w-3.5" />
-              {exams.length} exams tracked
+              {t(`${exams.length} exams tracked`)}
             </div>
           </div>
           {examScoreData.length > 0 ? (
@@ -334,7 +340,7 @@ export default function Analytics() {
           ) : (
             <div className="flex h-[220px] items-center justify-center">
               <p className="text-sm text-slate-400">
-                Complete your first mock exam to start building this chart.
+                {t("Complete your first mock exam to start building this chart.")}
               </p>
             </div>
           )}

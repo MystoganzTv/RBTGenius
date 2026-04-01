@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
 const OAUTH_OPTIONS = [
@@ -76,12 +78,14 @@ function getRedirectPath(search) {
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { language } = useLanguage();
   const redirectPath = useMemo(() => getRedirectPath(location.search), [location.search]);
   const initialMode = useMemo(() => {
     const searchParams = new URLSearchParams(location.search);
     return searchParams.get("mode") === "register" ? "register" : "login";
   }, [location.search]);
   const { user, isAuthenticated, login } = useAuth();
+  const t = (value) => translateUi(value, language);
 
   const [activeTab, setActiveTab] = useState(initialMode);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -148,7 +152,7 @@ export default function Login() {
     const oauthError = searchParams.get("oauthError");
 
     if (oauthError) {
-      setErrorMessage(oauthError);
+      setErrorMessage(t(oauthError));
     }
 
     if (!authToken) {
@@ -171,7 +175,7 @@ export default function Login() {
       })
       .catch((error) => {
         if (isMounted) {
-          setErrorMessage(error.message || "Unable to complete sign in");
+          setErrorMessage(t(error.message || "Unable to complete sign in"));
         }
       })
       .finally(() => {
@@ -195,7 +199,7 @@ export default function Login() {
       login(authData);
       navigate(redirectPath, { replace: true });
     } catch (error) {
-      setErrorMessage(error.message || "Unable to sign in");
+      setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
       setIsSubmitting(false);
     }
@@ -211,7 +215,7 @@ export default function Login() {
       login(authData);
       navigate(redirectPath, { replace: true });
     } catch (error) {
-      setErrorMessage(error.message || "Unable to create account");
+      setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
       setIsSubmitting(false);
     }
@@ -237,14 +241,14 @@ export default function Login() {
             <Sparkles className="-mt-1 h-4 w-4 text-[#FFB800]" />
           </div>
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-            Choose the easiest way to continue and keep your study progress synced.
+            {t("Choose the easiest way to continue and keep your study progress synced.")}
           </p>
         </div>
 
         {availableProviders.length > 0 ? (
           <>
             <div className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-              Quick sign in
+              {t("Quick sign in")}
             </div>
             <div className="mb-6 space-y-3">
               {availableProviders.map(({ id, label, Icon }) => (
@@ -259,38 +263,38 @@ export default function Login() {
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
                     <Icon className="h-5 w-5" />
                   </span>
-                  {label}
+                  {t(label)}
                 </Button>
               ))}
             </div>
 
             <div className="mb-6 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
               <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-              <span>or use email</span>
+              <span>{t("or use email")}</span>
               <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
             </div>
           </>
         ) : isLoadingProviders ? (
           <div className="mb-4 flex items-center justify-center py-1 text-sm text-slate-400 dark:text-slate-500">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Loading sign-in options...
+            {t("Loading sign-in options...")}
           </div>
         ) : null}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
+            <TabsTrigger value="login">{t("Login")}</TabsTrigger>
+            <TabsTrigger value="register">{t("Register")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
             <form onSubmit={handleLogin} className="space-y-4">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-                Manual login
+                {t("Manual login")}
               </p>
               <Input
                 type="email"
-                placeholder="Email"
+                placeholder={t("Email")}
                 value={loginForm.email}
                 onChange={(event) =>
                   setLoginForm((current) => ({
@@ -301,7 +305,7 @@ export default function Login() {
               />
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder={t("Password")}
                 value={loginForm.password}
                 onChange={(event) =>
                   setLoginForm((current) => ({
@@ -316,7 +320,7 @@ export default function Login() {
                 disabled={isSubmitting}
                 className="w-full rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
               >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t("Sign In")}
               </Button>
             </form>
           </TabsContent>
@@ -324,10 +328,10 @@ export default function Login() {
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="space-y-4">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-                Manual registration
+                {t("Manual registration")}
               </p>
               <Input
-                placeholder="Full name"
+                placeholder={t("Full name")}
                 value={registerForm.full_name}
                 onChange={(event) =>
                   setRegisterForm((current) => ({
@@ -338,7 +342,7 @@ export default function Login() {
               />
               <Input
                 type="email"
-                placeholder="Email"
+                placeholder={t("Email")}
                 value={registerForm.email}
                 onChange={(event) =>
                   setRegisterForm((current) => ({
@@ -349,7 +353,7 @@ export default function Login() {
               />
               <Input
                 type="password"
-                placeholder="Password (min 8 chars)"
+                placeholder={t("Password (min 8 chars)")}
                 value={registerForm.password}
                 onChange={(event) =>
                   setRegisterForm((current) => ({
@@ -367,7 +371,7 @@ export default function Login() {
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Create Account"
+                  t("Create Account")
                 )}
               </Button>
             </form>
@@ -382,7 +386,7 @@ export default function Login() {
 
         <div className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
           <Link to="/" className="text-[#1E5EFF] hover:underline">
-            Back to app
+            {t("Back to app")}
           </Link>
         </div>
       </Card>

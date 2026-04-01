@@ -15,8 +15,10 @@ import ReadinessGauge from "@/components/dashboard/ReadinessGauge";
 import StatCard from "@/components/dashboard/StatCard";
 import StreakCard from "@/components/dashboard/StreakCard";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
+import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
 const emptyProgress = {
@@ -95,6 +97,7 @@ async function loadDashboardData() {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const { data } = useQuery({
     queryKey: ["dashboard-data"],
     queryFn: loadDashboardData,
@@ -122,6 +125,7 @@ export default function Dashboard() {
   const activePlan = planStyles[plan] || planStyles.free;
 
   const badges = progress?.badges || [];
+  const t = (value) => translateUi(value, language);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -135,29 +139,31 @@ export default function Dashboard() {
               RBT Genius
             </p>
             <h1 className="mt-4 max-w-2xl text-4xl font-black leading-[0.95] text-[#0F172A] dark:text-slate-50 sm:text-5xl">
-              Welcome back,
+              {t("Welcome back,")}
               <br />
-              {firstName || "Student"}
+              {firstName || t("Student")}
             </h1>
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-500 dark:text-slate-300">
-              {totalQuestions < 20 && exams.length === 0
+              {t(
+                totalQuestions < 20 && exams.length === 0
                 ? `You have covered ${bankCoverage}% of the full bank so far. Readiness will become more meaningful as coverage grows.`
-                : `Exam readiness at ${readiness}% based on your overall progress, mock exam history, and bank coverage.`}
+                : `Exam readiness at ${readiness}% based on your overall progress, mock exam history, and bank coverage.`,
+              )}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <div className="rounded-full border border-[#1E5EFF]/20 bg-[#1E5EFF]/10 px-5 py-3 text-base font-semibold text-[#1E5EFF] dark:border-[#1E5EFF]/30 dark:bg-[#1E5EFF]/15 dark:text-[#8EB0FF]">
                 {streak > 0
-                  ? `Study streak ${streak} days`
+                  ? t(`Study streak ${streak} days`)
                   : questionsToday > 0
-                    ? "First day in progress"
-                    : "Start your streak"}
+                    ? t("First day in progress")
+                    : t("Start your streak")}
               </div>
               <div className="rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-                {totalQuestions}/{totalQuestionsAvailable} answered
+                {t(`${totalQuestions}/${totalQuestionsAvailable} answered`)}
               </div>
               <div className={`rounded-full border px-5 py-3 text-base font-semibold ${activePlan.className}`}>
-                {activePlan.label}
+                {t(activePlan.label)}
               </div>
             </div>
           </div>
@@ -166,7 +172,7 @@ export default function Dashboard() {
             <Link to={createPageUrl("Practice")}>
               <Button className="h-12 gap-2 rounded-2xl bg-[#1E5EFF] px-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90">
                 <Zap className="h-4 w-4" />
-                Start Practicing
+                {t("Start Practicing")}
               </Button>
             </Link>
           </div>
@@ -224,17 +230,17 @@ export default function Dashboard() {
 
           <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Quick Actions
+              {t("Quick Actions")}
             </h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Link to={createPageUrl("Practice")}>
                 <div className="group cursor-pointer rounded-xl border border-slate-200 bg-slate-50/80 p-4 transition-all hover:border-[#1E5EFF]/20 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-[#1E5EFF]/20 dark:hover:bg-slate-900">
                   <HelpCircle className="mb-2 h-5 w-5 text-[#1E5EFF] dark:text-[#8EB0FF]" />
                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Practice Questions
+                    {t("Practice Questions")}
                   </p>
                   <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                    Test your knowledge
+                    {t("Test your knowledge")}
                   </p>
                   <ArrowRight className="mt-2 h-4 w-4 text-[#1E5EFF] transition-transform group-hover:translate-x-1 dark:text-[#8EB0FF]" />
                 </div>
@@ -244,10 +250,10 @@ export default function Dashboard() {
                 <div className="group cursor-pointer rounded-xl border border-slate-200 bg-slate-50/80 p-4 transition-all hover:border-emerald-200 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-500/20 dark:hover:bg-slate-900">
                   <Trophy className="mb-2 h-5 w-5 text-emerald-600 dark:text-emerald-300" />
                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Mock Exam
+                    {t("Mock Exam")}
                   </p>
                   <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                    Simulate the real test
+                    {t("Simulate the real test")}
                   </p>
                   <ArrowRight className="mt-2 h-4 w-4 text-emerald-600 transition-transform group-hover:translate-x-1 dark:text-emerald-300" />
                 </div>
@@ -257,10 +263,10 @@ export default function Dashboard() {
                 <div className="group cursor-pointer rounded-xl border border-slate-200 bg-slate-50/80 p-4 transition-all hover:border-violet-200 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/20 dark:hover:bg-slate-900">
                   <Brain className="mb-2 h-5 w-5 text-violet-600 dark:text-violet-300" />
                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    AI Tutor
+                    {t("AI Tutor")}
                   </p>
                   <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                    Get instant help
+                    {t("Get instant help")}
                   </p>
                   <ArrowRight className="mt-2 h-4 w-4 text-violet-600 transition-transform group-hover:translate-x-1 dark:text-violet-300" />
                 </div>
@@ -279,51 +285,55 @@ export default function Dashboard() {
 
           <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Mock Exam Signal
+              {t("Mock Exam Signal")}
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                  Mock Exams Taken
+                  {t("Mock Exams Taken")}
                 </p>
                 <p className="mt-3 text-4xl font-black text-slate-900 dark:text-slate-50">
                   {mockExamsTaken}
                 </p>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  {mockExamsTaken > 0
-                    ? "Use mock exam results as your strongest exam-readiness signal."
-                    : "Take your first mock exam to unlock a stronger readiness signal."}
+                  {t(
+                    mockExamsTaken > 0
+                      ? "Use mock exam results as your strongest exam-readiness signal."
+                      : "Take your first mock exam to unlock a stronger readiness signal.",
+                  )}
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                  Average Mock Score
+                  {t("Average Mock Score")}
                 </p>
                 <p className="mt-3 text-4xl font-black text-slate-900 dark:text-slate-50">
                   {mockExamsTaken > 0 ? `${averageMockExamScore}%` : "--"}
                 </p>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  {mockExamsTaken > 0
-                    ? averageMockExamScore >= 80
-                      ? "You are performing in a ready-to-test range."
-                      : "Keep practicing before scheduling the real exam."
-                    : "Your readiness recommendation will improve once you have at least one mock exam."}
+                  {t(
+                    mockExamsTaken > 0
+                      ? averageMockExamScore >= 80
+                        ? "You are performing in a ready-to-test range."
+                        : "Keep practicing before scheduling the real exam."
+                      : "Your readiness recommendation will improve once you have at least one mock exam.",
+                  )}
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                  Mock Exams Passed
+                  {t("Mock Exams Passed")}
                 </p>
                 <p className="mt-3 text-4xl font-black text-emerald-600 dark:text-emerald-300">
                   {passedMockExams}
                 </p>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Scores at or above 80% count as a passed mock exam.
+                  {t("Scores at or above 80% count as a passed mock exam.")}
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                  Current Recommendation
+                  {t("Current Recommendation")}
                 </p>
                 <p
                   className={`mt-3 text-2xl font-black ${
@@ -334,16 +344,20 @@ export default function Dashboard() {
                         : "text-rose-500 dark:text-rose-300"
                   }`}
                 >
-                  {mockExamsTaken === 0
-                    ? "Take a mock exam"
-                    : averageMockExamScore >= 80
-                      ? "Ready for the exam"
-                      : "Need more mock practice"}
+                  {t(
+                    mockExamsTaken === 0
+                      ? "Take a mock exam"
+                      : averageMockExamScore >= 80
+                        ? "Ready for the exam"
+                        : "Need more mock practice",
+                  )}
                 </p>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  {mockExamsTaken === 0
-                    ? "Mock exams matter more than small practice samples for final readiness."
-                    : `${failedMockExams} mock exam${failedMockExams === 1 ? "" : "s"} below the target score so far.`}
+                  {t(
+                    mockExamsTaken === 0
+                      ? "Mock exams matter more than small practice samples for final readiness."
+                      : `${failedMockExams} mock exam${failedMockExams === 1 ? "" : "s"} below the target score so far.`,
+                  )}
                 </p>
               </div>
             </div>
@@ -351,7 +365,7 @@ export default function Dashboard() {
 
           <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Badges Earned
+              {t("Badges Earned")}
             </h3>
             <div className="grid grid-cols-3 gap-3">
               {badges.map((badge) => (
@@ -371,7 +385,7 @@ export default function Dashboard() {
                         : "text-slate-600 dark:text-slate-300"
                     }`}
                   >
-                    {badge.label}
+                    {t(badge.label)}
                   </span>
                   {badge.description ? (
                     <span
@@ -381,7 +395,7 @@ export default function Dashboard() {
                           : "text-slate-400 dark:text-slate-500"
                       }`}
                     >
-                      {badge.description}
+                      {t(badge.description)}
                     </span>
                   ) : null}
                 </div>
@@ -391,12 +405,12 @@ export default function Dashboard() {
 
           <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Your Progress
+              {t("Your Progress")}
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  Questions Completed
+                  {t("Questions Completed")}
                 </span>
                 <span className="text-sm font-semibold text-[#1E5EFF]">
                   {totalQuestions}/{totalQuestionsAvailable}
@@ -409,19 +423,19 @@ export default function Dashboard() {
                 />
               </div>
               <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Mock Exams Taken</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t("Mock Exams Taken")}</span>
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {mockExamsTaken}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Bank Accuracy</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t("Bank Accuracy")}</span>
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {bankAccuracy}%
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Study Hours</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t("Study Hours")}</span>
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                   {studyHours}h
                 </span>

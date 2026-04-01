@@ -7,18 +7,18 @@ import {
   ShieldAlert,
   XCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import BilingualText from "@/components/i18n/BilingualText";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/use-language";
+import {
+  localizeQuestion,
+  localizeText,
+  translateDifficulty,
+  translateTopic,
+  translateUi,
+} from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-const topicLabels = {
-  measurement: "Measurement",
-  assessment: "Assessment",
-  skill_acquisition: "Skill Acquisition",
-  behavior_reduction: "Behavior Reduction",
-  documentation: "Documentation",
-  professional_conduct: "Professional Conduct",
-};
 
 export default function QuestionCard({
   question,
@@ -34,6 +34,8 @@ export default function QuestionCard({
   onNext,
   onToggleFlag,
 }) {
+  const { language } = useLanguage();
+
   const handleSubmit = () => {
     if (!selectedAnswer) {
       return;
@@ -47,19 +49,21 @@ export default function QuestionCard({
   };
 
   const isCorrect = selectedAnswer === correctAnswer;
+  const localizedQuestion = localizeQuestion(question, language);
+  const localizedExplanation = localizeText(explanation, language);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-4 dark:border-slate-800 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-            Question {questionNumber} of {totalQuestions}
+            {translateUi("Question", language)} {questionNumber} / {totalQuestions}
           </span>
           <Badge
             variant="secondary"
             className="border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 text-[10px] text-[#1E5EFF]"
           >
-            {topicLabels[question?.topic] || question?.topic}
+            {translateTopic(question?.topic, language)}
           </Badge>
           {question?.bacb_concept ? (
             <Badge variant="secondary" className="text-[10px]">
@@ -80,7 +84,7 @@ export default function QuestionCard({
                   : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300",
             )}
           >
-            {question?.difficulty}
+            {translateDifficulty(question?.difficulty, language)}
           </Badge>
 
           <Button
@@ -95,18 +99,21 @@ export default function QuestionCard({
             onClick={onToggleFlag}
           >
             <Flag className={cn("h-3.5 w-3.5", isFlagged && "fill-current")} />
-            {isFlagged ? "Flagged" : "Flag"}
+            {isFlagged ? translateUi("Flagged", language) : translateUi("Flag", language)}
           </Button>
         </div>
       </div>
 
       <div className="p-6">
-        <p className="mb-6 text-base font-medium leading-relaxed text-slate-900 dark:text-slate-50">
-          {question?.text}
-        </p>
+        <BilingualText
+          content={localizedQuestion?.localizedText}
+          className="mb-6"
+          primaryClassName="text-base font-medium leading-relaxed text-slate-900 dark:text-slate-50"
+          secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
+        />
 
         <div className="space-y-3">
-          {(question?.options || []).map((option) => {
+          {(localizedQuestion?.options || []).map((option) => {
             const isThis = selectedAnswer === option.label;
             const isCorrectAnswer = option.label === correctAnswer;
             let optionStyle =
@@ -163,7 +170,11 @@ export default function QuestionCard({
                     option.label
                   )}
                 </span>
-                <span className={cn("text-sm", optionTextStyle)}>{option.text}</span>
+                <BilingualText
+                  content={option.localizedText}
+                  primaryClassName={cn("text-sm", optionTextStyle)}
+                  secondaryClassName="text-slate-500 dark:text-slate-400"
+                />
               </button>
             );
           })}
@@ -177,7 +188,7 @@ export default function QuestionCard({
             disabled={!selectedAnswer}
             className="w-full rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
           >
-            Submit Answer
+            {translateUi("Submit Answer", language)}
           </Button>
         ) : (
           <div className="space-y-4">
@@ -186,40 +197,51 @@ export default function QuestionCard({
                 <div className="mb-2 flex items-center gap-2">
                   <Lightbulb className="h-4 w-4 text-[#FFB800]" />
                   <span className="text-xs font-semibold text-[#1E5EFF]">
-                    Explanation
+                    {translateUi("Explanation", language)}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                  {explanation}
-                </p>
+                <BilingualText
+                  content={localizedExplanation}
+                  primaryClassName="text-sm leading-relaxed text-slate-600 dark:text-slate-300"
+                  secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
+                />
 
                 {question?.exam_pattern ? (
                   <div className="grid gap-3 pt-1 md:grid-cols-3">
                     <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                        Pattern
+                        {translateUi("Pattern", language)}
                       </p>
-                      <p className="mt-2 text-sm font-medium text-slate-800 dark:text-slate-100">
-                        {question.exam_pattern}
-                      </p>
+                      <BilingualText
+                        content={localizedQuestion?.localizedExamPattern}
+                        className="mt-2"
+                        primaryClassName="text-sm font-medium text-slate-800 dark:text-slate-100"
+                        secondaryClassName="text-slate-500 dark:text-slate-400"
+                      />
                     </div>
                     <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
                       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
                         <Search className="h-3.5 w-3.5" />
-                        Clue
+                        {translateUi("Clue", language)}
                       </div>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                        {question.exam_clue}
-                      </p>
+                      <BilingualText
+                        content={localizedQuestion?.localizedExamClue}
+                        className="mt-2"
+                        primaryClassName="text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+                        secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
+                      />
                     </div>
                     <div className="rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
                       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
                         <ShieldAlert className="h-3.5 w-3.5" />
-                        Common Trap
+                        {translateUi("Common Trap", language)}
                       </div>
-                      <p className="mt-2 text-sm leading-relaxed text-amber-800 dark:text-amber-100/85">
-                        {question.common_trap}
-                      </p>
+                      <BilingualText
+                        content={localizedQuestion?.localizedCommonTrap}
+                        className="mt-2"
+                        primaryClassName="text-sm leading-relaxed text-amber-800 dark:text-amber-100/85"
+                        secondaryClassName="leading-relaxed text-amber-700/80 dark:text-amber-200/70"
+                      />
                     </div>
                   </div>
                 ) : null}
@@ -230,7 +252,7 @@ export default function QuestionCard({
               onClick={handleNext}
               className="w-full gap-2 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
             >
-              Next Question <ArrowRight className="h-4 w-4" />
+              {translateUi("Next Question", language)} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         )}

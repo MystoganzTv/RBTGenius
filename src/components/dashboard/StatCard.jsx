@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
+import { translateUi } from "@/lib/i18n";
 
 export default function StatCard({
   title,
@@ -8,6 +10,7 @@ export default function StatCard({
   color = "blue",
   trend,
 }) {
+  const { language } = useLanguage();
   const colorStyles = {
     blue: "bg-[#1E5EFF]/10 text-[#1E5EFF] dark:bg-slate-900/80 dark:text-[#91A8FF]",
     gold: "bg-[#FFB800]/12 text-[#D18B00] dark:bg-slate-900/80 dark:text-[#F5C96B]",
@@ -21,12 +24,14 @@ export default function StatCard({
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-            {title}
+            {translateUi(title, language)}
           </p>
           <p className="mt-1 text-3xl font-black text-slate-900 dark:text-slate-50">{value}</p>
 
           {subtitle ? (
-            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{subtitle}</p>
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+              {translateUi(subtitle, language)}
+            </p>
           ) : null}
 
           {typeof trend === "number" ? (
@@ -36,7 +41,7 @@ export default function StatCard({
                 trend > 0 ? "text-emerald-500" : "text-rose-500",
               )}
             >
-              {trend > 0 ? "↑" : "↓"} {Math.abs(trend)}% from last week
+              {trend > 0 ? "↑" : "↓"} {Math.abs(trend)}% {translateUi("from last week", language)}
             </p>
           ) : null}
         </div>

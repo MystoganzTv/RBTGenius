@@ -172,9 +172,15 @@ export default function MessageBubble({ message }) {
                     ),
                 }}
               >
-                {message.content}
+                {message.localizedContent?.primary || message.content}
               </ReactMarkdown>
             )}
+          </div>
+        ) : null}
+
+        {!isUser && message?.localizedContent?.secondary ? (
+          <div className="mt-2 rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 text-xs leading-6 text-slate-500 dark:border-[#2D3958] dark:bg-[#10182B] dark:text-slate-400">
+            {message.localizedContent.secondary}
           </div>
         ) : null}
 

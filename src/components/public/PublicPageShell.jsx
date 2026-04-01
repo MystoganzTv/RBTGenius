@@ -1,14 +1,21 @@
 import { Link } from "react-router-dom";
 import { GraduationCap, Moon, Sparkles, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import BilingualText from "@/components/i18n/BilingualText";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import PublicSiteFooter from "@/components/public/PublicSiteFooter";
+import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/lib/AuthContext";
+import { localizeText, translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
 export default function PublicPageShell({ title, description, children }) {
   const { isDark, toggleTheme } = useTheme();
   const { isAuthenticated } = useAuth();
+  const { language } = useLanguage();
+  const localizedTitle = localizeText(title, language);
+  const localizedDescription = localizeText(description, language);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-foreground dark:bg-background">
@@ -26,6 +33,7 @@ export default function PublicPageShell({ title, description, children }) {
           </Link>
 
           <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+            <LanguageSwitcher compact />
             <Button
               variant="ghost"
               size="icon"
@@ -37,14 +45,16 @@ export default function PublicPageShell({ title, description, children }) {
             {isAuthenticated ? (
               <Link to={createPageUrl("Dashboard")}>
                 <Button className="rounded-xl bg-[#1E5EFF] px-3 text-sm hover:bg-[#1E5EFF]/90 sm:px-4 sm:text-base">
-                  <span className="hidden sm:inline">Go to Dashboard</span>
-                  <span className="sm:hidden">Dashboard</span>
+                  <span className="hidden sm:inline">
+                    {translateUi("Go to Dashboard", language)}
+                  </span>
+                  <span className="sm:hidden">{translateUi("Dashboard", language)}</span>
                 </Button>
               </Link>
             ) : (
               <Link to="/login">
                 <Button variant="outline" className="rounded-xl px-3 text-sm sm:px-4 sm:text-base">
-                  Log In
+                  {translateUi("Log In", language)}
                 </Button>
               </Link>
             )}
@@ -55,13 +65,17 @@ export default function PublicPageShell({ title, description, children }) {
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950 sm:p-8">
           <div className="max-w-3xl">
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl">
-              {title}
-            </h1>
+            <BilingualText
+              content={localizedTitle}
+              className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl"
+              secondaryClassName="text-base text-slate-400 dark:text-slate-500"
+            />
             {description ? (
-              <p className="mt-4 text-base leading-7 text-slate-500 dark:text-slate-400">
-                {description}
-              </p>
+              <BilingualText
+                content={localizedDescription}
+                className="mt-4 text-base leading-7 text-slate-500 dark:text-slate-400"
+                secondaryClassName="text-sm leading-6 text-slate-400 dark:text-slate-500"
+              />
             ) : null}
           </div>
 

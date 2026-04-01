@@ -14,9 +14,12 @@ import {
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import PublicSiteFooter from "@/components/public/PublicSiteFooter";
+import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { ACCESS_COMPARISON } from "@/lib/plan-access";
+import { translateUi } from "@/lib/i18n";
 import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
@@ -317,6 +320,7 @@ const offeringCards = [
 
 export default function Landing() {
   const { isDark, toggleTheme } = useTheme();
+  const { language } = useLanguage();
   const { isAuthenticated } = useAuth();
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
   const [outgoingPreviewIndex, setOutgoingPreviewIndex] = useState(null);
@@ -397,6 +401,7 @@ export default function Landing() {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+            <LanguageSwitcher compact />
             <Button
               variant="ghost"
               size="icon"
@@ -436,14 +441,16 @@ export default function Landing() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-xs font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/10 dark:text-[#8EB0FF] sm:text-sm">
               <Sparkles className="h-4 w-4" />
-              Built for RBT exam prep
+              {translateUi("Built for RBT exam prep", language)}
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[0.96] text-slate-900 dark:text-slate-50 sm:mt-6 sm:text-5xl lg:text-6xl">
-              Study with structure, not guesswork.
+              {translateUi("Study with structure, not guesswork.", language)}
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-6 sm:text-xl">
-              RBT Genius helps future technicians practice consistently, review with flashcards,
-              use the AI tutor, take realistic mock exams, and track progress across exam prep.
+              {translateUi(
+                "RBT Genius helps future technicians practice consistently, review with flashcards, use the AI tutor, take realistic mock exams, and track progress across exam prep.",
+                language,
+              )}
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">

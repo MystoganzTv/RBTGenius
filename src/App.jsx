@@ -11,6 +11,7 @@ import UserNotRegisteredError from "@/components/UserNotRegisteredError.jsx";
 import { Toaster } from "@/components/ui/toaster";
 import AppErrorBoundary from "@/components/AppErrorBoundary.jsx";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { LanguageProvider } from "@/hooks/use-language";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import PageNotFound from "@/lib/PageNotFound";
 import { queryClientInstance } from "@/lib/query-client";
@@ -190,16 +191,18 @@ function AuthenticatedApp() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <AppErrorBoundary>
-            <Router>
-              <AuthenticatedApp />
-            </Router>
-          </AppErrorBoundary>
-          <Toaster />
-        </QueryClientProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <AppErrorBoundary>
+              <Router>
+                <AuthenticatedApp />
+              </Router>
+            </AppErrorBoundary>
+            <Toaster />
+          </QueryClientProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

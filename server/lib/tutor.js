@@ -37,6 +37,10 @@ function isAffirmative(text) {
     "go ahead",
     "lets do it",
     "let s do it",
+    "si",
+    "claro",
+    "dale",
+    "hazlo",
   ]);
 }
 
@@ -47,6 +51,8 @@ function isNegative(text) {
     "not now",
     "later",
     "skip",
+    "ahora no",
+    "luego",
   ]);
 }
 
@@ -164,7 +170,7 @@ function evaluateQuizAnswer(response, quiz) {
 function formatQuizEvaluation(userText, quiz, topic) {
   const normalized = normalizeForMatch(userText);
 
-  if (hasAny(normalized, ["hint", "clue"])) {
+  if (hasAny(normalized, ["hint", "clue", "pista", "ayuda"])) {
     return {
       content: [
         formatTopicLead(topic, "Still on"),
@@ -179,7 +185,7 @@ function formatQuizEvaluation(userText, quiz, topic) {
     };
   }
 
-  if (hasAny(normalized, ["i dont know", "i don't know", "dont know", "don't know", "idk", "skip"])) {
+  if (hasAny(normalized, ["i dont know", "i don't know", "dont know", "don't know", "idk", "skip", "no se", "no sé", "paso"])) {
     return {
       content: [
         formatTopicLead(topic, "Still on"),
@@ -252,7 +258,7 @@ const TOPICS = [
   {
     id: "positive_reinforcement",
     title: "Positive Reinforcement",
-    aliases: ["positive reinforcement", "reinforcement", "reward"],
+    aliases: ["positive reinforcement", "reinforcement", "reward", "refuerzo positivo", "reforzamiento positivo"],
     summaries: [
       "Positive reinforcement means adding something valuable right after a behavior so that the behavior is more likely to happen again.",
       "In ABA, positive reinforcement happens when a behavior is followed by something preferred and that behavior increases later.",
@@ -293,7 +299,7 @@ const TOPICS = [
   {
     id: "prompting",
     title: "Prompting and Prompt Fading",
-    aliases: ["prompting", "prompt hierarchy", "least to most", "most to least", "prompt fading"],
+    aliases: ["prompting", "prompt hierarchy", "least to most", "most to least", "prompt fading", "ayudas", "jerarquia de ayudas", "desvanecimiento de ayudas"],
     summaries: [
       "Prompts are extra cues that help the learner respond correctly, and prompt fading reduces that help over time.",
       "Prompting supports correct responding in the moment, while fading helps transfer control to the natural cue.",
@@ -334,7 +340,7 @@ const TOPICS = [
   {
     id: "data_collection",
     title: "Data Collection",
-    aliases: ["data collection", "taking data", "recording data", "collecting data"],
+    aliases: ["data collection", "taking data", "recording data", "collecting data", "toma de datos", "recoleccion de datos", "registrar datos"],
     summaries: [
       "Data collection means recording behavior or skill performance accurately and consistently according to the treatment plan.",
       "Good data tells the team what is improving, what is not, and whether the intervention should stay the same or change.",
@@ -375,7 +381,7 @@ const TOPICS = [
   {
     id: "fba",
     title: "Functional Behavior Assessment",
-    aliases: ["functional behavior assessment", "fba", "function of behavior", "abc data"],
+    aliases: ["functional behavior assessment", "fba", "function of behavior", "abc data", "evaluacion funcional de la conducta", "funcion de la conducta", "datos abc"],
     summaries: [
       "A functional behavior assessment identifies why a behavior happens by looking at antecedents, behavior, and consequences.",
       "FBA is about finding the behavior's likely function so the intervention matches what is maintaining it.",
@@ -416,7 +422,7 @@ const TOPICS = [
   {
     id: "task_analysis",
     title: "Task Analysis and Chaining",
-    aliases: ["task analysis", "chaining", "forward chaining", "backward chaining"],
+    aliases: ["task analysis", "chaining", "forward chaining", "backward chaining", "analisis de tareas", "encadenamiento"],
     summaries: [
       "A task analysis breaks a skill into smaller teachable steps, and chaining teaches those steps in sequence.",
       "Complex routines become more teachable when each step is defined clearly and reinforced systematically.",
@@ -457,7 +463,7 @@ const TOPICS = [
   {
     id: "ethics",
     title: "Ethics and Professional Conduct",
-    aliases: ["ethics", "professional conduct", "supervisor", "scope of competence", "confidentiality"],
+    aliases: ["ethics", "professional conduct", "supervisor", "scope of competence", "confidentiality", "etica", "conducta profesional", "confidencialidad"],
     summaries: [
       "RBTs should stay within their role, protect confidentiality, follow the treatment plan, and contact the supervisor when a situation exceeds their authority.",
       "Professional conduct in ABA is usually about safety, boundaries, documentation, and asking for supervision when needed.",
@@ -751,7 +757,7 @@ export function createTutorReply(text, options = {}) {
   if (pendingQuiz) {
     const quizTopic = getTopicById(pendingQuiz.topicId) || activeTopic;
 
-    if (hasAny(normalized, ["next question", "another question", "next one"])) {
+    if (hasAny(normalized, ["next question", "another question", "next one", "siguiente pregunta", "otra pregunta"])) {
       const topic = quizTopic || getTopicById("positive_reinforcement");
       return formatQuizReply(topic, seed + 5, {
         count: 1,
@@ -795,24 +801,24 @@ export function createTutorReply(text, options = {}) {
     return { content: `Today is **${todayLabel}**.` };
   }
 
-  if (hasAny(normalized, ["what can you do", "help me", "how can you help"])) {
+  if (hasAny(normalized, ["what can you do", "help me", "how can you help", "ayudame", "como puedes ayudar"])) {
     return { content: formatGeneralHelp(activeTopic) };
   }
 
-  if (hasAny(normalized, ["study plan", "how should i study", "study schedule"])) {
+  if (hasAny(normalized, ["study plan", "how should i study", "study schedule", "plan de estudio", "como debo estudiar"])) {
     return { content: formatStudyPlan(activeTopic, seed) };
   }
 
-  if (hasAny(normalized, ["why is this wrong", "why is that wrong", "why wrong"])) {
+  if (hasAny(normalized, ["why is this wrong", "why is that wrong", "why wrong", "por que esta mal", "por que esto esta mal"])) {
     return { content: formatWrongAnswerReply(activeTopic) };
   }
 
-  if (hasAny(normalized, ["another example", "one more example", "more example"])) {
+  if (hasAny(normalized, ["another example", "one more example", "more example", "otro ejemplo", "mas ejemplo", "más ejemplo"])) {
     const topic = activeTopic || getTopicById("positive_reinforcement");
     return { content: formatExampleReply(topic, seed + 1, intro) };
   }
 
-  if (hasAny(normalized, ["example", "give me an example"])) {
+  if (hasAny(normalized, ["example", "give me an example", "ejemplo", "dame un ejemplo"])) {
     const topic = activeTopic || getTopicById("positive_reinforcement");
     return { content: formatExampleReply(topic, seed, intro) };
   }
@@ -824,6 +830,9 @@ export function createTutorReply(text, options = {}) {
       "without showing the answer",
       "don't show the answer",
       "dont show the answer",
+      "una pregunta a la vez",
+      "sin mostrar la respuesta",
+      "no muestres la respuesta",
     ])
   ) {
     const topic = activeTopic || getTopicById("positive_reinforcement");
@@ -834,7 +843,7 @@ export function createTutorReply(text, options = {}) {
     });
   }
 
-  if (hasAny(normalized, ["harder", "more challenging"])) {
+  if (hasAny(normalized, ["harder", "more challenging", "mas dificil", "más difícil"])) {
     const topic = activeTopic || getTopicById("positive_reinforcement");
     return {
       content: formatQuizReply(topic, seed + 2, {
@@ -850,7 +859,7 @@ export function createTutorReply(text, options = {}) {
     };
   }
 
-  if (hasAny(normalized, ["quiz me", "test me", "practice me"])) {
+  if (hasAny(normalized, ["quiz me", "test me", "practice me", "hazme un quiz", "preguntame", "pruebame"])) {
     if (activeTopic) {
       const quizReply = formatQuizReply(activeTopic, seed, {
         count: 3,

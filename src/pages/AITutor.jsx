@@ -14,6 +14,8 @@ import PremiumGate from "@/components/billing/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
+import { useLanguage } from "@/hooks/use-language";
+import { localizeText, translateUi } from "@/lib/i18n";
 import { api } from "@/lib/api";
 
 const suggestedTopics = [
@@ -44,6 +46,7 @@ const suggestedTopics = [
 ];
 
 export default function AITutor() {
+  const { language } = useLanguage();
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [input, setInput] = useState("");
@@ -72,6 +75,23 @@ export default function AITutor() {
   );
 
   const messages = activeConversation?.messages || [];
+  const localizedMessages = useMemo(
+    () =>
+      messages.map((message) => ({
+        ...message,
+        localizedContent: localizeText(message.content, language),
+      })),
+    [language, messages],
+  );
+  const localizedSuggestedTopics = useMemo(
+    () =>
+      suggestedTopics.map((topic) => ({
+        ...topic,
+        label: translateUi(topic.label, language),
+        prompt: translateUi(topic.prompt, language),
+      })),
+    [language],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +234,7 @@ export default function AITutor() {
               className="w-full gap-2 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
             >
               <Plus className="h-4 w-4" />
-              New Chat
+              {translateUi("New Chat", language)}
             </Button>
           </div>
 
@@ -225,7 +245,7 @@ export default function AITutor() {
               </div>
             ) : conversations.length === 0 ? (
               <p className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
-                No conversations yet
+                {translateUi("No conversations yet", language)}
               </p>
             ) : (
               conversations.map((conversation) => (
@@ -242,7 +262,7 @@ export default function AITutor() {
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-3.5 w-3.5 flex-shrink-0" />
                     <span className="truncate">
-                      {conversation.metadata?.name || "Chat"}
+                      {conversation.metadata?.name || translateUi("Chat", language)}
                     </span>
                   </div>
                 </button>
@@ -258,17 +278,17 @@ export default function AITutor() {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-                Genius AI Tutor
+                {translateUi("Genius AI Tutor", language)}
               </h2>
               <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                Your personal ABA and RBT exam coach
+                {translateUi("Your personal ABA and RBT exam coach", language)}
               </p>
             </div>
             <Sparkles className="ml-1 h-4 w-4 text-[#FFB800]" />
             {remainingMessages !== null && remainingMessages !== undefined ? (
               <div className="ml-auto inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 text-[11px] font-semibold text-[#C88700]">
                 <Crown className="h-3 w-3" />
-                {remainingMessages} free messages left today
+                {translateUi(`${remainingMessages} free messages left today`, language)}
               </div>
             ) : null}
           </div>
@@ -281,16 +301,17 @@ export default function AITutor() {
                   <Brain className="h-8 w-8 text-[#1E5EFF]" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                  Hello! I&apos;m your AI Tutor
+                  {translateUi("Hello! I'm your AI Tutor", language)}
                 </h3>
                 <p className="mt-1 max-w-md text-sm text-slate-400 dark:text-slate-300">
-                  Ask about ABA concepts, exam strategy, wrong answers, or ask
-                  me to quiz you. You can also paste a question and I will help
-                  break it down.
+                  {translateUi(
+                    "Ask about ABA concepts, exam strategy, wrong answers, or ask me to quiz you. You can also paste a question and I will help break it down.",
+                    language,
+                  )}
                 </p>
 
                 <div className="mt-6 grid max-w-lg grid-cols-2 gap-3">
-                  {suggestedTopics.map((topic) => (
+                  {localizedSuggestedTopics.map((topic) => (
                     <button
                       key={topic.label}
                       type="button"
@@ -307,7 +328,7 @@ export default function AITutor() {
                 </div>
               </div>
             ) : (
-              messages.map((message) => (
+              localizedMessages.map((message) => (
                 <MessageBubble key={message.id} message={message} />
               ))
             )}
@@ -315,7 +336,7 @@ export default function AITutor() {
             {loading ? (
               <div className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-400">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Thinking...
+                {translateUi("Thinking...", language)}
               </div>
             ) : null}
 
@@ -324,7 +345,7 @@ export default function AITutor() {
 
           <div className="border-t border-slate-100 p-4 dark:border-[#28324E] dark:bg-[#141C31]/92">
             <div className="mb-3 flex flex-wrap gap-2">
-              {suggestedTopics.slice(0, 4).map((topic) => (
+              {localizedSuggestedTopics.slice(0, 4).map((topic) => (
                 <button
                   key={`quick-${topic.label}`}
                   type="button"
@@ -345,7 +366,7 @@ export default function AITutor() {
               <Input
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder="Ask about ABA concepts, exam tips..."
+                placeholder={translateUi("Ask about ABA concepts, exam tips...", language)}
                 className="flex-1 rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-[#1E5EFF]/20 dark:border-[#324160] dark:bg-[#212B42] dark:text-slate-100 dark:placeholder:text-slate-400"
               />
               <Button
@@ -358,11 +379,17 @@ export default function AITutor() {
             </form>
             {limitReached ? (
               <p className="mt-3 text-xs text-amber-600">
-                Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.
+                {translateUi(
+                  "Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.",
+                  language,
+                )}
               </p>
             ) : (
               <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
-                Tip: paste a full question with answer choices if you want a clearer explanation.
+                {translateUi(
+                  "Tip: paste a full question with answer choices if you want a clearer explanation.",
+                  language,
+                )}
               </p>
             )}
           </div>

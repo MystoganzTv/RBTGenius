@@ -41,6 +41,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/hooks/use-language";
+import { translateUi } from "@/lib/i18n";
 import { useAuth } from "@/lib/AuthContext";
 import { toast } from "@/components/ui/use-toast";
 
@@ -132,6 +134,7 @@ function getPaymentPlanLabel(plan) {
 
 export default function AdminMembers() {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
@@ -141,6 +144,7 @@ export default function AdminMembers() {
   const [memberPaymentsTarget, setMemberPaymentsTarget] = useState(null);
 
   const isAdmin = user?.role === "admin";
+  const t = (value) => translateUi(value, language);
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["admin-members"],
@@ -180,8 +184,8 @@ export default function AdminMembers() {
     },
     onSuccess: () => {
       toast({
-        title: "Member deleted",
-        description: "The account and related study data were removed.",
+        title: t("Member deleted"),
+        description: t("The account and related study data were removed."),
       });
     },
     onError: (_error, _memberId, context) => {
@@ -190,8 +194,8 @@ export default function AdminMembers() {
       }
 
       toast({
-        title: "Unable to delete member",
-        description: "Please try again in a moment.",
+        title: t("Unable to delete member"),
+        description: t("Please try again in a moment."),
         variant: "destructive",
       });
     },
@@ -273,10 +277,10 @@ export default function AdminMembers() {
         <Card className="p-10 text-center">
           <Shield className="mx-auto mb-4 h-12 w-12 text-slate-300" />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            Admin access only
+            {t("Admin access only")}
           </h1>
           <p className="mt-2 text-slate-500 dark:text-slate-400">
-            This panel is only available to administrator accounts.
+            {t("This panel is only available to administrator accounts.")}
           </p>
         </Card>
       </div>
@@ -289,10 +293,10 @@ export default function AdminMembers() {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="min-w-0">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-              Member Management
+              {t("Member Management")}
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-              Manage premium access and admin roles for your members.
+              {t("Manage premium access and admin roles for your members.")}
             </p>
           </div>
 
@@ -300,7 +304,7 @@ export default function AdminMembers() {
             <Card className={summaryCardClass}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Total Members</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("Total Members")}</p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                     {members.length}
                   </p>
@@ -311,7 +315,7 @@ export default function AdminMembers() {
             <Card className={summaryCardClass}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Premium Members</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("Premium Members")}</p>
                   <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-300">
                     {premiumCount}
                   </p>
@@ -322,7 +326,7 @@ export default function AdminMembers() {
             <Card className={summaryCardClass}>
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Admins</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("Admins")}</p>
                   <p className="text-2xl font-bold text-violet-600 dark:text-violet-300">
                     {adminCount}
                   </p>
@@ -338,16 +342,16 @@ export default function AdminMembers() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by name or email"
+              placeholder={t("Search by name or email")}
               className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
 
             <Select value={planFilter} onValueChange={setPlanFilter}>
               <SelectTrigger className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
-                <SelectValue placeholder="Filter by plan" />
+                <SelectValue placeholder={t("Filter by plan")} />
               </SelectTrigger>
               <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
-                <SelectItem value="all">All Plans</SelectItem>
+                <SelectItem value="all">{t("All Plans")}</SelectItem>
                 {PLAN_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -361,11 +365,11 @@ export default function AdminMembers() {
         <div className="grid grid-cols-1 gap-4">
           {isLoading ? (
             <Card className="border-slate-200/80 bg-white/95 p-8 text-center text-slate-500 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82 dark:text-slate-400">
-              Loading members...
+              {t("Loading members...")}
             </Card>
           ) : filteredMembers.length === 0 ? (
             <Card className="border-slate-200/80 bg-white/95 p-8 text-center text-slate-500 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82 dark:text-slate-400">
-              No members match the current filters.
+              {t("No members match the current filters.")}
             </Card>
           ) : (
             filteredMembers.map((member) => {
@@ -385,7 +389,7 @@ export default function AdminMembers() {
                           {member.full_name}
                         </h2>
                         <Badge variant="outline" className={darkBadgeClass}>
-                          {member.role === "admin" ? "Admin" : "User"}
+                          {member.role === "admin" ? t("Admin") : t("User")}
                         </Badge>
                         <Badge variant="outline" className={darkBadgeClass}>
                           {getProviderLabel(member.auth_provider)}
@@ -405,13 +409,13 @@ export default function AdminMembers() {
                         {member.email}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-                        <span>Joined {formatJoinedDate(member.created_at)}</span>
-                        <span>{member.total_questions_completed} questions completed</span>
-                        <span>{member.readiness_score}% readiness</span>
-                        <span>{member.study_streak_days} day streak</span>
-                        <span>{member.exams_count} exams</span>
-                        <span>{member.payments_count || 0} payments</span>
-                        <span>${Number(member.total_paid_amount || 0).toFixed(2)} paid</span>
+                        <span>{t(`Joined ${formatJoinedDate(member.created_at)}`)}</span>
+                        <span>{t(`${member.total_questions_completed} questions completed`)}</span>
+                        <span>{t(`${member.readiness_score}% readiness`)}</span>
+                        <span>{t(`${member.study_streak_days} day streak`)}</span>
+                        <span>{t(`${member.exams_count} exams`)}</span>
+                        <span>{t(`${member.payments_count || 0} payments`)}</span>
+                        <span>{t(`$${Number(member.total_paid_amount || 0).toFixed(2)} paid`)}</span>
                       </div>
                     </div>
 
@@ -419,7 +423,7 @@ export default function AdminMembers() {
                       <div className="mb-3 flex items-center justify-end gap-3">
                         {hasChanges ? (
                           <Badge className="border-transparent bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300">
-                            Unsaved changes
+                            {t("Unsaved changes")}
                           </Badge>
                         ) : null}
                       </div>
@@ -468,7 +472,7 @@ export default function AdminMembers() {
                             className={memberOutlineButtonClass}
                           >
                             <CreditCard className="mr-2 h-4 w-4" />
-                            Payments
+                            {t("Payments")}
                           </Button>
 
                           <Button
@@ -480,7 +484,7 @@ export default function AdminMembers() {
                             }
                             className="w-full bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:bg-[#7C97FF] dark:text-slate-950 dark:hover:bg-[#96ACFF] dark:shadow-[0_16px_32px_-22px_rgba(124,151,255,0.85)]"
                           >
-                            Save
+                            {t("Save")}
                           </Button>
 
                           <Button
@@ -491,7 +495,7 @@ export default function AdminMembers() {
                             className="w-full border-red-200 bg-white text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-400/30 dark:bg-[#2C1C30] dark:text-red-200 dark:hover:bg-[#38233D]"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            {t("Delete")}
                           </Button>
                         </div>
                       </div>
@@ -519,11 +523,10 @@ export default function AdminMembers() {
             </div>
             <AlertDialogHeader className="space-y-2 text-left">
               <AlertDialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                Delete member account?
+                {t("Delete member account?")}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-                This action permanently removes the member profile, practice attempts,
-                flashcard activity, mock exams, payments, sessions, and tutor conversations.
+                {t("This action permanently removes the member profile, practice attempts, flashcard activity, mock exams, payments, sessions, and tutor conversations.")}
               </AlertDialogDescription>
             </AlertDialogHeader>
           </div>
@@ -536,7 +539,7 @@ export default function AdminMembers() {
                     {memberPendingDelete.full_name}
                   </h3>
                   <Badge variant="outline" className={darkBadgeClass}>
-                    {memberPendingDelete.role === "admin" ? "Admin" : "User"}
+                    {memberPendingDelete.role === "admin" ? t("Admin") : t("User")}
                   </Badge>
                   <Badge variant="outline" className={darkBadgeClass}>
                     {getProviderLabel(memberPendingDelete.auth_provider)}
@@ -546,10 +549,10 @@ export default function AdminMembers() {
                   {memberPendingDelete.email}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-                  <span>{memberPendingDelete.total_questions_completed} questions completed</span>
-                  <span>{memberPendingDelete.exams_count} exams</span>
-                  <span>{memberPendingDelete.payments_count || 0} payments</span>
-                  <span>${Number(memberPendingDelete.total_paid_amount || 0).toFixed(2)} paid</span>
+                  <span>{t(`${memberPendingDelete.total_questions_completed} questions completed`)}</span>
+                  <span>{t(`${memberPendingDelete.exams_count} exams`)}</span>
+                  <span>{t(`${memberPendingDelete.payments_count || 0} payments`)}</span>
+                  <span>{t(`$${Number(memberPendingDelete.total_paid_amount || 0).toFixed(2)} paid`)}</span>
                 </div>
               </div>
             </div>
@@ -560,7 +563,7 @@ export default function AdminMembers() {
               className="rounded-xl"
               disabled={deleteMemberMutation.isPending}
             >
-              Keep member
+              {t("Keep member")}
             </AlertDialogCancel>
             <AlertDialogAction
               className="rounded-xl bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"
@@ -575,12 +578,12 @@ export default function AdminMembers() {
               {deleteMemberMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
+                  {t("Deleting...")}
                 </>
               ) : (
                 <>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete member
+                  {t("Delete member")}
                 </>
               )}
             </AlertDialogAction>
@@ -601,19 +604,19 @@ export default function AdminMembers() {
           <div className="border-b border-slate-200/80 bg-gradient-to-br from-slate-50 via-white to-blue-50 px-6 py-5 dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
             <DialogHeader className="space-y-2 text-left">
               <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                Payment history
+                {t("Payment history")}
               </DialogTitle>
               <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {memberPaymentsTarget ? (
                   <>
-                    Detailed billing records for{" "}
+                    {t("Detailed billing records for")}{" "}
                     <span className="font-medium text-slate-900 dark:text-slate-100">
                       {memberPaymentsTarget.full_name}
                     </span>
                     .
                   </>
                 ) : (
-                  "Detailed billing records for the selected member."
+                  t("Detailed billing records for the selected member.")
                 )}
               </DialogDescription>
             </DialogHeader>

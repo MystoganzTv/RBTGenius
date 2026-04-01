@@ -10,10 +10,14 @@ import {
   XCircle,
 } from "lucide-react";
 import PremiumGate from "@/components/billing/PremiumGate";
+import BilingualText from "@/components/i18n/BilingualText";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
+import { localizeQuestion, translateTopic, translateUi } from "@/lib/i18n";
 import { isPremiumPlan } from "@/lib/plan-access";
+import { topicLabels } from "@/lib/question-bank";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +30,7 @@ async function saveMockExamResult(result) {
 }
 
 export default function MockExams() {
+  const { language } = useLanguage();
   const [examState, setExamState] = useState("idle");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -127,6 +132,7 @@ export default function MockExams() {
   };
 
   const currentQuestion = questions[currentIndex] || null;
+  const localizedCurrentQuestion = localizeQuestion(currentQuestion, language);
 
   if (!entitlements) {
     return (
@@ -144,9 +150,9 @@ export default function MockExams() {
       <PremiumGate
         feature="mock_exams"
         bullets={[
-          "Full 85-question timed mock exams",
-          "Saved exam history and score trends",
-          "Domain breakdown after each completed exam",
+          translateUi("Full 85-question timed mock exams", language),
+          translateUi("Saved exam history and score trends", language),
+          translateUi("Domain breakdown after each completed exam", language),
         ]}
       />
     );
@@ -160,10 +166,10 @@ export default function MockExams() {
             <ClipboardCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-300" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            Mock RBT Exam
+            {translateUi("Mock RBT Exam", language)}
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Simulate the real BACB RBT certification exam.
+            {translateUi("Simulate the real BACB RBT certification exam.", language)}
           </p>
         </div>
 
@@ -173,17 +179,17 @@ export default function MockExams() {
               <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                 {TOTAL_QUESTIONS}
               </p>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Questions</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{translateUi("Questions", language)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-center dark:border-slate-800 dark:bg-slate-900">
               <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                 {EXAM_DURATION_MINUTES}m
               </p>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Time Limit</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{translateUi("Time Limit", language)}</p>
             </div>
             <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-center dark:border-slate-800 dark:bg-slate-900">
               <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{PASS_SCORE}%</p>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Pass Score</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{translateUi("Pass Score", language)}</p>
             </div>
           </div>
 
@@ -191,12 +197,12 @@ export default function MockExams() {
             <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500 dark:text-amber-300" />
             <div>
               <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                Exam Instructions
+                {translateUi("Exam Instructions", language)}
               </p>
               <ul className="mt-1 space-y-1 text-xs text-amber-700 dark:text-amber-100/85">
-                <li>• Answer all questions within the time limit</li>
-                <li>• You can navigate between questions freely</li>
-                <li>• Results are shown after submission</li>
+                <li>• {translateUi("Answer all questions within the time limit", language)}</li>
+                <li>• {translateUi("You can navigate between questions freely", language)}</li>
+                <li>• {translateUi("Results are shown after submission", language)}</li>
               </ul>
             </div>
           </div>
@@ -207,7 +213,7 @@ export default function MockExams() {
             style={{ backgroundColor: "#059669" }}
           >
             <ClipboardCheck className="h-5 w-5" />
-            Begin Mock Exam
+            {translateUi("Begin Mock Exam", language)}
           </Button>
         </div>
       </div>
@@ -231,12 +237,12 @@ export default function MockExams() {
             )}
           </div>
           <h2 className="text-2xl font-bold text-slate-900">
-            {examResult.passed ? "Congratulations!" : "Keep Practicing"}
+            {translateUi(examResult.passed ? "Congratulations!" : "Keep Practicing", language)}
           </h2>
           <p className="mt-1 text-sm text-slate-500">
             {examResult.passed
-              ? "You passed the mock exam!"
-              : "You need more preparation."}
+              ? translateUi("You passed the mock exam!", language)
+              : translateUi("You need more preparation.", language)}
           </p>
         </div>
 
@@ -262,14 +268,14 @@ export default function MockExams() {
           </div>
 
           <h3 className="mb-3 text-sm font-semibold text-slate-700">
-            Domain Breakdown
+            {translateUi("Domain Breakdown", language)}
           </h3>
           <div className="space-y-3">
             {Object.entries(examResult.domain_scores || {}).map(([key, value]) => (
               <div key={key}>
                 <div className="mb-1 flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-600">
-                    {topicLabels[key]}
+                    {translateTopic(key, language) || topicLabels[key]}
                   </span>
                   <span
                     className="text-xs font-semibold"
@@ -302,13 +308,13 @@ export default function MockExams() {
             className="flex-1 rounded-xl"
             onClick={() => setExamState("idle")}
           >
-            Back to Exams
+            {translateUi("Back to Exams", language)}
           </Button>
           <Button
             className="flex-1 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
             onClick={handleStartExam}
           >
-            Retake Exam
+            {translateUi("Retake Exam", language)}
           </Button>
         </div>
       </div>
@@ -334,7 +340,7 @@ export default function MockExams() {
             {currentIndex + 1}/{questions.length}
           </Badge>
           <span className="text-sm text-slate-500">
-            {Object.keys(answers).length} answered
+            {translateUi(`${Object.keys(answers).length} answered`, language)}
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -355,17 +361,20 @@ export default function MockExams() {
             className="rounded-xl"
             onClick={handleFinishExam}
           >
-            Finish Exam
+            {translateUi("Finish Exam", language)}
           </Button>
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-100 bg-white p-6">
-        <p className="mb-6 text-base font-medium leading-relaxed text-slate-900">
-          {currentQuestion.text}
-        </p>
+        <BilingualText
+          content={localizedCurrentQuestion?.localizedText}
+          className="mb-6"
+          primaryClassName="text-base font-medium leading-relaxed text-slate-900"
+          secondaryClassName="leading-relaxed text-slate-500"
+        />
         <div className="space-y-3">
-          {(currentQuestion.options || []).map((option) => {
+          {(localizedCurrentQuestion?.options || []).map((option) => {
             const isSelected = answers[currentQuestion.id] === option.label;
 
             return (
@@ -395,7 +404,11 @@ export default function MockExams() {
                 >
                   {option.label}
                 </span>
-                <span className="text-sm text-slate-900">{option.text}</span>
+                <BilingualText
+                  content={option.localizedText}
+                  primaryClassName="text-sm text-slate-900"
+                  secondaryClassName="text-slate-500"
+                />
               </button>
             );
           })}
@@ -410,14 +423,14 @@ export default function MockExams() {
           onClick={() => setCurrentIndex((current) => current - 1)}
         >
           <ArrowLeft className="h-4 w-4" />
-          Previous
+          {translateUi("Previous", language)}
         </Button>
         <Button
           className="gap-2 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
           disabled={currentIndex >= questions.length - 1}
           onClick={() => setCurrentIndex((current) => current + 1)}
         >
-          Next
+          {translateUi("Next", language)}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

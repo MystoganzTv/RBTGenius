@@ -25,6 +25,8 @@ import {
 import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
+import { useLanguage } from "@/hooks/use-language";
+import { translateUi } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { createPageUrl } from "@/utils";
 
@@ -81,6 +83,8 @@ export default function Pricing() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { language } = useLanguage();
+  const t = (value) => translateUi(value, language);
 
   const { data: publicSettings } = useQuery({
     queryKey: ["public-settings"],
@@ -112,14 +116,14 @@ export default function Pricing() {
       }
 
       toast({
-        title: "Checkout unavailable",
-        description: "Stripe did not return a checkout link.",
+        title: t("Checkout unavailable"),
+        description: t("Stripe did not return a checkout link."),
       });
     },
     onError: (error) => {
       toast({
-        title: "Unable to start checkout",
-        description: error.message || "Please try again in a moment.",
+        title: t("Unable to start checkout"),
+        description: t(error.message || "Please try again in a moment."),
       });
     },
   });
@@ -133,14 +137,14 @@ export default function Pricing() {
       }
 
       toast({
-        title: "Billing portal unavailable",
-        description: "Stripe did not return a billing portal link.",
+        title: t("Billing portal unavailable"),
+        description: t("Stripe did not return a billing portal link."),
       });
     },
     onError: (error) => {
       toast({
-        title: "Unable to open billing portal",
-        description: error.message || "Please try again in a moment.",
+        title: t("Unable to open billing portal"),
+        description: t(error.message || "Please try again in a moment."),
       });
     },
   });
@@ -151,8 +155,8 @@ export default function Pricing() {
 
     if (checkoutStatus === "cancelled") {
       toast({
-        title: "Checkout cancelled",
-        description: "Your plan was not changed.",
+        title: t("Checkout cancelled"),
+        description: t("Your plan was not changed."),
       });
       navigate(createPageUrl("Pricing"), { replace: true });
     }
@@ -205,7 +209,7 @@ export default function Pricing() {
         <Link to={isAuthenticated ? createPageUrl("Dashboard") : "/"}>
           <Button variant="ghost" className="gap-2 rounded-xl text-sm text-slate-500">
             <ArrowLeft className="h-4 w-4" />
-            {isAuthenticated ? "Back to Dashboard" : "Back to Home"}
+            {isAuthenticated ? t("Back to Dashboard") : t("Back to Home")}
           </Button>
         </Link>
       </nav>
@@ -213,25 +217,24 @@ export default function Pricing() {
       <div className="px-6 pb-12 pt-12 text-center">
         <Badge className="mb-4 border-[#FFB800]/20 bg-[#FFB800]/10 text-[#FFB800]">
           <Crown className="mr-1 h-3 w-3" />
-          Plans and Access
+          {t("Plans and Access")}
         </Badge>
         <h1 className="mt-2 text-4xl font-bold text-[#0F172A] dark:text-slate-50 md:text-5xl">
-          Pick the level of support that fits your study pace.
+          {t("Pick the level of support that fits your study pace.")}
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-slate-500 dark:text-slate-400">
-          Guests can review the landing and pricing, free members get daily study tools,
-          and Premium unlocks unlimited practice, AI tutor, timed mock exams, and analytics.
+          {t("Guests can review the landing and pricing, free members get daily study tools, and Premium unlocks unlimited practice, AI tutor, timed mock exams, and analytics.")}
         </p>
         <p className="mx-auto mt-4 inline-flex max-w-2xl rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300">
-          The 40-hour course is planned for a future release and is not included in current plans yet.
+          {t("The 40-hour course is planned for a future release and is not included in current plans yet.")}
         </p>
         {isAuthenticated ? (
           <p className="mx-auto mt-4 inline-flex rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]">
-            Current plan: {profileData?.user?.plan === PLAN_IDS.PREMIUM_YEARLY
+            {t(`Current plan: ${profileData?.user?.plan === PLAN_IDS.PREMIUM_YEARLY
               ? "Premium Yearly"
               : profileData?.user?.plan === PLAN_IDS.PREMIUM_MONTHLY
                 ? "Premium Monthly"
-                : "Free"}
+                : "Free"}`)}
           </p>
         ) : null}
       </div>
@@ -254,7 +257,7 @@ export default function Pricing() {
               plan.id === PLAN_IDS.FREE || billing.checkout_enabled?.[plan.id];
             const loading =
               checkoutMutation.isPending && checkoutMutation.variables === plan.id;
-            const topBadgeLabel = isCurrent ? "Current" : plan.badge;
+            const topBadgeLabel = isCurrent ? t("Current") : plan.badge ? t(plan.badge) : null;
             const topBadgeClassName = isCurrent
               ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300"
               : "bg-[#1E5EFF] text-white";
@@ -281,11 +284,11 @@ export default function Pricing() {
                 </div>
 
                 <div className="mb-6 min-h-[196px]">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
-                    {plan.name}
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                    {t(plan.name)}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                    {plan.description}
+                    {t(plan.description)}
                   </p>
                   <div className="mt-5">
                     <span className="text-4xl font-black text-slate-900 dark:text-slate-50">
@@ -296,10 +299,10 @@ export default function Pricing() {
                     </span>
                     {plan.id === PLAN_IDS.PREMIUM_YEARLY ? (
                       <p className="mt-2 text-sm font-medium text-emerald-600 dark:text-emerald-300">
-                        10% less than paying monthly for a full year
+                        {t("10% less than paying monthly for a full year")}
                       </p>
                     ) : (
-                      <p className="invisible mt-2 text-sm font-medium">Spacer copy</p>
+                      <p className="invisible mt-2 text-sm font-medium">{t("Spacer copy")}</p>
                     )}
                   </div>
                 </div>
@@ -322,13 +325,13 @@ export default function Pricing() {
                   {loading || portalMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isCurrent && isPremiumPlan(plan.id) ? (
-                    "Manage Billing"
+                    t("Manage Billing")
                   ) : isCurrent ? (
-                    "Current Plan"
+                    t("Current Plan")
                   ) : !checkoutReady && plan.id !== PLAN_IDS.FREE ? (
-                    "Stripe setup pending"
+                    t("Stripe setup pending")
                   ) : (
-                    getActionLabel(plan.id, currentPlan, isAuthenticated)
+                    t(getActionLabel(plan.id, currentPlan, isAuthenticated))
                   )}
                 </Button>
 
@@ -337,7 +340,7 @@ export default function Pricing() {
                     <div key={feature} className="flex items-start gap-2.5">
                       <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500" />
                       <span className="text-sm text-slate-600 dark:text-slate-300">
-                        {feature}
+                        {t(feature)}
                       </span>
                     </div>
                   ))}
@@ -345,16 +348,16 @@ export default function Pricing() {
                 <div className="mt-5 min-h-[48px] text-sm font-medium">
                   {isCurrent ? (
                     <span className="block text-emerald-600 dark:text-emerald-300">
-                      Your current billing plan.
+                      {t("Your current billing plan.")}
                     </span>
                   ) : isPremiumPlan(currentPlan) && plan.id !== currentPlan ? (
                     <span className="block text-slate-400 dark:text-slate-500">
-                      Switch plans anytime from billing.
+                      {t("Switch plans anytime from billing.")}
                     </span>
                   ) : (
                     <span className="invisible inline-flex items-center gap-1">
                       <Minus className="h-3.5 w-3.5" />
-                      spacer
+                      {t("spacer")}
                     </span>
                   )}
                 </div>
@@ -368,11 +371,10 @@ export default function Pricing() {
         <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_24px_80px_-48px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950">
           <div className="border-b border-slate-200/80 px-6 py-5 dark:border-slate-800">
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
-              Guest vs Free vs Premium
+              {t("Guest vs Free vs Premium")}
             </h2>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              A quick view of what someone sees before registering, after creating a free account,
-              and after upgrading. Anything not live yet is marked as coming soon.
+              {t("A quick view of what someone sees before registering, after creating a free account, and after upgrading. Anything not live yet is marked as coming soon.")}
             </p>
           </div>
 
@@ -381,16 +383,16 @@ export default function Pricing() {
               <thead>
                 <tr className="border-b border-slate-200/80 dark:border-slate-800">
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    Feature
+                    {t("Feature")}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    Guest
+                    {t("Guest")}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    Free
+                    {t("Free")}
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    Premium
+                    {t("Premium")}
                   </th>
                 </tr>
               </thead>
@@ -401,16 +403,16 @@ export default function Pricing() {
                     className="border-b border-slate-100 last:border-b-0 dark:border-slate-900"
                   >
                     <td className="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      {row.label}
+                      {t(row.label)}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                      {row.guest}
+                      {t(row.guest)}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                      {row.free}
+                      {t(row.free)}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                      {row.premium}
+                      {t(row.premium)}
                     </td>
                   </tr>
                 ))}
@@ -421,7 +423,7 @@ export default function Pricing() {
           {!billing.stripe_enabled ? (
             <div className="flex items-center gap-3 border-t border-slate-200/80 bg-amber-50/70 px-6 py-4 text-sm text-amber-700 dark:border-slate-800 dark:bg-amber-500/10 dark:text-amber-300">
               <X className="h-4 w-4 flex-shrink-0" />
-              Stripe has not been configured with live price IDs yet, so premium checkout buttons stay disabled until those env vars are added.
+              {t("Stripe has not been configured with live price IDs yet, so premium checkout buttons stay disabled until those env vars are added.")}
             </div>
           ) : null}
         </div>

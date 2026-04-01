@@ -9,8 +9,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { isPremiumPlan } from "@/lib/plan-access";
+import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
 const planLabels = {
@@ -26,6 +29,7 @@ export default function TopBar({
   onLogout,
 }) {
   const { isDark, toggleTheme } = useTheme();
+  const { language } = useLanguage();
   const fullName = user?.full_name || user?.name || "Student";
   const initials = fullName
     .split(" ")
@@ -74,7 +78,7 @@ export default function TopBar({
               <div className="hidden text-left sm:block">
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-100">{fullName}</p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                  {planLabels[plan] ?? planLabels.free}
+                  {translateUi(planLabels[plan] ?? planLabels.free, language)}
                 </p>
               </div>
             </button>
@@ -83,13 +87,16 @@ export default function TopBar({
           <DropdownMenuContent align="end" className="w-48 rounded-xl">
             <Link to={createPageUrl("Profile")}>
               <DropdownMenuItem className="rounded-lg">
-                <User className="mr-2 h-4 w-4" /> Profile
+                <User className="mr-2 h-4 w-4" /> {translateUi("Profile", language)}
               </DropdownMenuItem>
             </Link>
             <Link to={createPageUrl("Pricing")}>
               <DropdownMenuItem className="rounded-lg text-[#FFB800]">
                 <Crown className="mr-2 h-4 w-4" />{" "}
-                {isPremiumPlan(plan) ? "Manage Plan" : "Upgrade to Premium"}
+                {translateUi(
+                  isPremiumPlan(plan) ? "Manage Plan" : "Upgrade to Premium",
+                  language,
+                )}
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
@@ -97,10 +104,11 @@ export default function TopBar({
               className="rounded-lg text-red-500"
               onClick={onLogout}
             >
-              <LogOut className="mr-2 h-4 w-4" /> Sign Out
+              <LogOut className="mr-2 h-4 w-4" /> {translateUi("Sign Out", language)}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <LanguageSwitcher compact />
       </div>
     </header>
   );

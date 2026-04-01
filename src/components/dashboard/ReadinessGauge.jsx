@@ -1,4 +1,6 @@
 import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
+import { useLanguage } from "@/hooks/use-language";
+import { translateUi } from "@/lib/i18n";
 
 export default function ReadinessGauge({
   score = 0,
@@ -6,6 +8,7 @@ export default function ReadinessGauge({
   examCount = 0,
   averageExamScore = 0,
 }) {
+  const { language } = useLanguage();
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (score / 100) * circumference;
   const hasStrongSignal = questionCount >= 20 || examCount > 0;
@@ -45,7 +48,7 @@ export default function ReadinessGauge({
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
       <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">
-        Exam Readiness
+        {translateUi("Exam Readiness", language)}
       </h3>
 
       <div className="flex flex-col items-center">
@@ -79,14 +82,17 @@ export default function ReadinessGauge({
         </div>
 
         <span className="mt-3 text-sm font-medium text-slate-700 dark:text-slate-200">
-          {getLabel()}
+          {translateUi(getLabel(), language)}
         </span>
         <p className="mt-1 text-center text-xs text-slate-400 dark:text-slate-500">
-          {examCount > 0
+          {translateUi(
+            examCount > 0
             ? `Guided by ${examCount} mock exam${examCount === 1 ? "" : "s"} and your ${TOTAL_PRACTICE_QUESTIONS}-question bank coverage`
             : hasStrongSignal
               ? `Coverage-adjusted from your ${TOTAL_PRACTICE_QUESTIONS}-question bank`
-              : "Early estimate based on very limited bank coverage"}
+              : "Early estimate based on very limited bank coverage",
+            language,
+          )}
         </p>
       </div>
     </div>
