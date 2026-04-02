@@ -96,6 +96,9 @@ const UI_TRANSLATIONS = {
   "Open Navigator": "Abrir navegador",
   "This Session": "Esta sesión",
   "Session-only stats. Your dashboard tracks the bigger picture separately.": "Estas estadísticas son solo de esta sesión. Tu dashboard lleva el progreso general.",
+  "session accuracy": "de precisión de la sesión",
+  "answered this session": "respondidas en esta sesión",
+  "flagged for review": "marcadas para revisar",
   "Navigator": "Navegador",
   "End Session": "Terminar sesión",
   "You reached today's free practice limit. You can keep reviewing these questions, or upgrade for unlimited answers.": "Llegaste al límite gratuito de práctica de hoy. Puedes seguir revisando estas preguntas o mejorar para respuestas ilimitadas.",
@@ -331,6 +334,17 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Documentation purpose", "Objetivo de documentación"],
   ["Role boundary goal", "Objetivo de límites del rol"],
   ["Scope and ethics judgment", "Juicio sobre alcance y ética"],
+  ["important treatment information is shared promptly with the right members of the team.", "la información importante del tratamiento se comparte oportunamente con los miembros correctos del equipo."],
+  ["A medication change is reported by the caregiver, and the RBT documents it and alerts the supervisor before session goals continue.", "El cuidador informa un cambio de medicación, y el RBT lo documenta y alerta al supervisor antes de continuar con los objetivos de la sesión."],
+  ["To share important treatment information promptly with the supervisor and team.", "Para compartir oportunamente información importante del tratamiento con el supervisor y el equipo."],
+  ["Timely communication helps the team respond quickly to changes that may affect treatment or safety.", "La comunicación oportuna ayuda al equipo a responder rápidamente a cambios que pueden afectar el tratamiento o la seguridad."],
+  ["To protect the client by staying within the responsibilities of the RBT role.", "Para proteger al cliente manteniéndose dentro de las responsabilidades del rol RBT."],
+  ["To maintain professional boundaries around gifts and favors.", "Para mantener límites profesionales alrededor de regalos y favores."],
+  ["To keep services accurate and safe by involving supervision when needed.", "Para mantener los servicios precisos y seguros involucrando supervisión cuando sea necesario."],
+  ["Timely communication", "Comunicación oportuna"],
+  ["Professional demeanor", "Conducta profesional"],
+  ["Implementing feedback", "Implementación de retroalimentación"],
+  ["Accurate record keeping", "Registro preciso"],
   ["The common trap is choosing the answer that seems proactive but actually steps outside the RBT role or crosses a boundary.", "La trampa común es elegir una respuesta que parece proactiva pero en realidad se sale del rol del RBT o cruza un límite profesional."],
   ["Ask what keeps the RBT within scope, protects dignity or confidentiality, and routes clinical decisions back to supervision when needed.", "Pregúntate qué mantiene al RBT dentro de su alcance, protege la dignidad o la confidencialidad y devuelve las decisiones clínicas a supervisión cuando haga falta."],
   ["Look for whether the note is objective, timely, and limited to relevant facts about behavior, treatment, communication, or safety.", "Busca si la nota es objetiva, oportuna y limitada a hechos relevantes sobre conducta, tratamiento, comunicación o seguridad."],
@@ -396,7 +410,6 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Nice", "Bien"],
   ["Almost there on", "Casi lo tienes en"],
   ["Let's correct", "Corrijamos"],
-  ["Correct", "Correcto"],
   ["Not quite", "No del todo"],
   ["Still on", "Seguimos con"],
   ["Hint", "Pista"],
@@ -413,12 +426,49 @@ const QUESTION_SENTENCE_REPLACEMENTS = [
   ["An RBT", "Un RBT"],
   ["A BCBA", "Un BCBA"],
   ["A supervisor", "Un supervisor"],
+  ["A learner", "Un aprendiz"],
+  ["A caregiver", "Un cuidador"],
+  ["a target behavior", "una conducta objetivo"],
+  ["a behavior", "una conducta"],
+  ["an instruction", "una instrucción"],
+  ["a cue", "una señal"],
+  ["a session", "una sesión"],
   ["the RBT", "el RBT"],
   ["the BCBA", "el BCBA"],
   ["the team", "el equipo"],
+  ["the caregiver", "el cuidador"],
+  ["the table", "la mesa"],
   ["a learner", "un aprendiz"],
   ["the learner", "el aprendiz"],
   ["learner", "aprendiz"],
+  ["20-minute session", "sesión de 20 minutos"],
+  ["20 minute session", "sesión de 20 minutos"],
+  ["30-second block", "bloque de 30 segundos"],
+  ["30 second block", "bloque de 30 segundos"],
+  ["several minutes at a time", "durante varios minutos a la vez"],
+  ["how long each episode lasts", "cuánto dura cada episodio"],
+  ["how long it takes", "cuánto tarda"],
+  ["how long it takes a learner to begin cleaning up", "cuánto tarda un aprendiz en comenzar a recoger"],
+  ["to begin cleaning up", "en comenzar a recoger"],
+  ["at least once", "al menos una vez"],
+  ["marks the interval as yes", "marca el intervalo como sí"],
+  ["the interval is scored if", "el intervalo se marca si"],
+  ["during recess", "durante el recreo"],
+  ["before session goals continue", "antes de continuar con los objetivos de la sesión"],
+  ["how many math problems were completed correctly", "cuántos problemas de matemáticas se completaron correctamente"],
+  ["after the worksheet is finished", "después de terminar la hoja de trabajo"],
+  ["what triggers and follows the behavior", "qué desencadena y sigue a la conducta"],
+  ["only actions that can be seen and counted", "solo acciones que pueden observarse y contarse"],
+  ["items the learner chooses most often", "los elementos que el aprendiz elige con más frecuencia"],
+  ["for several sessions", "durante varias sesiones"],
+  ["across times of day", "a lo largo de distintos momentos del día"],
+  ["to see when patterns happen most often", "para ver cuándo los patrones ocurren con más frecuencia"],
+  ["with immediate feedback after each response", "con retroalimentación inmediata después de cada respuesta"],
+  ["rather than only table work", "en lugar de solo trabajo en mesa"],
+  ["turn taking", "turnarse"],
+  ["simple labels", "etiquetas simples"],
+  ["with the family", "con la familia"],
+  ["with a cue, response, consequence, and brief pause before the next trial", "con una señal, respuesta, consecuencia y una breve pausa antes del siguiente ensayo"],
   ["target behavior", "conducta objetivo"],
   ["problem behavior", "conducta problema"],
   ["behavior episode", "episodio de conducta"],
@@ -455,6 +505,35 @@ const QUESTION_SENTENCE_REPLACEMENTS = [
   ["current behavior levels", "niveles actuales de conducta"],
   ["different staff", "distinto personal"],
   ["the same way", "de la misma manera"],
+  ["live by the RBT", "en vivo por el RBT"],
+  ["rather than relying only on reports from others", "en lugar de depender solo de reportes de otras personas"],
+  ["the actual behavior", "la conducta real"],
+  ["two items are presented at a time", "se presentan dos elementos a la vez"],
+  ["the learner chooses between them repeatedly", "el aprendiz elige entre ellos repetidamente"],
+  ["multiple items are presented together", "se presentan varios elementos juntos"],
+  ["the selected item is removed before the next selection", "el elemento seleccionado se retira antes de la siguiente elección"],
+  ["multiple assessment methods are combined", "se combinan varios métodos de evaluación"],
+  ["why problem behavior is happening", "por qué está ocurriendo la conducta problema"],
+  ["before designing a plan", "antes de diseñar un plan"],
+  ["throughout the session", "a lo largo de la sesión"],
+  ["what the learner is likely to work for", "por qué es probable que el aprendiz trabaje"],
+  ["lasting outcome", "resultado duradero"],
+  ["lasting result", "resultado duradero"],
+  ["cleaned materials", "materiales limpios"],
+  ["completed work", "trabajo completado"],
+  ["hits the table", "golpea la mesa"],
+  ["the team needs an exact count of how many times behavior happened", "el equipo necesita un conteo exacto de cuántas veces ocurrió la conducta"],
+  ["is used when the team needs", "se usa cuando el equipo necesita"],
+  ["tracks how long the response lasts, not how many times it happens", "registra cuánto dura la respuesta, no cuántas veces ocurre"],
+  ["the delay between a cue and the response matters clinically", "la demora entre una señal y la respuesta es clínicamente relevante"],
+  ["marks behavior as present if it occurs at any point in the interval", "marca la conducta como presente si ocurre en cualquier momento del intervalo"],
+  ["if yelling occurs", "si ocurren gritos"],
+  ["delay between a cue and the response", "demora entre una señal y la respuesta"],
+  ["matters clinically", "es clínicamente relevante"],
+  ["at any point in the interval", "en cualquier momento del intervalo"],
+  ["how many times behavior happened", "cuántas veces ocurrió la conducta"],
+  ["how many times it happens", "cuántas veces ocurre"],
+  ["if it occurs at any point in the interval", "si ocurre en cualquier momento del intervalo"],
   ["data", "datos"],
   ["note", "nota"],
   ["notes", "notas"],
@@ -464,13 +543,94 @@ const QUESTION_SENTENCE_REPLACEMENTS = [
 ];
 
 const QUESTION_WORD_REPLACEMENTS = [
+  ["assessment", "evaluación"],
+  ["teaching", "enseñanza"],
+  ["performance", "desempeño"],
+  ["measurable", "medible"],
+  ["terms", "términos"],
+  ["environmental", "ambiental"],
+  ["description", "descripción"],
+  ["summarization", "resumen"],
+  ["level", "nivel"],
+  ["delay", "demora"],
+  ["clinically", "clínicamente"],
+  ["point", "momento"],
+  ["present", "presente"],
+  ["reinforcer", "reforzador"],
+  ["documentation", "documentación"],
+  ["support", "apoyo"],
+  ["replacement", "reemplazo"],
+  ["consequence", "consecuencia"],
+  ["intervention", "intervención"],
+  ["observation", "observación"],
+  ["observed", "observado"],
+  ["observe", "observar"],
+  ["observes", "observa"],
+  ["behavioral", "conductual"],
+  ["professional", "profesional"],
+  ["natural", "natural"],
+  ["services", "servicios"],
+  ["service", "servicio"],
+  ["session", "sesión"],
+  ["sessions", "sesiones"],
+  ["interval", "intervalo"],
+  ["intervals", "intervalos"],
+  ["trial", "ensayo"],
+  ["trials", "ensayos"],
+  ["minute", "minuto"],
+  ["minutes", "minutos"],
+  ["second", "segundo"],
+  ["seconds", "segundos"],
+  ["block", "bloque"],
+  ["worksheet", "hoja de trabajo"],
+  ["recess", "recreo"],
+  ["yelling", "gritos"],
+  ["cries", "llora"],
+  ["crying", "llanto"],
+  ["episode", "episodio"],
+  ["episodes", "episodios"],
+  ["begins", "comienza"],
+  ["begin", "comenzar"],
+  ["cleaning", "recoger"],
+  ["reported", "informa"],
+  ["completes", "completa"],
+  ["completed", "completado"],
+  ["correctly", "correctamente"],
+  ["finished", "terminada"],
+  ["choose", "elegir"],
+  ["chooses", "elige"],
+  ["choice", "elección"],
+  ["choices", "elecciones"],
+  ["often", "a menudo"],
+  ["actual", "real"],
+  ["reports", "reportes"],
+  ["report", "reporte"],
+  ["track", "registrar"],
+  ["tracks", "registra"],
+  ["matters", "importa"],
+  ["occurred", "ocurrió"],
+  ["occur", "ocurrir"],
+  ["occurs", "ocurre"],
+  ["safe", "seguros"],
+  ["safety", "seguridad"],
+  ["within", "dentro de"],
+  ["more", "más"],
+  ["written", "escrito"],
+  ["correct", "correcto"],
   ["the", "el"],
-  ["a", "una"],
-  ["an", "un"],
   ["of", "de"],
-  ["to", "a"],
   ["and", "y"],
   ["or", "o"],
+  ["if", "si"],
+  ["is", "es"],
+  ["are", "son"],
+  ["can", "puede"],
+  ["because", "porque"],
+  ["whether", "si"],
+  ["not", "no"],
+  ["at", "en"],
+  ["as", "como"],
+  ["on", "en"],
   ["when", "cuando"],
   ["while", "mientras"],
   ["before", "antes de"],
@@ -508,8 +668,6 @@ const QUESTION_WORD_REPLACEMENTS = [
   ["collect", "recoger"],
   ["record", "registrar"],
   ["records", "registros"],
-  ["correct", "correcta"],
-  ["incorrect", "incorrecta"],
   ["response", "respuesta"],
   ["responses", "respuestas"],
   ["instruction", "instrucción"],
@@ -522,6 +680,44 @@ const QUESTION_WORD_REPLACEMENTS = [
   ["communication", "comunicación"],
   ["function", "función"],
   ["reinforcement", "reforzamiento"],
+  ["important", "importante"],
+  ["treatment", "tratamiento"],
+  ["information", "información"],
+  ["shared", "comparte"],
+  ["promptly", "oportunamente"],
+  ["members", "miembros"],
+  ["medication", "medicación"],
+  ["change", "cambio"],
+  ["reported", "informado"],
+  ["caregiver", "cuidador"],
+  ["documents", "documenta"],
+  ["alerts", "alerta"],
+  ["goals", "objetivos"],
+  ["continue", "continúan"],
+  ["helps", "ayuda"],
+  ["respond", "responder"],
+  ["quickly", "rápidamente"],
+  ["changes", "cambios"],
+  ["affect", "afectar"],
+  ["safety", "seguridad"],
+  ["protect", "proteger"],
+  ["client", "cliente"],
+  ["staying", "manteniéndose"],
+  ["responsibilities", "responsabilidades"],
+  ["maintain", "mantener"],
+  ["around", "alrededor de"],
+  ["gifts", "regalos"],
+  ["favors", "favores"],
+  ["keep", "mantener"],
+  ["services", "servicios"],
+  ["involving", "involucrando"],
+  ["needed", "necesario"],
+  ["accurate", "precisos"],
+  ["safe", "seguros"],
+  ["teachers", "profesores"],
+  ["asks", "pregunta"],
+  ["observing", "observando"],
+  ["directly", "directamente"],
   ["duration", "duración"],
   ["frequency", "frecuencia"],
   ["rate", "tasa"],
@@ -611,11 +807,20 @@ function stripTrailingPeriod(text) {
   return String(text || "").trim().replace(/[.]\s*$/, "");
 }
 
+function stripLeadingPara(text) {
+  return String(text || "").trim().replace(/^Para\s+/i, "");
+}
+
 function translatePurposeText(text) {
   const trimmed = String(text || "").trim();
   const directMap = UI_TRANSLATIONS[trimmed];
   if (directMap) {
     return directMap;
+  }
+
+  const fullTranslation = applyQuestionSentenceReplacements(translateToSpanish(trimmed));
+  if (fullTranslation !== trimmed) {
+    return fullTranslation;
   }
 
   const purposeMatch = trimmed.match(/^To\s+(.+?)[.]?$/i);
@@ -664,7 +869,7 @@ function translateExplanationText(text) {
 
   const purposeSplit = value.match(/^(.+?)\s+The main goal is\s+(.+)$/i);
   if (purposeSplit) {
-    return `${translateQuestionSentence(purposeSplit[1])} El objetivo principal es ${stripTrailingPeriod(translatePurposeText(purposeSplit[2])).toLowerCase()}.`;
+    return `${translateQuestionSentence(purposeSplit[1])} El objetivo principal es ${stripTrailingPeriod(stripLeadingPara(translatePurposeText(purposeSplit[2]))).toLowerCase()}.`;
   }
 
   return translateQuestionSentence(value);
@@ -679,7 +884,7 @@ function translateOptionText(optionText, question) {
     return translatePurposeText(optionText);
   }
 
-  return translateToSpanish(optionText);
+  return applyQuestionSentenceReplacements(translateToSpanish(optionText));
 }
 
 export function localizeText(text, language) {
@@ -735,7 +940,7 @@ export function localizeQuestion(question, language) {
     : translateQuestionText(question.text);
   const spanishExplanation = concept
     ? questionKind === "purpose"
-      ? `${translateQuestionSentence(concept.explanation)} El objetivo principal es ${stripTrailingPeriod(translatePurposeText(concept.purpose)).toLowerCase()}.`
+      ? `${translateQuestionSentence(concept.explanation)} El objetivo principal es ${stripTrailingPeriod(stripLeadingPara(translatePurposeText(concept.purpose))).toLowerCase()}.`
       : translateQuestionSentence(concept.explanation)
     : translateExplanationText(question.explanation);
 
@@ -753,13 +958,19 @@ export function localizeQuestion(question, language) {
       : localizeText(question.exam_pattern, language);
   const localizedExamClue =
     language === "es"
-      ? { primary: translateToSpanish(question.exam_clue), secondary: "" }
+      ? { primary: translateQuestionSentence(question.exam_clue), secondary: "" }
       : localizeText(question.exam_clue, language);
   const localizedCommonTrap =
     language === "es"
-      ? { primary: translateToSpanish(question.common_trap), secondary: "" }
+      ? { primary: translateQuestionSentence(question.common_trap), secondary: "" }
       : localizeText(question.common_trap, language);
-
+  const localizedOptions = (question.options || []).map((option) => ({
+    ...option,
+    localizedText:
+      language === "es"
+        ? { primary: translateOptionText(option.text, question), secondary: "" }
+        : localizeText(option.text, language),
+  }));
   return {
     ...question,
     localizedTopic: translateTopic(question.topic, language),
@@ -769,12 +980,6 @@ export function localizeQuestion(question, language) {
     localizedExamPattern,
     localizedExamClue,
     localizedCommonTrap,
-    options: (question.options || []).map((option) => ({
-      ...option,
-      localizedText:
-        language === "es"
-          ? { primary: translateOptionText(option.text, question), secondary: "" }
-          : localizeText(option.text, language),
-    })),
+    options: localizedOptions,
   };
 }

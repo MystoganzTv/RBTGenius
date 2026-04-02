@@ -746,15 +746,13 @@ export default function Practice() {
             <div className="flex items-center gap-1.5">
               <Target className="h-4 w-4 text-[#1E5EFF]" />
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                {accuracy}% session accuracy
-                
+                {accuracy}% {translateUi("session accuracy", language)}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <HelpCircle className="h-4 w-4 text-slate-400 dark:text-slate-500" />
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                {answeredCount}/{baseFilteredQuestions.length} answered this session
-                
+                {answeredCount}/{baseFilteredQuestions.length} {translateUi("answered this session", language)}
               </span>
             </div>
             <div className="flex items-center gap-1.5">

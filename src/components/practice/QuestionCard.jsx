@@ -50,7 +50,10 @@ export default function QuestionCard({
 
   const isCorrect = selectedAnswer === correctAnswer;
   const localizedQuestion = localizeQuestion(question, language);
-  const localizedExplanation = localizeText(explanation, language);
+  const localizedExplanation =
+    explanation && explanation !== question?.explanation
+      ? localizeText(explanation, language)
+      : localizedQuestion?.localizedExplanation || localizeText(explanation, language);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
