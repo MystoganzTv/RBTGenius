@@ -32,6 +32,7 @@ const UI_TRANSLATIONS = {
   "Pattern": "Patrón",
   "Clue": "Pista",
   "Common Trap": "Trampa común",
+  "Ethics": "Ética",
   "Flag": "Marcar",
   "Flagged": "Marcada",
   "Question": "Pregunta",
@@ -325,7 +326,7 @@ const TOPIC_TRANSLATIONS = {
   skill_acquisition: "Adquisición de habilidades",
   behavior_reduction: "Reducción de conducta",
   documentation: "Documentación",
-  professional_conduct: "Conducta profesional",
+  professional_conduct: "Ética",
 };
 
 const DIFFICULTY_TRANSLATIONS = {
@@ -362,7 +363,7 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["To maintain professional boundaries around gifts and favors.", "Para mantener límites profesionales alrededor de regalos y favores."],
   ["To keep services accurate and safe by involving supervision when needed.", "Para mantener los servicios precisos y seguros involucrando supervisión cuando sea necesario."],
   ["Timely communication", "Comunicación oportuna"],
-  ["Professional demeanor", "Conducta profesional"],
+  ["Professional demeanor", "Comportamiento profesional"],
   ["Implementing feedback", "Implementación de retroalimentación"],
   ["Accurate record keeping", "Registro preciso"],
   ["The common trap is choosing the answer that seems proactive but actually steps outside the RBT role or crosses a boundary.", "La trampa común es elegir una respuesta que parece proactiva pero en realidad se sale del rol del RBT o cruza un límite profesional."],
@@ -386,6 +387,40 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["To teach the learner to respond differently to relevant cues.", "Para enseñar al aprendiz a responder de manera diferente ante señales relevantes."],
   ["To show the learner what response to perform.", "Para mostrarle al aprendiz qué respuesta debe emitir."],
   ["The common trap is choosing a related teaching tool instead of the exact procedure described.", "La trampa común es elegir una herramienta de enseñanza relacionada en lugar del procedimiento exacto descrito."],
+  ["the RBT accurately represents credentials, training, role, and authority without exaggeration or misleading others.", "el RBT representa con precisión sus credenciales, formación, rol y autoridad sin exagerar ni inducir a error."],
+  ["A family asks whether the RBT can independently redesign treatment goals, and the RBT explains the limits of the RBT role instead of presenting as the clinician in charge.", "Una familia pregunta si el RBT puede rediseñar metas de tratamiento de manera independiente, y el RBT explica los límites de su rol en lugar de presentarse como el clínico a cargo."],
+  ["To ensure statements about role, training, and authority stay accurate.", "Para garantizar que las declaraciones sobre el rol, la formación y la autoridad sean precisas."],
+  ["Truthful representation protects clients from misleading claims and keeps the RBT within the ethical limits of the role.", "La representación veraz protege a los clientes de afirmaciones engañosas y mantiene al RBT dentro de los límites éticos de su rol."],
+  ["the RBT does not independently change goals, procedures, prompting strategies, or reinforcement plans without supervisor direction.", "el RBT no cambia de manera independiente metas, procedimientos, estrategias de ayuda ni planes de reforzamiento sin dirección del supervisor."],
+  ["A target seems too difficult during session, so the RBT collects data and reports the concern instead of rewriting the teaching steps alone.", "Un objetivo parece demasiado difícil durante la sesión, así que el RBT recoge datos e informa la preocupación en lugar de reescribir por su cuenta los pasos de enseñanza."],
+  ["To keep treatment decisions with the supervising clinician.", "Para mantener las decisiones de tratamiento bajo el clínico supervisor."],
+  ["Program changes are clinical decisions and must be directed by the supervisor rather than made independently by the RBT.", "Los cambios al programa son decisiones clínicas y deben ser dirigidos por el supervisor, no realizados de forma independiente por el RBT."],
+  ["only the information needed for the approved purpose is shared, and unnecessary client details are left out.", "solo se comparte la información necesaria para el propósito aprobado y se omiten los detalles innecesarios del cliente."],
+  ["A staff member asks why a learner missed session, and the RBT shares only the information required by policy instead of discussing private clinical details.", "Un miembro del personal pregunta por qué un aprendiz faltó a la sesión, y el RBT comparte solo la información requerida por la política en lugar de discutir detalles clínicos privados."],
+  ["To protect confidentiality by limiting disclosure to what is necessary.", "Para proteger la confidencialidad limitando la divulgación a lo necesario."],
+  ["Ethical confidentiality includes sharing only the minimum necessary information through appropriate channels.", "La confidencialidad ética incluye compartir solo la información mínima necesaria mediante canales apropiados."],
+  ["the RBT participates in required supervision, responds to coaching, and brings relevant data or concerns for review.", "el RBT participa en la supervisión requerida, responde al coaching y lleva datos o preocupaciones relevantes para revisar."],
+  ["The supervisor schedules a check-in, and the RBT arrives with current data, questions, and implementation concerns rather than treating supervision as optional.", "El supervisor programa una revisión y el RBT llega con datos actuales, preguntas y preocupaciones de implementación en lugar de tratar la supervisión como algo opcional."],
+  ["To maintain service quality through active required supervision.", "Para mantener la calidad del servicio mediante una supervisión obligatoria y activa."],
+  ["Supervision is a required part of safe RBT practice and supports accuracy, feedback, and ongoing competency.", "La supervisión es una parte obligatoria de la práctica segura del RBT y apoya la precisión, la retroalimentación y la competencia continua."],
+  ["public, online, and verbal statements about services, outcomes, and credentials are accurate and not misleading.", "las declaraciones públicas, en línea y verbales sobre servicios, resultados y credenciales son precisas y no engañosas."],
+  ["An RBT updates a professional profile and removes wording that implies independent BCBA authority or guaranteed treatment results.", "Un RBT actualiza un perfil profesional y elimina frases que implican autoridad independiente de BCBA o resultados garantizados del tratamiento."],
+  ["To avoid misleading public statements about services, outcomes, or credentials.", "Para evitar declaraciones públicas engañosas sobre servicios, resultados o credenciales."],
+  ["Ethical public statements must be accurate because misleading claims can confuse families and misrepresent the RBT role.", "Las declaraciones públicas éticas deben ser precisas porque las afirmaciones engañosas pueden confundir a las familias y tergiversar el rol del RBT."],
+  ["the RBT acts in ways that protect privacy, dignity, choice, and humane treatment during services.", "el RBT actúa de maneras que protegen la privacidad, la dignidad, la elección y el trato humano durante los servicios."],
+  ["During a personal-care routine, the RBT closes the door, explains each step respectfully, and honors reasonable client preferences when possible.", "Durante una rutina de cuidado personal, el RBT cierra la puerta, explica cada paso con respeto y honra las preferencias razonables del cliente cuando es posible."],
+  ["To protect client rights throughout service delivery.", "Para proteger los derechos del cliente durante toda la prestación del servicio."],
+  ["Client rights are protected when services preserve dignity, privacy, respectful treatment, and reasonable choice.", "Los derechos del cliente se protegen cuando los servicios preservan la dignidad, la privacidad, el trato respetuoso y la elección razonable."],
+  ["client information is released only through approved authorization, policy, and need-to-know channels.", "la información del cliente se divulga solo mediante autorización aprobada, política aplicable y canales de necesidad de saber."],
+  ["A teacher requests detailed behavior records, and the RBT first checks authorization and supervisor direction before sharing anything.", "Un maestro solicita registros detallados de conducta, y el RBT primero verifica la autorización y la dirección del supervisor antes de compartir cualquier cosa."],
+  ["To ensure disclosures follow authorization and confidentiality requirements.", "Para asegurar que las divulgaciones cumplan con la autorización y los requisitos de confidencialidad."],
+  ["Even helpful information should not be released unless authorization, policy, and role expectations support the disclosure.", "Incluso la información útil no debe divulgarse a menos que la autorización, la política y las expectativas del rol respalden esa divulgación."],
+  ["professional boundaries are maintained even when services change, pause, or end and do not automatically become personal relationships.", "los límites profesionales se mantienen incluso cuando los servicios cambian, se pausan o terminan y no se convierten automáticamente en relaciones personales."],
+  ["After discharge, a former caregiver asks the RBT to become the child's regular babysitter, and the RBT consults policy and supervision before responding.", "Después del alta, un antiguo cuidador le pide al RBT que se convierta en la niñera habitual del niño, y el RBT consulta la política y la supervisión antes de responder."],
+  ["To prevent blurred roles after services change or end.", "Para prevenir la confusión de roles después de que los servicios cambien o terminen."],
+  ["Boundary concerns can continue after services, so the RBT should not assume a former professional relationship is now risk free.", "Las preocupaciones de límites pueden continuar después de los servicios, así que el RBT no debe asumir que una relación profesional anterior ahora está libre de riesgo."],
+  ["To ensure serious events are escalated through the required channels immediately.", "Para asegurar que los eventos graves se escalen de inmediato por los canales requeridos."],
+  ["To prevent implementation errors when directions are unclear.", "Para prevenir errores de implementación cuando las instrucciones no están claras."],
   ["Positive reinforcement", "Reforzamiento positivo"],
   ["Negative reinforcement", "Reforzamiento negativo"],
   ["Frequency recording", "Registro de frecuencia"],
@@ -425,6 +460,34 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Professional boundaries", "Límites profesionales"],
   ["Scope of competence", "Alcance de competencia"],
   ["Confidentiality", "Confidencialidad"],
+  ["Seeking supervision", "Búsqueda de supervisión"],
+  ["Mandated reporting", "Reporte obligatorio"],
+  ["Referral outside scope", "Derivación fuera del alcance"],
+  ["Interdisciplinary collaboration", "Colaboración interdisciplinaria"],
+  ["Guardian consent", "Consentimiento del tutor"],
+  ["Feedback receptivity", "Receptividad a la retroalimentación"],
+  ["Clarification request", "Solicitud de aclaración"],
+  ["Secure record storage", "Almacenamiento seguro de registros"],
+  ["Privacy protection in public", "Protección de la privacidad en público"],
+  ["Gift boundary", "Límite con regalos"],
+  ["Multiple relationship risk", "Riesgo de relación múltiple"],
+  ["Social media confidentiality", "Confidencialidad en redes sociales"],
+  ["Workplace policy compliance", "Cumplimiento de la política del lugar de trabajo"],
+  ["Supervision preparation", "Preparación para la supervisión"],
+  ["Error reporting", "Reporte de errores"],
+  ["Respectful language", "Lenguaje respetuoso"],
+  ["Least restrictive support", "Apoyo menos restrictivo"],
+  ["Respect for client preferences", "Respeto por las preferencias del cliente"],
+  ["Emergency reporting", "Reporte de emergencia"],
+  ["Role-appropriate communication", "Comunicación acorde al rol"],
+  ["Truthful representation", "Representación veraz"],
+  ["No independent program changes", "Cambios del programa solo con supervisión"],
+  ["Minimum necessary disclosure", "Divulgación mínima necesaria"],
+  ["Required supervision participation", "Participación obligatoria en supervisión"],
+  ["Public statement accuracy", "Exactitud de declaraciones públicas"],
+  ["Protection of client rights", "Protección de los derechos del cliente"],
+  ["Authorized information release", "Divulgación autorizada de información"],
+  ["Post-service boundary maintenance", "Mantenimiento de límites tras el servicio"],
   ["Cultural responsiveness", "Respuesta cultural"],
   ["Visual analysis", "Análisis visual"],
   ["Interresponse time", "Tiempo entre respuestas"],
@@ -683,7 +746,6 @@ const QUESTION_WORD_REPLACEMENTS = [
   ["whether", "si"],
   ["not", "no"],
   ["at", "en"],
-  ["as", "como"],
   ["on", "en"],
   ["when", "cuando"],
   ["while", "mientras"],
@@ -1007,6 +1069,21 @@ function translateDynamicUi(label) {
   match = text.match(/^(\d+) answered practice questions each day$/);
   if (match) {
     return `${match[1]} preguntas de práctica respondidas por día`;
+  }
+
+  match = text.match(/^Premium unlocks unlimited answers across the curated (\d+)-question official-style bank\.$/);
+  if (match) {
+    return `Premium desbloquea respuestas ilimitadas en el banco curado de ${match[1]} preguntas con estilo oficial.`;
+  }
+
+  match = text.match(/^Free accounts can answer (\d+) practice questions per day across the curated (\d+)-question official-style bank\.$/);
+  if (match) {
+    return `Las cuentas gratis pueden responder ${match[1]} preguntas de práctica por día dentro del banco curado de ${match[2]} preguntas con estilo oficial.`;
+  }
+
+  match = text.match(/^Unlimited practice from the curated (\d+)-question bank$/);
+  if (match) {
+    return `Práctica ilimitada del banco curado de ${match[1]} preguntas`;
   }
 
   match = text.match(/^Guided by (\d+) mock exams? and your (\d+)-question bank coverage$/);

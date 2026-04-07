@@ -11,7 +11,7 @@ const domains = [
   { key: "documentation", label: "Documentation", color: "#A07BB7" },
   {
     key: "professional_conduct",
-    label: "Professional Conduct",
+    label: "Ethics",
     color: "#8B78D8",
   },
 ];

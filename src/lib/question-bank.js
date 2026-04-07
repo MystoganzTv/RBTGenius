@@ -6,7 +6,7 @@ export const topicLabels = {
   skill_acquisition: "Skill Acquisition",
   behavior_reduction: "Behavior Reduction",
   documentation: "Documentation",
-  professional_conduct: "Professional Conduct",
+  professional_conduct: "Ethics",
 };
 
 export const PRACTICE_BATCH_SIZE = 24;

@@ -30,7 +30,7 @@ const topicLabels = {
   skill_acquisition: "Skill Acquisition",
   behavior_reduction: "Behavior Reduction",
   documentation: "Documentation",
-  professional_conduct: "Professional Conduct",
+  professional_conduct: "Ethics",
 };
 
 const topicKeys = Object.keys(topicLabels);
