@@ -194,18 +194,38 @@ const UI_TRANSLATIONS = {
   "Get instant help": "Obtén ayuda al instante",
   "Test your knowledge": "Pon a prueba tus conocimientos",
   "Simulate the real test": "Simula el examen real",
+  "RBT Genius": "RBT Genius",
   "Welcome back,": "Bienvenido de nuevo,",
+  "Start your streak": "Empieza tu racha",
+  "First day in progress": "Primer día en progreso",
   "No streak yet": "Sin racha todavía",
+  "Started today": "Empezaste hoy",
   "Started": "Empezada",
   "Consecutive return days": "Días consecutivos regresando",
   "Come back tomorrow to start your streak": "Vuelve mañana para empezar tu racha",
+  "No bank progress yet": "Todavía no hay progreso en el banco",
   "Questions Completed": "Preguntas completadas",
+  "Mock Exams Taken": "Exámenes simulados realizados",
   "Average Mock Score": "Puntaje promedio en simulados",
   "Mock Exams Passed": "Simulados aprobados",
   "Current Recommendation": "Recomendación actual",
   "Take a mock exam": "Haz un examen simulado",
   "Ready for the exam": "Listo para el examen",
   "Need more mock practice": "Necesitas más práctica en simulados",
+  "Use mock exam results as your strongest exam-readiness signal.": "Usa los resultados de los simulados como tu señal más fuerte de preparación para el examen.",
+  "Take your first mock exam to unlock a stronger readiness signal.": "Haz tu primer simulacro para desbloquear una señal de preparación más sólida.",
+  "You are performing in a ready-to-test range.": "Estás rindiendo en un rango listo para examinarte.",
+  "Keep practicing before scheduling the real exam.": "Sigue practicando antes de programar el examen real.",
+  "Your readiness recommendation will improve once you have at least one mock exam.": "Tu recomendación de preparación mejorará cuando tengas al menos un simulacro.",
+  "Scores at or above 80% count as a passed mock exam.": "Los puntajes de 80% o más cuentan como simulacro aprobado.",
+  "Mock exams matter more than small practice samples for final readiness.": "Los simulacros importan más que muestras pequeñas de práctica para la preparación final.",
+  "from last week": "desde la semana pasada",
+  "Ready for the Exam": "Listo para el examen",
+  "Exam Ready": "Preparado para el examen",
+  "Almost There": "Casi listo",
+  "Keep Studying": "Sigue estudiando",
+  "Early Estimate": "Estimación inicial",
+  "Not enough data": "Datos insuficientes",
   "My Profile": "Mi perfil",
   "Manage your account, usage, and membership.": "Gestiona tu cuenta, uso y membresía.",
   "Membership": "Membresía",
@@ -898,12 +918,137 @@ export function localizeText(text, language) {
   return { primary: english, secondary: "" };
 }
 
+function translateDynamicUi(label) {
+  const text = String(label || "").trim();
+  let match = text.match(/^You have covered (\d+)% of the full bank so far\. Readiness will become more meaningful as coverage grows\.$/);
+  if (match) {
+    return `Has cubierto ${match[1]}% del banco completo hasta ahora. La preparación será más útil a medida que aumente tu cobertura.`;
+  }
+
+  match = text.match(/^Exam readiness at (\d+)% based on your overall progress, mock exam history, and bank coverage\.$/);
+  if (match) {
+    return `Preparación para el examen en ${match[1]}% según tu progreso general, tu historial de simulados y la cobertura del banco.`;
+  }
+
+  match = text.match(/^Study streak (\d+) days$/);
+  if (match) {
+    return `Racha de estudio de ${match[1]} días`;
+  }
+
+  match = text.match(/^(\d+)\/(\d+) answered$/);
+  if (match) {
+    return `${match[1]}/${match[2]} respondidas`;
+  }
+
+  match = text.match(/^(\d+) answered so far$/);
+  if (match) {
+    return `${match[1]} respondidas hasta ahora`;
+  }
+
+  match = text.match(/^(\d+) of (\d+) answered$/);
+  if (match) {
+    return `${match[1]} de ${match[2]} respondidas`;
+  }
+
+  match = text.match(/^(\d+) answered$/);
+  if (match) {
+    return `${match[1]} respondidas`;
+  }
+
+  match = text.match(/^(\d+) days$/);
+  if (match) {
+    return `${match[1]} días`;
+  }
+
+  match = text.match(/^(\d+) free answers left today$/);
+  if (match) {
+    return `Te quedan ${match[1]} respuestas gratis hoy`;
+  }
+
+  match = text.match(/^(\d+) answered per day$/);
+  if (match) {
+    return `${match[1]} respondidas por día`;
+  }
+
+  match = text.match(/^(\d+) answered practice questions each day$/);
+  if (match) {
+    return `${match[1]} preguntas de práctica respondidas por día`;
+  }
+
+  match = text.match(/^Guided by (\d+) mock exams? and your (\d+)-question bank coverage$/);
+  if (match) {
+    return `Guiado por ${match[1]} simulacro${match[1] === "1" ? "" : "s"} y tu cobertura del banco de ${match[2]} preguntas`;
+  }
+
+  match = text.match(/^Coverage-adjusted from your (\d+)-question bank$/);
+  if (match) {
+    return `Ajustado según tu cobertura del banco de ${match[1]} preguntas`;
+  }
+
+  match = text.match(/^Scores become reliable after at least (\d+) attempts per domain\.$/);
+  if (match) {
+    return `Los puntajes se vuelven confiables después de al menos ${match[1]} intentos por dominio.`;
+  }
+
+  match = text.match(/^(\d+) mock exams tracked$/);
+  if (match) {
+    return `${match[1]} simulacros registrados`;
+  }
+
+  match = text.match(/^(\d+) mock exam(?:s)? below the target score so far\.$/);
+  if (match) {
+    return `${match[1]} simulacro${match[1] === "1" ? "" : "s"} por debajo del puntaje objetivo hasta ahora.`;
+  }
+
+  match = text.match(/^Joined (.+)$/);
+  if (match) {
+    return `Se unió ${match[1]}`;
+  }
+
+  match = text.match(/^(\d+) questions completed$/);
+  if (match) {
+    return `${match[1]} preguntas completadas`;
+  }
+
+  match = text.match(/^(\d+)% readiness$/);
+  if (match) {
+    return `${match[1]}% de preparación`;
+  }
+
+  match = text.match(/^(\d+) day streak$/);
+  if (match) {
+    return `${match[1]} días de racha`;
+  }
+
+  match = text.match(/^(\d+) exams$/);
+  if (match) {
+    return `${match[1]} exámenes`;
+  }
+
+  match = text.match(/^(\d+) payments$/);
+  if (match) {
+    return `${match[1]} pagos`;
+  }
+
+  match = text.match(/^\$([0-9]+(?:\.[0-9]{2})?) paid$/);
+  if (match) {
+    return `$${match[1]} pagados`;
+  }
+
+  match = text.match(/^Current plan: (.+)$/);
+  if (match) {
+    return `Plan actual: ${translateUi(match[1], "es")}`;
+  }
+
+  return null;
+}
+
 export function translateUi(label, language) {
   if (language === "en") {
     return label;
   }
 
-  return UI_TRANSLATIONS[label] || translateToSpanish(label);
+  return UI_TRANSLATIONS[label] || translateDynamicUi(label) || translateToSpanish(label);
 }
 
 export function translateTopic(topic, language) {

@@ -4,7 +4,7 @@ import { translateUi } from "@/lib/i18n";
 
 export default function StreakCard({ streak = 0, questionsToday = 0 }) {
   const { language } = useLanguage();
-  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const days = language === "es" ? ["L", "M", "X", "J", "V", "S", "D"] : ["M", "T", "W", "T", "F", "S", "S"];
   const today = new Date().getDay();
   const adjustedToday = today === 0 ? 6 : today - 1;
   const hasStudiedToday = questionsToday > 0;
