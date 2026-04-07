@@ -378,6 +378,14 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Assessment questions usually ask what kind of information the team is trying to gather before changing treatment.", "Las preguntas de evaluación suelen preguntar qué tipo de información intenta reunir el equipo antes de cambiar el tratamiento."],
   ["Skill acquisition questions usually turn on what teaching procedure is being used to build independent responding.", "Las preguntas de adquisición de habilidades suelen girar en torno a qué procedimiento de enseñanza se usa para construir respuestas independientes."],
   ["Behavior reduction questions often hinge on function, replacement behavior, and what consequence is or is not being delivered.", "Las preguntas de reducción de conducta suelen depender de la función, la conducta de reemplazo y qué consecuencia se está o no se está entregando."],
+  ["When introducing a new receptive label, the RBT prompts right away so the learner contacts success from the start.", "Cuando se introduce una nueva etiqueta receptiva, el RBT da la ayuda de inmediato para que el aprendiz tenga éxito desde el principio."],
+  ["the RBT provides enough support immediately to reduce the chance of mistakes during early learning.", "el RBT proporciona suficiente apoyo de inmediato para reducir la probabilidad de errores durante el aprendizaje inicial."],
+  ["To minimize mistakes during initial instruction by providing immediate support.", "Para minimizar errores durante la instrucción inicial proporcionando apoyo inmediato."],
+  ["Errorless teaching is often used early in instruction so the learner practices the correct response more often than errors.", "La enseñanza sin error se usa a menudo al inicio de la instrucción para que el aprendiz practique la respuesta correcta con más frecuencia que los errores."],
+  ["To transfer stimulus control and build independent responding.", "Para transferir el control del estímulo y construir respuestas independientes."],
+  ["To teach the learner to respond differently to relevant cues.", "Para enseñar al aprendiz a responder de manera diferente ante señales relevantes."],
+  ["To show the learner what response to perform.", "Para mostrarle al aprendiz qué respuesta debe emitir."],
+  ["The common trap is choosing a related teaching tool instead of the exact procedure described.", "La trampa común es elegir una herramienta de enseñanza relacionada en lugar del procedimiento exacto descrito."],
   ["Positive reinforcement", "Reforzamiento positivo"],
   ["Negative reinforcement", "Reforzamiento negativo"],
   ["Frequency recording", "Registro de frecuencia"],
@@ -395,10 +403,15 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Scatterplot assessment", "Evaluación con diagrama de dispersión"],
   ["ABC data", "Datos ABC"],
   ["Task analysis", "Análisis de tareas"],
+  ["Discrimination training", "Entrenamiento en discriminación"],
+  ["Errorless teaching", "Enseñanza sin error"],
   ["Prompt fading", "Desvanecimiento de ayudas"],
   ["Prompting and Prompt Fading", "Ayudas y desvanecimiento de ayudas"],
   ["Least-to-most prompting", "Ayuda de menos a más"],
   ["Most-to-least prompting", "Ayuda de más a menos"],
+  ["Continuous reinforcement", "Reforzamiento continuo"],
+  ["Fixed-interval schedule", "Programa de intervalo fijo"],
+  ["Forward chaining", "Encadenamiento hacia adelante"],
   ["Differential reinforcement", "Reforzamiento diferencial"],
   ["Functional communication training", "Entrenamiento en comunicación funcional"],
   ["Noncontingent reinforcement", "Reforzamiento no contingente"],
@@ -439,6 +452,10 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Let's do one question at a time on", "Hagamos una pregunta a la vez sobre"],
   ["Next question on", "Siguiente pregunta sobre"],
 ];
+
+const SORTED_LONGEST_FIRST_REPLACEMENTS = [...LONGEST_FIRST_REPLACEMENTS].sort(
+  (a, b) => b[0].length - a[0].length,
+);
 
 const WORD_REPLACEMENTS = [];
 
@@ -537,6 +554,19 @@ const QUESTION_SENTENCE_REPLACEMENTS = [
   ["before designing a plan", "antes de diseñar un plan"],
   ["throughout the session", "a lo largo de la sesión"],
   ["what the learner is likely to work for", "por qué es probable que el aprendiz trabaje"],
+  ["prompts right away", "da la ayuda de inmediato"],
+  ["contacts success from the start", "tenga éxito desde el principio"],
+  ["the chance of mistakes", "la probabilidad de errores"],
+  ["during early learning", "durante el aprendizaje inicial"],
+  ["used early in instruction", "usada al inicio de la instrucción"],
+  ["the correct response", "la respuesta correcta"],
+  ["more often than errors", "con más frecuencia que los errores"],
+  ["relevant cues", "señales relevantes"],
+  ["stimulus control", "control del estímulo"],
+  ["independent responding", "respuestas independientes"],
+  ["what response to perform", "qué respuesta debe emitir"],
+  ["initial instruction", "la instrucción inicial"],
+  ["immediate support", "apoyo inmediato"],
   ["lasting outcome", "resultado duradero"],
   ["lasting result", "resultado duradero"],
   ["cleaned materials", "materiales limpios"],
@@ -561,6 +591,10 @@ const QUESTION_SENTENCE_REPLACEMENTS = [
   ["sessions", "sesiones"],
   ["supervisor", "supervisor"],
 ];
+
+const SORTED_QUESTION_SENTENCE_REPLACEMENTS = [...QUESTION_SENTENCE_REPLACEMENTS].sort(
+  (a, b) => b[0].length - a[0].length,
+);
 
 const QUESTION_WORD_REPLACEMENTS = [
   ["assessment", "evaluación"],
@@ -762,7 +796,7 @@ function replaceCaseInsensitive(text, search, replacement) {
 function applyQuestionSentenceReplacements(text) {
   let translated = String(text || "");
 
-  QUESTION_SENTENCE_REPLACEMENTS.forEach(([english, spanish]) => {
+  SORTED_QUESTION_SENTENCE_REPLACEMENTS.forEach(([english, spanish]) => {
     translated = replaceCaseInsensitive(translated, english, spanish);
   });
 
@@ -796,7 +830,7 @@ export function translateToSpanish(text) {
 
   let translated = String(text);
 
-  LONGEST_FIRST_REPLACEMENTS.forEach(([english, spanish]) => {
+  SORTED_LONGEST_FIRST_REPLACEMENTS.forEach(([english, spanish]) => {
     translated = replaceCaseInsensitive(translated, english, spanish);
   });
 
