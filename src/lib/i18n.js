@@ -622,6 +622,242 @@ const SORTED_LONGEST_FIRST_REPLACEMENTS = [...LONGEST_FIRST_REPLACEMENTS].sort(
 
 const WORD_REPLACEMENTS = [];
 
+const EXACT_SPANISH_TEXT = {
+  "What is the main goal of Frequency recording?": "¿Cuál es el objetivo principal de Registro de frecuencia?",
+  "The team wants to know how long it takes a learner to begin cleaning up after the instruction is given.": "El equipo quiere saber cuánto tarda un aprendiz en comenzar a recoger después de que se da la instrucción.",
+  "A supervisor counts how many math problems were completed correctly after the worksheet is finished.": "Un supervisor cuenta cuántos problemas de matemáticas se completaron correctamente después de terminar la hoja de trabajo.",
+  "the interval is scored only if the behavior lasted for the entire interval.": "el intervalo se registra solo si la conducta duró durante todo el intervalo.",
+  "An RBT marks on-task behavior only when the learner stayed engaged during the full 20-second interval.": "Un RBT marca conducta en tarea solo cuando el aprendiz se mantuvo involucrado durante todo el intervalo de 20 segundos.",
+  "the observer checks for behavior only at specific moments in time.": "el observador revisa la conducta solo en momentos específicos del tiempo.",
+  "A BCBA observes alongside the RBT to confirm they are both recording aggression in the same way.": "Un BCBA observa junto al RBT para confirmar que ambos están registrando la agresión de la misma manera.",
+  "the team tests whether an item actually increases responding rather than only being preferred.": "el equipo evalúa si un elemento realmente aumenta la respuesta en lugar de ser solo preferido.",
+  "A learner likes stickers, but the RBT checks whether stickers really increase correct responding during teaching.": "A un aprendiz le gustan las pegatinas, pero el RBT comprueba si realmente aumentan las respuestas correctas durante la enseñanza.",
+  "What is the main goal of Reinforcer assessment?": "¿Cuál es el objetivo principal de Evaluación de reforzadores?",
+  "What is the main goal of Errorless teaching?": "¿Cuál es el objetivo principal de Enseñanza sin error?",
+  "instruction is planned so a skill transfers across people, materials, and settings.": "la instrucción se planifica para que una habilidad se transfiera entre personas, materiales y contextos.",
+  "After a learner mands in the clinic, the team practices the same skill at home and with different staff members.": "Después de que un aprendiz pide algo en la clínica, el equipo practica la misma habilidad en casa y con diferentes miembros del personal.",
+  "previously learned skills are scheduled for periodic review after mastery.": "las habilidades aprendidas previamente se programan para revisión periódica después del dominio.",
+  "A target is already mastered, but the learner still practices it once a week so the skill stays strong.": "Un objetivo ya está dominado, pero el aprendiz aún lo practica una vez por semana para que la habilidad se mantenga fuerte.",
+  "What is the main goal of Maintenance programming?": "¿Cuál es el objetivo principal de Programación de mantenimiento?",
+  "reinforcement is delivered on a time-based schedule rather than after the target behavior.": "el reforzamiento se entrega según un programa basado en el tiempo en lugar de después de la conducta objetivo.",
+  "To reduce attention-seeking interruptions, the learner receives scheduled attention every few minutes regardless of behavior.": "Para reducir interrupciones que buscan atención, el aprendiz recibe atención programada cada pocos minutos independientemente de la conducta.",
+  "What is the main goal of Noncontingent reinforcement?": "¿Cuál es el objetivo principal de Reforzamiento no contingente?",
+  "the problem response is interrupted and the learner is redirected to an appropriate alternative.": "la respuesta problema se interrumpe y se redirige al aprendiz hacia una alternativa apropiada.",
+  "A learner begins scripting repetitively, and the RBT interrupts briefly and redirects to answering simple social questions.": "Un aprendiz comienza a repetir guiones de forma repetitiva, y el RBT interrumpe brevemente y redirige a responder preguntas sociales simples.",
+  "What is the main goal of Response interruption and redirection?": "¿Cuál es el objetivo principal de Interrupción y redirección de respuesta?",
+  "performance is scored separately for each teaching opportunity rather than only at the end of session.": "el desempeño se puntúa por separado en cada oportunidad de enseñanza en lugar de solo al final de la sesión.",
+  "The RBT records correct, incorrect, and prompted for every card sort trial during DTT.": "El RBT registra correcto, incorrecto y con ayuda en cada ensayo de clasificación de tarjetas durante DTT.",
+  "What is the main goal of Trial-by-trial documentation?": "¿Cuál es el objetivo principal de Documentación ensayo por ensayo?",
+  "a significant behavior episode is summarized by describing antecedent, behavior, and consequence in sequence.": "un episodio significativo de conducta se resume describiendo antecedente, conducta y consecuencia en secuencia.",
+  "After an elopement episode, the RBT writes what happened before, exactly what the learner did, and what followed.": "Después de un episodio de fuga, el RBT escribe qué ocurrió antes, exactamente qué hizo el aprendiz y qué siguió.",
+  "What is the main goal of ABC narrative note?": "¿Cuál es el objetivo principal de Nota narrativa ABC?",
+  "ongoing records are compared against the program's stated mastery requirement.": "los registros continuos se comparan con el criterio de dominio establecido por el programa.",
+  "The BCBA checks whether a target has met 90 percent independent correct responding across three sessions.": "El BCBA comprueba si un objetivo alcanzó 90 por ciento de respuestas correctas independientes a lo largo de tres sesiones.",
+  "What is the main goal of Mastery criterion tracking?": "¿Cuál es el objetivo principal de Seguimiento del criterio de dominio?",
+  "records confirm the date, time, location, and delivery of authorized services.": "los registros confirman la fecha, hora, ubicación y prestación de servicios autorizados.",
+  "At the end of session, the RBT confirms attendance, service time, and required signatures according to agency policy.": "Al final de la sesión, el RBT confirma asistencia, tiempo de servicio y firmas requeridas según la política de la agencia.",
+  "A learner pushes materials away and withdraws, so the RBT pauses and communicates this to the supervisor.": "Un aprendiz aparta los materiales y se retira, así que el RBT hace una pausa y lo comunica al supervisor.",
+  "A medication change is reported by the caregiver, and the RBT documents it and alerts the supervisor before session goals continue.": "El cuidador informa un cambio de medicación, y el RBT lo documenta y alerta al supervisor antes de continuar con los objetivos de la sesión.",
+  "What is the main goal of Timely communication?": "¿Cuál es el objetivo principal de Comunicación oportuna?",
+  "the RBT avoids personal arrangements that could impair professional judgment or objectivity.": "el RBT evita acuerdos personales que podrían perjudicar el juicio profesional o la objetividad.",
+  "A caregiver offers extra cash for off-the-clock childcare, and the RBT declines because it would blur the professional relationship.": "Un cuidador ofrece dinero extra por cuidar niños fuera del horario laboral, y el RBT rechaza porque eso difuminaría la relación profesional.",
+  "What is the main goal of Conflict-of-interest prevention?": "¿Cuál es el objetivo principal de Prevención de conflicto de interés?",
+  "every instance or full dimension of the behavior is directly measured during observation.": "cada ocurrencia o dimensión completa de la conducta se mide directamente durante la observación.",
+  "The team wants the most precise data possible, so the RBT tracks each instance of aggression as it happens throughout the session.": "El equipo quiere los datos más precisos posibles, así que el RBT registra cada ocurrencia de agresión a medida que sucede durante toda la sesión.",
+  "What is the main goal of Continuous measurement?": "¿Cuál es el objetivo principal de Medición continua?",
+  "behavior is sampled instead of measured in full, using intervals or moments.": "la conducta se muestrea en lugar de medirse por completo, usando intervalos o momentos.",
+  "Because full observation is difficult during a busy classroom routine, the RBT uses intervals rather than tracking every second of behavior.": "Como la observación completa es difícil durante una rutina de aula muy activa, el RBT usa intervalos en lugar de registrar cada segundo de la conducta.",
+  "What is the main goal of Discontinuous measurement?": "¿Cuál es el objetivo principal de Medición discontinua?",
+  "Instead of using only interview information, the BCBA watches sessions and reviews data collected live by the RBT.": "En lugar de usar solo información de entrevistas, el BCBA observa sesiones y revisa datos recogidos en vivo por el RBT.",
+  "multiple items are presented together, and each chosen item is removed before the next selection.": "se presentan varios elementos juntos y cada elemento elegido se retira antes de la siguiente selección.",
+  "A learner chooses from five available items, and after each choice the selected item is taken away before the next choice round.": "Un aprendiz elige entre cinco elementos disponibles, y después de cada elección el elemento seleccionado se retira antes de la siguiente ronda.",
+  "What is the main goal of MSWO assessment?": "¿Cuál es el objetivo principal de Evaluación MSWO?",
+  "multiple assessment methods are combined to identify why problem behavior is happening.": "se combinan múltiples métodos de evaluación para identificar por qué ocurre la conducta problema.",
+  "The BCBA reviews interviews, ABC data, and direct observations before designing a plan for severe aggression.": "El BCBA revisa entrevistas, datos ABC y observaciones directas antes de diseñar un plan para agresión severa.",
+  "instruction is delivered in structured repeated trials with a cue, response, consequence, and brief pause before the next trial.": "la instrucción se entrega en ensayos estructurados y repetidos con una señal, respuesta, consecuencia y una breve pausa antes del siguiente ensayo.",
+  "At the table, the RBT runs repeated receptive identification trials with immediate feedback after each response.": "En la mesa, el RBT realiza ensayos repetidos de identificación receptiva con retroalimentación inmediata después de cada respuesta.",
+  "What is the main goal of Discrete trial teaching?": "¿Cuál es el objetivo principal de Enseñanza en ensayos discretos?",
+  "instruction is embedded into ongoing routines, play, and learner motivation rather than only table work.": "la instrucción se integra en rutinas continuas, juego y motivación del aprendiz en lugar de limitarse al trabajo en mesa.",
+  "During play with trains, the RBT captures motivation to teach requesting, turn taking, and simple labels.": "Durante el juego con trenes, el RBT aprovecha la motivación para enseñar petición, turnos y etiquetas simples.",
+  "What is the main goal of Natural environment teaching?": "¿Cuál es el objetivo principal de Enseñanza en ambiente natural?",
+  "the first step in a task chain is taught first, and additional steps are added in order over time.": "se enseña primero el primer paso de una cadena de tareas y luego se añaden los pasos siguientes en orden con el tiempo.",
+  "When teaching handwashing, the learner first masters turning on the water before later steps are added.": "Al enseñar lavado de manos, el aprendiz primero domina abrir el agua antes de añadir pasos posteriores.",
+  "What is the main goal of Forward chaining?": "¿Cuál es el objetivo principal de Encadenamiento hacia adelante?",
+  "the final step of a task chain is taught first so the learner contacts the terminal reinforcer at the end of each trial.": "se enseña primero el último paso de una cadena de tareas para que el aprendiz contacte el reforzador terminal al final de cada ensayo.",
+  "During shoe tying, the RBT completes most of the routine and lets the learner finish the last step independently.": "Durante el amarre de zapatos, el RBT completa la mayor parte de la rutina y deja que el aprendiz termine el último paso de forma independiente.",
+  "What is the main goal of Backward chaining?": "¿Cuál es el objetivo principal de Encadenamiento hacia atrás?",
+  "the RBT systematically increases the pause before giving a prompt so the learner has a chance to respond independently.": "el RBT aumenta sistemáticamente la pausa antes de dar una ayuda para que el aprendiz tenga oportunidad de responder de forma independiente.",
+  "At first the learner is prompted immediately after the instruction, but later the RBT waits a few seconds before helping.": "Al principio se ayuda al aprendiz inmediatamente después de la instrucción, pero luego el RBT espera unos segundos antes de ayudar.",
+  "What is the main goal of Time delay?": "¿Cuál es el objetivo principal de Demora temporal?",
+  "A learner is reinforced for asking for help appropriately instead of throwing materials when work is difficult.": "Se refuerza a un aprendiz por pedir ayuda de manera apropiada en lugar de lanzar materiales cuando el trabajo es difícil.",
+  "problem behavior no longer results in postponing or avoiding the demand that previously maintained it.": "la conducta problema ya no tiene como resultado posponer o evitar la demanda que antes la mantenía.",
+  "A learner screams during work demands, and staff continue the task sequence according to plan while also prompting an appropriate break request.": "Un aprendiz grita durante demandas de trabajo, y el personal continúa la secuencia de tareas según el plan mientras también da ayuda para una petición de descanso apropiada.",
+  "What is the main goal of Escape extinction?": "¿Cuál es el objetivo principal de Extinción por escape?",
+  "attention is intentionally withheld for a behavior that is maintained by attention, as specified in the plan.": "la atención se retira intencionalmente para una conducta mantenida por atención, tal como se especifica en el plan.",
+  "A learner whines for attention, and staff withhold eye contact and conversation until appropriate communication occurs.": "Un aprendiz se queja para obtener atención, y el personal retira contacto visual y conversación hasta que ocurra una comunicación apropiada.",
+  "What is the main goal of Planned ignoring?": "¿Cuál es el objetivo principal de Ignorar planificadamente?",
+  "session performance is condensed into a brief factual overview for review by the supervisor or team.": "el desempeño de la sesión se resume en una visión breve y factual para revisión del supervisor o del equipo.",
+  "At the end of treatment, the RBT reports that the learner completed 18 trials, responded independently on 14, and engaged in aggression twice.": "Al final del tratamiento, el RBT informa que el aprendiz completó 18 ensayos, respondió de forma independiente en 14 y presentó agresión dos veces.",
+  "What is the main goal of Data summary reporting?": "¿Cuál es el objetivo principal de Reporte resumido de datos?",
+  "records include when important events, transitions, or services occurred.": "los registros incluyen cuándo ocurrieron eventos, transiciones o servicios importantes.",
+  "The RBT notes when session began, when aggression occurred, when a break was given, and when the session ended.": "El RBT anota cuándo comenzó la sesión, cuándo ocurrió la agresión, cuándo se dio un descanso y cuándo terminó la sesión.",
+  "important information shared with or received from caregivers is recorded clearly and professionally.": "la información importante compartida con cuidadores o recibida de ellos se registra de manera clara y profesional.",
+  "A caregiver reports poor sleep before session, and the RBT documents the update and shares it with the supervisor.": "Un cuidador informa mal sueño antes de la sesión, y el RBT documenta la actualización y la comparte con el supervisor.",
+  "What is the main goal of Caregiver communication log?": "¿Cuál es el objetivo principal de Registro de comunicación con cuidadores?",
+  "An RBT hears statements and sees injuries that raise concern for abuse and follows the required reporting process immediately.": "Un RBT escucha declaraciones y observa lesiones que generan sospecha de abuso, y sigue de inmediato el proceso de reporte requerido.",
+  "the RBT documents what actually happened rather than filling in missing details from memory or assumption.": "el RBT documenta lo que realmente ocurrió en lugar de completar detalles faltantes desde la memoria o la suposición.",
+  "A staff member suggests guessing the last few trial scores after a busy session, but the RBT records only what was actually observed.": "Un miembro del personal sugiere adivinar los últimos puntajes de ensayo después de una sesión ocupada, pero el RBT registra solo lo que realmente observó.",
+  "the RBT measures the amount of time between one response ending and the next response beginning.": "el RBT mide la cantidad de tiempo entre el final de una respuesta y el comienzo de la siguiente.",
+  "A supervisor wants to know how much time passes between one instance of hand flapping and the next during observation.": "Un supervisor quiere saber cuánto tiempo pasa entre una ocurrencia de aleteo de manos y la siguiente durante la observación.",
+  "What is the main goal of Interresponse time?": "¿Cuál es el objetivo principal de Tiempo entre respuestas?",
+  "the RBT averages the length of several response episodes.": "el RBT calcula el promedio de la duración de varios episodios de respuesta.",
+  "A learner engages in tantrums of different lengths, and the BCBA asks for the average duration across the last five episodes.": "Un aprendiz presenta rabietas de distinta duración, y el BCBA pide la duración promedio de los últimos cinco episodios.",
+  "What is the main goal of Mean duration?": "¿Cuál es el objetivo principal de Duración promedio?",
+  "the RBT records whether a behavior occurred during each opportunity and calculates the percentage.": "el RBT registra si una conducta ocurrió en cada oportunidad y calcula el porcentaje.",
+  "A learner had 12 opportunities to request help and used the taught response during 9 of them.": "Un aprendiz tuvo 12 oportunidades para pedir ayuda y usó la respuesta enseñada en 9 de ellas.",
+  "the overall direction of data on a graph is described as increasing, decreasing, or stable over time.": "la dirección general de los datos en una gráfica se describe como ascendente, descendente o estable a lo largo del tiempo.",
+  "A BCBA reviews a graph and asks whether independent responding is generally moving upward across recent sessions.": "Un BCBA revisa una gráfica y pregunta si la respuesta independiente, en general, va en aumento a través de las sesiones recientes.",
+  "What is the main goal of Trend?": "¿Cuál es el objetivo principal de Tendencia?",
+  "the team looks at the relative height of the data path on a graph.": "el equipo observa la altura relativa de la trayectoria de los datos en una gráfica.",
+  "Two intervention phases have similar patterns, but one phase consistently shows much higher responding overall.": "Dos fases de intervención tienen patrones similares, pero una fase muestra de forma consistente una respuesta general mucho más alta.",
+  "What is the main goal of Level?": "¿Cuál es el objetivo principal de Nivel?",
+  "the amount of fluctuation in data points across observations is described.": "se describe la cantidad de fluctuación en los puntos de datos a través de las observaciones.",
+  "A learner's correct responses jump from very high to very low across consecutive sessions, and the BCBA wants that pattern named.": "Las respuestas correctas de un aprendiz pasan de muy altas a muy bajas entre sesiones consecutivas, y el BCBA quiere nombrar ese patrón.",
+  "What is the main goal of Variability?": "¿Cuál es el objetivo principal de Variabilidad?",
+  "the team examines how quickly behavior changed when a new condition began.": "el equipo examina qué tan rápido cambió la conducta cuando comenzó una nueva condición.",
+  "A new prompting procedure begins, and the BCBA checks whether performance changed right away at the phase line.": "Comienza un nuevo procedimiento de ayudas, y el BCBA comprueba si el desempeño cambió de inmediato en la línea de fase.",
+  "What is the main goal of Immediacy of change?": "¿Cuál es el objetivo principal de Inmediatez del cambio?",
+  "graphed data are interpreted by examining features such as trend, level, and variability.": "los datos graficados se interpretan examinando rasgos como tendencia, nivel y variabilidad.",
+  "A supervisor reviews a graph to decide whether data support continuing the current intervention.": "Un supervisor revisa una gráfica para decidir si los datos apoyan continuar con la intervención actual.",
+  "materials, definitions, timing tools, and recording systems are made ready before the session starts.": "los materiales, definiciones, herramientas de tiempo y sistemas de registro se preparan antes de que comience la sesión.",
+  "behavior is described using actions that can be seen or heard rather than guesses about feelings or intentions.": "la conducta se describe usando acciones que pueden verse u oírse en lugar de suposiciones sobre sentimientos o intenciones.",
+  "A school team maps aggressive behavior by hour to see whether it happens more during lunch, recess, or classwork.": "Un equipo escolar registra la conducta agresiva por hora para ver si ocurre más durante el almuerzo, el recreo o el trabajo en clase.",
+  "Instead of depending only on caregiver report, the supervisor asks the RBT to observe behavior during the actual routine.": "En lugar de depender solo del reporte del cuidador, el supervisor le pide al RBT que observe la conducta durante la rutina real.",
+  "During handwashing training, the RBT begins with a verbal cue and only adds modeling or physical guidance if needed.": "Durante el entrenamiento de lavado de manos, el RBT comienza con una señal verbal y solo añade modelado o guía física si es necesario.",
+  "A learner is reinforced first for saying 'ba,' then 'ball,' as the team works toward a full spoken request.": "Primero se refuerza al aprendiz por decir 'ba' y luego 'ball', mientras el equipo trabaja hacia una petición verbal completa.",
+  "To teach brushing teeth, the team lists each part of the routine in the order it should be completed.": "Para enseñar a cepillarse los dientes, el equipo enumera cada parte de la rutina en el orden en que debe completarse.",
+  "To teach a new motor routine, the RBT begins with full physical guidance and gradually reduces assistance.": "Para enseñar una nueva rutina motora, el RBT comienza con guía física completa y reduce gradualmente la ayuda.",
+  "To help the learner choose the correct picture, the RBT points toward the relevant item without touching it.": "Para ayudar al aprendiz a elegir la imagen correcta, el RBT señala el elemento relevante sin tocarlo.",
+  "To teach a handwashing step, the RBT gently guides the learner's hands through the movement.": "Para enseñar un paso del lavado de manos, el RBT guía suavemente las manos del aprendiz a través del movimiento.",
+  "the consequence that previously maintained the behavior is no longer delivered.": "la consecuencia que previamente mantenía la conducta ya no se entrega.",
+  "A learner screams for tablet access, and staff stop providing the tablet after screaming while teaching an alternative request.": "Un aprendiz grita para acceder a la tableta, y el personal deja de proporcionarla después del grito mientras enseña una petición alternativa.",
+  "Instead of hitting to escape work, a learner is taught to request a break appropriately.": "En lugar de golpear para escapar del trabajo, se enseña al aprendiz a pedir un descanso de manera apropiada.",
+  "the selected intervention matches the identified function of the behavior.": "la intervención seleccionada coincide con la función identificada de la conducta.",
+  "Assessment suggests the behavior is maintained by escape, so the plan teaches a break request rather than adding attention-based strategies.": "La evaluación sugiere que la conducta está mantenida por escape, así que el plan enseña una petición de descanso en lugar de añadir estrategias basadas en atención.",
+  "Instead of grabbing materials, a learner is taught to request a turn appropriately.": "En lugar de agarrar materiales, se enseña al aprendiz a pedir un turno de manera apropiada.",
+  "an event temporarily increases the value of a consequence and the behavior that has produced it before.": "un evento aumenta temporalmente el valor de una consecuencia y de la conducta que antes la producía.",
+  "A learner who has been working for a long time begins requesting breaks more often once task demands continue.": "Un aprendiz que ha estado trabajando durante mucho tiempo comienza a pedir descansos con más frecuencia a medida que continúan las demandas.",
+  "an event temporarily decreases the value of a consequence and the behavior that has produced it before.": "un evento disminuye temporalmente el valor de una consecuencia y de la conducta que antes la producía.",
+  "After a learner has had extended access to a favorite snack, requests for that snack decrease during session.": "Después de que un aprendiz ha tenido acceso prolongado a un snack favorito, las peticiones por ese snack disminuyen durante la sesión.",
+  "the learner is given options within the activity, materials, or order of tasks to reduce problem behavior and improve cooperation.": "al aprendiz se le ofrecen opciones dentro de la actividad, los materiales o el orden de las tareas para reducir la conducta problema y mejorar la cooperación.",
+  "Instead of writing that a client was lazy, the RBT documents that the client completed 3 of 10 tasks and left the table twice.": "En lugar de escribir que un cliente fue perezoso, el RBT documenta que el cliente completó 3 de 10 tareas y se levantó de la mesa dos veces.",
+  "Which concept is being described as notes describe observable events and data without opinions or labels.": "¿Qué concepto se describe como notas que describen eventos observables y datos sin opiniones ni etiquetas?",
+  "What is the main goal of Supervisor concern report?": "¿Cuál es el objetivo principal de Reporte de preocupación al supervisor?",
+  "Reporting concerns with objective details helps the supervisor evaluate whether changes to the plan are needed. The main goal is to communicate clinically relevant concerns to the supervisor promptly.": "Reportar preocupaciones con detalles objetivos ayuda al supervisor a evaluar si se necesitan cambios en el plan. El objetivo principal es comunicar oportunamente al supervisor preocupaciones clínicamente relevantes.",
+
+  "Natural environment teaching": "Enseñanza en ambiente natural",
+  "Physical prompt": "Ayuda física",
+  "Written skill acquisition plan": "Plan escrito de adquisición de habilidades",
+  "Fixed-ratio schedule": "Programa de razón fija",
+  "Baseline data entry": "Registro de datos de línea base",
+  "Objective session notes": "Notas objetivas de la sesión",
+  "Supervisor concern report": "Reporte de preocupación al supervisor",
+  "Poor procedural fidelity": "Baja fidelidad procedimental",
+  "Generalization programming": "Programación de generalización",
+  "Maintenance programming": "Programación de mantenimiento",
+  "Trend": "Tendencia",
+  "Written behavior reduction plan": "Plan escrito de reducción de conducta",
+  "Time-stamped session documentation": "Documentación de sesión con marca de tiempo",
+  "Direct observation": "Observación directa",
+  "Variable-interval schedule": "Programa de intervalo variable",
+  "Precorrection": "Precorrección",
+  "Demand fading": "Desvanecimiento de demandas",
+  "Mastery criterion tracking": "Seguimiento del criterio de dominio",
+  "Immediate data entry": "Registro inmediato de datos",
+  "Antecedent pattern analysis": "Análisis de patrones antecedentes",
+  "Timely reporting": "Reporte oportuno",
+  "Fixed-interval schedule": "Programa de intervalo fijo",
+  "Relevant variable documentation": "Documentación de variables relevantes",
+  "Transfer trial": "Ensayo de transferencia",
+  "Choice making": "Toma de decisiones",
+  "Caregiver update note": "Nota de actualización del cuidador",
+  "Accurate record keeping": "Mantenimiento preciso de registros",
+  "Observable terms": "Términos observables",
+  "Reinforcer effectiveness check": "Comprobación de efectividad del reforzador",
+  "Planned ignoring": "Ignorar planificadamente",
+  "Medication change report": "Reporte de cambio de medicación",
+  "Continuous reinforcement": "Reforzamiento continuo",
+  "Task analysis": "Análisis de tareas",
+  "Tangible extinction": "Extinción tangible",
+  "Establishing operation": "Operación establecedora",
+  "Attention-maintained replacement response": "Respuesta de reemplazo mantenida por atención",
+  "Safety monitoring": "Monitoreo de seguridad",
+  "Plan deviation note": "Nota de desviación del plan",
+  "Treatment integrity": "Integridad del tratamiento",
+  "Referral outside scope": "Derivación fuera del alcance",
+  "Variability": "Variabilidad",
+  "Continuous measurement": "Medición continua",
+  "Most-to-least prompting": "Ayuda de más a menos",
+  "Environmental change report": "Reporte de cambio ambiental",
+  "Caregiver communication log": "Registro de comunicación con cuidadores",
+  "Assent monitoring": "Monitoreo de asentimiento",
+  "Variable-ratio schedule": "Programa de razón variable",
+  "Stimulus prompt": "Ayuda de estímulo",
+  "Abolishing operation": "Operación abolitoria",
+  "Prompt level documentation": "Documentación del nivel de ayuda",
+  "Developmental assessment": "Evaluación del desarrollo",
+  "Subjective statement": "Declaración subjetiva",
+  "Function match": "Ajuste con la función",
+  "Data transcription check": "Comprobación de transcripción de datos",
+  "Prompt change note": "Nota de cambio de ayuda",
+  "Behavior trend summary": "Resumen de tendencia de conducta",
+  "Conflict-of-interest prevention": "Prevención de conflicto de interés",
+  "Momentary time sampling": "Muestreo momentáneo en el tiempo",
+  "Caregiver interview": "Entrevista con cuidador",
+  "Intermittent reinforcement": "Reforzamiento intermitente",
+  "Follow-up communication note": "Nota de comunicación de seguimiento",
+  "Level": "Nivel",
+  "Percentage correct": "Porcentaje correcto",
+  "Skill strengths assessment": "Evaluación de fortalezas de habilidades",
+  "Skill deficits assessment": "Evaluación de déficits de habilidades",
+  "Attention extinction": "Extinción de atención",
+  "Injury report": "Reporte de lesión",
+  "Trial-by-trial documentation": "Documentación ensayo por ensayo",
+  "Mandated reporting": "Reporte obligatorio",
+  "ABC data": "Datos ABC",
+  "Discrete trial teaching": "Enseñanza en ensayos discretos",
+  "Forward chaining": "Encadenamiento hacia adelante",
+  "Backward chaining": "Encadenamiento hacia atrás",
+  "Time delay": "Demora temporal",
+  "Escape extinction": "Extinción por escape"
+  ,
+  "Direct assessment": "Evaluación directa",
+  "Scatterplot assessment": "Evaluación con diagrama de dispersión",
+  "Function hypothesis": "Hipótesis de función",
+  "Least-to-most prompting": "Ayuda de menos a más",
+  "Shaping": "Moldeamiento",
+  "Gesture prompt": "Ayuda gestual",
+  "Differential reinforcement of other behavior": "Reforzamiento diferencial de otra conducta",
+  "Replacement behavior": "Conducta de reemplazo",
+  "Function-based intervention": "Intervención basada en la función",
+  "Tangible-maintained replacement response": "Respuesta de reemplazo mantenida por tangible",
+  "Extinction side effects": "Efectos secundarios de la extinción",
+  "Choice making": "Toma de decisiones",
+  "Objective notes focus on what happened and what data were collected, not on opinions or assumptions.": "Las notas objetivas se centran en lo que ocurrió y en qué datos se recogieron, no en opiniones ni suposiciones.",
+  "Incident reports are required when important events affect safety, health, or the integrity of services.": "Los reportes de incidentes son requeridos cuando eventos importantes afectan la seguridad, la salud o la integridad de los servicios.",
+  "RBTs should not make independent treatment changes outside their role or training.": "Los RBT no deben hacer cambios independientes al tratamiento fuera de su rol o entrenamiento.",
+  "Direct observation improves assessment quality because it captures what is happening in the moment.": "La observación directa mejora la calidad de la evaluación porque capta lo que está ocurriendo en el momento.",
+  "Least-to-most prompting preserves the chance for independent responding before stronger prompts are added.": "La ayuda de menos a más preserva la posibilidad de respuesta independiente antes de añadir ayudas más intensas.",
+  "Shaping is useful when the final target behavior does not happen yet and smaller approximations must be reinforced first.": "El moldeamiento es útil cuando la conducta objetivo final todavía no ocurre y primero deben reforzarse aproximaciones más pequeñas.",
+  "Gesture prompts are typically less intrusive than direct physical guidance.": "Las ayudas gestuales suelen ser menos intrusivas que la guía física directa.",
+  "Physical prompts involve direct physical assistance and are typically among the most intrusive prompt types.": "Las ayudas físicas implican asistencia física directa y suelen estar entre los tipos de ayuda más intrusivos.",
+  "Function-based interventions are more effective because they address the variable maintaining the behavior.": "Las intervenciones basadas en la función son más efectivas porque abordan la variable que mantiene la conducta.",
+  "Replacement behaviors are chosen because they are safer, more acceptable, and functionally useful.": "Las conductas de reemplazo se eligen porque son más seguras, más aceptables y funcionalmente útiles.",
+  "Establishing operations make a consequence more effective and increase relevant behavior.": "Las operaciones establecedoras hacen una consecuencia más efectiva y aumentan la conducta relevante.",
+  "Abolishing operations make a consequence less effective and reduce related behavior.": "Las operaciones abolitivas hacen una consecuencia menos efectiva y reducen la conducta relacionada.",
+  "Choice making can reduce the aversiveness of demands and increase learner participation.": "La toma de decisiones puede reducir la aversividad de las demandas y aumentar la participación del aprendiz."
+};
+
 const QUESTION_SENTENCE_REPLACEMENTS = [
   ["An RBT", "Un RBT"],
   ["A BCBA", "Un BCBA"],
@@ -1163,7 +1399,13 @@ export function translateToSpanish(text) {
     return "";
   }
 
-  let translated = String(text);
+  const rawText = String(text);
+  const exact = EXACT_SPANISH_TEXT[rawText.trim()];
+  if (exact) {
+    return exact;
+  }
+
+  let translated = rawText;
 
   SORTED_LONGEST_FIRST_REPLACEMENTS.forEach(([english, spanish]) => {
     translated = replaceCaseInsensitive(translated, english, spanish);
@@ -1687,16 +1929,16 @@ const ENGLISH_LEAK_TOKENS = new Set([
   "routine", "lists", "part", "order", "completed",
 ]);
 
-function hasEnglishLeak(text) {
+function countEnglishLeaks(text) {
   const words = String(text || "")
     .toLowerCase()
     .match(/[a-z']+/g);
 
   if (!words) {
-    return false;
+    return 0;
   }
 
-  return words.some((word) => ENGLISH_LEAK_TOKENS.has(word));
+  return words.reduce((total, word) => total + (ENGLISH_LEAK_TOKENS.has(word) ? 1 : 0), 0);
 }
 
 export function localizeQuestion(question, language) {
@@ -1749,15 +1991,20 @@ export function localizeQuestion(question, language) {
         : localizeText(option.text, language),
   }));
 
+  const leakCounts =
+    language === "es"
+      ? [
+          spanishQuestionText,
+          spanishExplanation,
+          localizedExamClue.primary,
+          localizedCommonTrap.primary,
+          ...localizedOptions.map((option) => option.localizedText.primary),
+        ].map(countEnglishLeaks)
+      : [];
+
+  const totalLeakCount = leakCounts.reduce((sum, count) => sum + count, 0);
   const shouldFallbackToEnglish =
-    language === "es" &&
-    [
-      spanishQuestionText,
-      spanishExplanation,
-      localizedExamClue.primary,
-      localizedCommonTrap.primary,
-      ...localizedOptions.map((option) => option.localizedText.primary),
-    ].some(hasEnglishLeak);
+    language === "es" && (totalLeakCount >= 8 || leakCounts.some((count) => count >= 4));
 
   if (shouldFallbackToEnglish) {
     return {
