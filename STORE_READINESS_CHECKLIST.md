@@ -50,3 +50,8 @@ Do not market these as already included inside the app listing yet:
 
 - If premium is sold inside the mobile app, use native store billing.
 - Keep the listing honest: this is an exam-prep app today, not a completed 40-hour training course.
+
+## Internal reference
+
+- Exact product IDs, RevenueCat mapping, and env vars:
+  - `STORE_PRODUCT_SETUP.md`
