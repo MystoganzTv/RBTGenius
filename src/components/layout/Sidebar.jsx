@@ -39,7 +39,7 @@ export default function Sidebar({ currentPage, isAdmin = false, plan = "free" })
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-slate-100 bg-white transition-all duration-300 dark:border-slate-800 dark:bg-slate-950",
+        "app-sidebar fixed left-0 top-0 z-50 flex flex-col border-r border-slate-100 bg-white transition-all duration-300 dark:border-slate-800 dark:bg-slate-950",
         collapsed ? "w-[72px]" : "w-[260px]",
       )}
     >

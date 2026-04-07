@@ -39,7 +39,7 @@ export default function TopBar({
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-100 bg-white/80 px-6 backdrop-blur-xl transition-colors dark:border-slate-800 dark:bg-slate-950/80">
+    <header className="app-topbar sticky top-0 z-40 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 backdrop-blur-xl transition-colors dark:border-slate-800 dark:bg-slate-950/80 sm:px-6">
       <div className="flex items-center gap-3">
         {onMenuClick ? (
           <Button

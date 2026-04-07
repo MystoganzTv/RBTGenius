@@ -1,44 +1,59 @@
 # Mobile App Notes
 
-RBT Genius now supports a shared mobile path based on the existing web app:
+RBT Genius now uses a shared mobile path on top of the existing web app:
 
-- `PWA` for installable web behavior
-- `Capacitor` for native `iOS` and `Android` shells
+- `PWA` for installable browser behavior
+- `Capacitor` for native `iOS` and `Android`
 
 ## Current setup
 
 - Bundle id: `com.mystodev.rbtgenius`
 - Web output directory: `dist`
-- Sync command: `npm run mobile:sync`
+- Native projects:
+  - `ios/`
+  - `android/`
+- Native shell support already added:
+  - safe-area aware layout
+  - native status bar sync with light/dark theme
+  - splash screen handoff
 
-## Store-readiness notes
+## Commands
 
-The project is now technically ready to be wrapped as a mobile app, but there are still business and review items to finish before submission:
+1. `npm run mobile:sync`
+2. `npm run mobile:ios`
+3. `npm run mobile:android`
+4. `npm run cap:run:ios`
+5. `npm run cap:run:android`
 
-1. Apple and Google digital subscriptions inside the app should use native in-app purchase flows instead of only web checkout.
-2. App Store review is more likely to pass if the app adds clear mobile-native value such as:
+## What is already true
+
+- We are not building a second product from scratch.
+- The same React app is being packaged for mobile stores.
+- The current app offer is still exam prep:
+  - practice
+  - flashcards
+  - mock exams
+  - AI tutor
+  - analytics
+- The `40-hour course` is still future work and should stay marked as `coming soon`.
+
+## What still must happen before store submission
+
+1. Replace web-only subscription checkout with native in-app purchase flows for Apple and Google if premium will be sold inside the app.
+2. Add clearer mobile-native value:
    - push reminders
    - offline flashcards
    - saved study sessions
-   - smoother splash / launch experience
-3. Final store assets are still needed:
-   - app icon set
-   - splash screen assets
+3. Finish store assets and compliance:
+   - final app icon set
+   - splash assets
    - screenshots
-   - privacy metadata
+   - privacy nutrition labels / data safety form
+   - support URL and review notes
 
-## Native workflow
+## Recommended next product steps
 
-1. `npm run build:mobile`
-2. `npm run cap:sync`
-3. `npm run cap:open:ios`
-4. `npm run cap:open:android`
-
-## Recommendation
-
-Use the same shared question bank and existing UI flow, but prioritize:
-
-- mobile onboarding polish
 - native billing
-- push reminders
-- offline-safe study surfaces
+- offline flashcards
+- push study reminders
+- small mobile onboarding flow

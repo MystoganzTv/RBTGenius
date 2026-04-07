@@ -11,14 +11,14 @@ export default function Layout({ children, currentPageName }) {
 
   if (currentPageName === "Pricing") {
     return (
-      <div className="dark-dashboard-grid min-h-screen bg-[#F8FAFC] text-foreground transition-colors dark:bg-background">
+      <div className="app-shell dark-dashboard-grid min-h-[100dvh] bg-[#F8FAFC] text-foreground transition-colors dark:bg-background">
         {children}
       </div>
     );
   }
 
   return (
-    <div className="dark-dashboard-grid min-h-screen bg-[#F8FAFC] text-foreground transition-colors dark:bg-background">
+    <div className="app-shell dark-dashboard-grid min-h-[100dvh] bg-[#F8FAFC] text-foreground transition-colors dark:bg-background">
       {sidebarOpen ? (
         <div
           className="fixed inset-0 z-40 bg-black/30 lg:hidden dark:bg-black/60"
@@ -42,7 +42,7 @@ export default function Layout({ children, currentPageName }) {
           onLogout={() => logout()}
         />
 
-        <main className="p-4 lg:p-6">
+        <main className="app-main p-4 lg:p-6">
           {children}
         </main>
       </div>

@@ -8,6 +8,7 @@ import {
   useParams,
 } from "react-router-dom";
 import UserNotRegisteredError from "@/components/UserNotRegisteredError.jsx";
+import NativeShellEffects from "@/components/mobile/NativeShellEffects.jsx";
 import { Toaster } from "@/components/ui/toaster";
 import AppErrorBoundary from "@/components/AppErrorBoundary.jsx";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -195,6 +196,7 @@ export default function App() {
         <AuthProvider>
           <QueryClientProvider client={queryClientInstance}>
             <AppErrorBoundary>
+              <NativeShellEffects />
               <Router>
                 <AuthenticatedApp />
               </Router>
