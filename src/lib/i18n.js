@@ -365,8 +365,8 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Look for whether the note is objective, timely, and limited to relevant facts about behavior, treatment, communication, or safety.", "Busca si la nota es objetiva, oportuna y limitada a hechos relevantes sobre conducta, tratamiento, comunicación o seguridad."],
   ["Measurement questions usually hinge on exactly what is being observed: count, time, interval, product, or graph feature.", "Las preguntas de medición suelen depender exactamente de qué se está observando: conteo, tiempo, intervalo, producto o rasgo de la gráfica."],
   ["Skill acquisition questions usually turn on what teaching procedure is being used to build independent responding.", "Las preguntas de adquisición de habilidades suelen girar en torno a qué procedimiento de enseñanza se usa para construir respuestas independientes."],
-  ["Which concept is being described as", "¿Qué concepto se describe como"],
-  ["Which concept is the best match?", "¿Qué concepto encaja mejor?"],
+  ["Which concept is being described as", "¿Qué concepto se define como"],
+  ["Which concept is the best match?", "¿Qué concepto corresponde mejor?"],
   ["What is the main goal of", "¿Cuál es el objetivo principal de"],
   ["The main goal is", "El objetivo principal es"],
   ["Definition match", "Coincidencia de definición"],
@@ -460,8 +460,8 @@ const LONGEST_FIRST_REPLACEMENTS = [
   ["Preference assessments help the team identify what the learner is likely to work for during teaching.", "Las evaluaciones de preferencias ayudan al equipo a identificar por qué es probable que el aprendiz trabaje durante la enseñanza."],
   ["Baseline data show the learner's starting point so later changes can be interpreted accurately.", "Los datos de línea base muestran el punto de partida del aprendiz para que los cambios posteriores puedan interpretarse con precisión."],
   ["A scatterplot is useful when the team suspects behavior is more likely at particular times of day.", "Un diagrama de dispersión es útil cuando el equipo sospecha que la conducta es más probable en momentos específicos del día."],
-  ["Least-to-most prompting preserves the chance for independent responding before stronger prompts are added.", "La ayuda de menos a más preserva la posibilidad de responder de forma independiente antes de añadir ayudas más intensas."],
-  ["Prompt fading helps the learner respond to the natural cue instead of depending on the prompt.", "El desvanecimiento de ayudas ayuda al aprendiz a responder a la señal natural en lugar de depender de la ayuda."],
+  ["Least-to-most prompting preserves the chance for independent responding before stronger prompts are added.", "La ayuda de menos a más preserva la oportunidad de responder de forma independiente antes de añadir ayudas más intensas."],
+  ["Prompt fading helps the learner respond to the natural cue instead of depending on the prompt.", "El desvanecimiento de ayudas favorece que el aprendiz responda ante la señal natural en lugar de depender de la ayuda."],
   ["Shaping is useful when the final target behavior does not happen yet and smaller approximations must be reinforced first.", "El moldeamiento es útil cuando la conducta objetivo final todavía no ocurre y primero deben reforzarse aproximaciones más pequeñas."],
   ["Task analysis breaks a chain into clear steps so instruction can be delivered more systematically.", "El análisis de tareas divide una cadena en pasos claros para que la instrucción pueda impartirse de forma más sistemática."],
   ["Total task chaining involves completing the whole chain each time rather than just one link.", "El encadenamiento de tarea total implica completar toda la cadena cada vez, en lugar de solo un eslabón."],
@@ -862,6 +862,32 @@ const EXACT_SPANISH_TEXT = {
   "Differential reinforcement of low rates is used when the behavior is acceptable in small amounts but happens too often.": "El reforzamiento diferencial de tasas bajas se usa cuando la conducta es aceptable en pequeñas cantidades, pero ocurre con demasiada frecuencia.",
   "Differential reinforcement of low rates is used when the behavior is acceptable in small amounts but happens too often. The main goal is to reduce a behavior to a lower rate while allowing some occurrence.": "El reforzamiento diferencial de tasas bajas se usa cuando la conducta es aceptable en pequeñas cantidades, pero ocurre con demasiada frecuencia. El objetivo principal es reducir una conducta a una tasa más baja permitiendo cierta ocurrencia.",
   "Teaching an acceptable item request is a common replacement strategy for tangible-maintained behavior.": "Enseñar una petición apropiada de un objeto es una estrategia común de reemplazo para conducta mantenida por tangibles.",
+  "An RBT wants the exact number of times a learner hits the table during a 20-minute session.": "Un RBT quiere saber el número exacto de veces que un aprendiz golpea la mesa durante una sesión de 20 minutos.",
+  "the RBT measures how long a behavior lasts from start to finish.": "el RBT mide cuánto dura una conducta de inicio a fin.",
+  "A learner cries for several minutes at a time, and the team wants to measure how long each episode lasts.": "Un aprendiz llora durante varios minutos a la vez, y el equipo quiere medir cuánto dura cada episodio.",
+  "a behavior is described in observable, measurable terms so different staff can identify it the same way.": "una conducta se expresa en términos observables y medibles para que distintas personas del equipo puedan identificarla de la misma manera.",
+  "Before collecting data on aggression, the team writes a description that includes only actions that can be seen and counted.": "Antes de recoger datos sobre agresión, el equipo redacta una descripción que incluye solo acciones que pueden observarse y contarse.",
+  "items or activities are systematically tested to identify likely reinforcers.": "se prueban de forma sistemática elementos o actividades para identificar reforzadores probables.",
+  "An RBT rotates toys and snacks to see what items the learner chooses most often.": "Un RBT rota juguetes y snacks para ver qué elementos el aprendiz elige con más frecuencia.",
+  "An RBT rotates toys and snacks to see which items the learner chooses most often.": "Un RBT rota juguetes y snacks para ver qué elementos el aprendiz elige con más frecuencia.",
+  "prompts are gradually reduced so control transfers to the natural cue.": "las ayudas se reducen gradualmente para que el control pase a la señal natural.",
+  "successive approximations of the target behavior are reinforced.": "se refuerzan aproximaciones sucesivas de la conducta objetivo.",
+  "the learner is taught a communication response that serves the same function as the problem behavior.": "se enseña al aprendiz una respuesta de comunicación que cumple la misma función que la conducta problema.",
+  "the environment is changed before behavior occurs to reduce the likelihood of problem behavior.": "el entorno se modifica antes de que ocurra la conducta para reducir la probabilidad de conducta problema.",
+  "the environment is changed before behavior occurs to reduce the likelihood of the problem behavior.": "el entorno se modifica antes de que ocurra la conducta para reducir la probabilidad de la conducta problema.",
+  "An RBT uses a visual schedule and warnings before transitions because transitions usually trigger tantrums.": "Un RBT usa un horario visual y avisos previos antes de las transiciones porque esas transiciones suelen desencadenar berrinches.",
+  "data are recorded as soon as possible after the behavior or teaching trial.": "los datos se registran lo antes posible después de la conducta o del ensayo de enseñanza.",
+  "Recording data right away reduces memory errors and makes the record more reliable.": "Registrar los datos de inmediato disminuye los errores de memoria y hace que el registro sea más confiable.",
+  "recording data right away reduces memory errors and makes the record more reliable.": "Registrar los datos de inmediato disminuye los errores de memoria y hace que el registro sea más confiable.",
+  "After each discrete trial, the RBT enters the response immediately instead of waiting until the end of session.": "Después de cada ensayo discreto, el RBT registra la respuesta de inmediato en lugar de esperar hasta el final de la sesión.",
+  "a significant event is documented according to policy and communicated promptly.": "un evento significativo se documenta según la política y se comunica de manera oportuna.",
+  "A client falls during the session and needs first aid, so the RBT completes the required report and notifies the supervisor.": "Un cliente se cae durante la sesión y necesita primeros auxilios, así que el RBT completa el reporte requerido y notifica al supervisor.",
+  "A client falls during session and needs first aid, so the RBT completes the required report and notifies the supervisor.": "Un cliente se cae durante la sesión y necesita primeros auxilios, así que el RBT completa el reporte requerido y notifica al supervisor.",
+  "the RBT seeks feedback or guidance when unsure how to proceed.": "el RBT busca retroalimentación o guía cuando no tiene claro cómo proceder.",
+  "Seeking supervision protects the client and keeps services aligned with the treatment plan.": "Buscar supervisión protege al cliente y mantiene los servicios alineados con el plan de tratamiento.",
+  "An intervention is not going as expected, so the RBT brings data and questions to the supervisor instead of improvising.": "Una intervención no está avanzando como se esperaba, así que el RBT lleva datos y preguntas al supervisor en lugar de improvisar.",
+  "Confidentiality requires protecting private information in conversation, storage, and communication.": "La confidencialidad exige proteger la información privada en conversaciones, almacenamiento y comunicación.",
+  "An RBT avoids discussing a client's treatment details with friends and keeps session documents secure.": "Un RBT evita comentar con amistades detalles del tratamiento de un cliente y mantiene seguros los documentos de la sesión.",
 
   "Natural environment teaching": "Enseñanza en ambiente natural",
   "Physical prompt": "Ayuda física",
@@ -1792,12 +1818,12 @@ function translateQuestionText(text) {
 
   const definitionMatch = value.match(/^Which concept is being described as (.+)$/i);
   if (definitionMatch) {
-    return `¿Qué concepto se describe como ${stripTrailingPeriod(translateQuestionSentence(definitionMatch[1]))}?`;
+    return `¿Qué concepto corresponde a esta definición: ${stripTrailingPeriod(translateQuestionSentence(definitionMatch[1]))}?`;
   }
 
   const scenarioMatch = value.match(/^(.+)\s+Which concept is the best match\?$/i);
   if (scenarioMatch) {
-    return `${translateQuestionSentence(scenarioMatch[1].trim())} ¿Qué concepto encaja mejor?`;
+    return `${translateQuestionSentence(scenarioMatch[1].trim())} ¿Qué concepto corresponde mejor?`;
   }
 
   const purposeMatch = value.match(/^What is the main goal of (.+)\?$/i);
@@ -1816,7 +1842,7 @@ function translateExplanationText(text) {
 
   const purposeSplit = value.match(/^(.+?)\s+The main goal is\s+(.+)$/i);
   if (purposeSplit) {
-    return `${translateQuestionSentence(purposeSplit[1])} El objetivo principal es ${stripTrailingPeriod(stripLeadingPara(translatePurposeText(purposeSplit[2]))).toLowerCase()}.`;
+    return `${translateQuestionSentence(purposeSplit[1])} El objetivo principal es ${stripTrailingPeriod(stripLeadingPara(translatePurposeText(purposeSplit[2])))}.`;
   }
 
   return translateQuestionSentence(value);
@@ -2059,16 +2085,16 @@ export function localizeQuestion(question, language) {
   const questionKind = question.id?.split("_").pop();
   const spanishQuestionText = concept
     ? questionKind === "definition"
-      ? `¿Qué concepto se describe como ${stripTrailingPeriod(translateQuestionSentence(concept.definition))}?`
+      ? `¿Qué concepto corresponde a esta definición: ${stripTrailingPeriod(translateQuestionSentence(concept.definition))}?`
       : questionKind === "scenario"
-        ? `${translateQuestionSentence(concept.scenario)} ¿Qué concepto encaja mejor?`
+        ? `${translateQuestionSentence(concept.scenario)} ¿Qué concepto corresponde mejor?`
         : questionKind === "purpose"
           ? `¿Cuál es el objetivo principal de ${stripTrailingPeriod(translateQuestionSentence(concept.answer))}?`
           : translateQuestionText(question.text)
     : translateQuestionText(question.text);
   const spanishExplanation = concept
     ? questionKind === "purpose"
-      ? `${translateQuestionSentence(concept.explanation)} El objetivo principal es ${stripTrailingPeriod(stripLeadingPara(translatePurposeText(concept.purpose))).toLowerCase()}.`
+      ? `${translateQuestionSentence(concept.explanation)} El objetivo principal es ${stripTrailingPeriod(stripLeadingPara(translatePurposeText(concept.purpose)))}.`
       : translateQuestionSentence(concept.explanation)
     : translateExplanationText(question.explanation);
 
