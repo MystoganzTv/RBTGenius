@@ -163,6 +163,12 @@ export const api = {
       },
     });
   },
+  syncMobileBilling(payload) {
+    return request("/api/billing/mobile/sync", {
+      method: "POST",
+      body: payload,
+    });
+  },
   listAdminMembers() {
     return request("/api/admin/members");
   },

@@ -34,6 +34,14 @@ import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
 import { translateUi } from "@/lib/i18n";
 import {
+  getNativePlanAvailability,
+  isNativeBillingAvailable,
+  isNativePurchaseCancelled,
+  openNativeManagement,
+  purchaseNativePlan,
+  restoreNativePurchases,
+} from "@/lib/mobile-billing";
+import {
   FREE_DAILY_PRACTICE_LIMIT,
   FREE_DAILY_TUTOR_LIMIT,
   PLAN_CATALOG,
@@ -80,7 +88,7 @@ function formatPaymentDate(value) {
 }
 
 export default function Profile() {
-  const { user: authUser, login } = useAuth();
+  const { user: authUser, login, checkUserAuth } = useAuth();
   const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
@@ -103,11 +111,16 @@ export default function Profile() {
     stripe_enabled: false,
     checkout_enabled: {},
     portal_enabled: false,
+    revenuecat_enabled: false,
+    mobile_checkout_enabled: {},
   };
   const currentPlanId = currentUser?.plan || PLAN_IDS.FREE;
   const currentPlan = planInfo[currentPlanId] || planInfo.free;
   const CurrentPlanIcon = currentPlan.icon;
-  const canManageBilling = Boolean(billing.portal_enabled && currentUser?.stripe_customer_id);
+  const nativeBillingActive = isNativeBillingAvailable(billing);
+  const canManageBilling = nativeBillingActive
+    ? Boolean(currentUser?.revenuecat_management_url || billing.mobile_portal_enabled)
+    : Boolean(billing.portal_enabled && currentUser?.stripe_customer_id);
   const t = (value) => translateUi(value, language);
 
   useEffect(() => {
@@ -150,6 +163,44 @@ export default function Profile() {
     },
   });
 
+  const nativePlanAvailabilityQuery = useQuery({
+    queryKey: ["native-plan-availability", currentUser?.id, billing?.mobile_offering_identifier],
+    queryFn: () => getNativePlanAvailability({ user: currentUser, billing }),
+    enabled: nativeBillingActive && Boolean(currentUser?.id),
+    staleTime: 60_000,
+  });
+
+  const nativePurchaseMutation = useMutation({
+    mutationFn: (planId) => purchaseNativePlan({ user: currentUser, billing, planId }),
+    onSuccess: async () => {
+      const nextProfile = await refetchProfile();
+      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
+      if (nextProfile?.data?.user) {
+        login(nextProfile.data.user);
+      }
+      await checkUserAuth();
+      toast({
+        title: t("Premium activated"),
+        description: t("Your mobile subscription is now linked to this account."),
+      });
+    },
+    onError: (error) => {
+      if (isNativePurchaseCancelled(error)) {
+        toast({
+          title: t("Purchase cancelled"),
+          description: t("Your plan was not changed."),
+        });
+        return;
+      }
+
+      toast({
+        title: t("Unable to complete in-app purchase"),
+        description: t(error.message || "Please try again."),
+      });
+    },
+  });
+
   const portalMutation = useMutation({
     mutationFn: api.createBillingPortal,
     onSuccess: (data) => {
@@ -160,6 +211,29 @@ export default function Profile() {
     onError: (error) => {
       toast({
         title: t("Unable to open billing portal"),
+        description: t(error.message || "Please try again."),
+      });
+    },
+  });
+
+  const nativeRestoreMutation = useMutation({
+    mutationFn: () => restoreNativePurchases({ user: currentUser, billing }),
+    onSuccess: async () => {
+      const nextProfile = await refetchProfile();
+      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics-data"] });
+      if (nextProfile?.data?.user) {
+        login(nextProfile.data.user);
+      }
+      await checkUserAuth();
+      toast({
+        title: t("Purchases restored"),
+        description: t("Your mobile subscription access has been refreshed."),
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t("Unable to restore purchases"),
         description: t(error.message || "Please try again."),
       });
     },
@@ -457,9 +531,14 @@ export default function Profile() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   {premiumPlans.map((plan) => {
-                    const checkoutReady = billing.checkout_enabled?.[plan.id];
+                    const checkoutReady = nativeBillingActive
+                      ? nativePlanAvailabilityQuery.data?.[plan.id]
+                      : billing.checkout_enabled?.[plan.id];
                     const isLoading =
-                      checkoutMutation.isPending && checkoutMutation.variables === plan.id;
+                      nativeBillingActive
+                        ? nativePurchaseMutation.isPending &&
+                          nativePurchaseMutation.variables === plan.id
+                        : checkoutMutation.isPending && checkoutMutation.variables === plan.id;
 
                     return (
                       <div
@@ -481,14 +560,18 @@ export default function Profile() {
                         <Button
                           className="mt-5 w-full rounded-2xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
                           disabled={!checkoutReady || isLoading}
-                          onClick={() => checkoutMutation.mutate(plan.id)}
+                          onClick={() =>
+                            nativeBillingActive
+                              ? nativePurchaseMutation.mutate(plan.id)
+                              : checkoutMutation.mutate(plan.id)
+                          }
                         >
                           {isLoading ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : checkoutReady ? (
                             plan.cta
                           ) : (
-                            t("Stripe setup pending")
+                            nativeBillingActive ? t("Store setup pending") : t("Stripe setup pending")
                           )}
                         </Button>
                       </div>
@@ -525,33 +608,81 @@ export default function Profile() {
 
                 <div className="flex flex-wrap gap-3">
                   <Button
-                    onClick={() => portalMutation.mutate()}
-                    disabled={!canManageBilling || portalMutation.isPending}
+                    onClick={() => {
+                      if (nativeBillingActive) {
+                        openNativeManagement({
+                          user: currentUser,
+                          billing,
+                          fallbackUrl: currentUser?.revenuecat_management_url,
+                        }).catch((error) => {
+                          toast({
+                            title: t("Store management unavailable"),
+                            description: t(error.message || "Please try again."),
+                          });
+                        });
+                        return;
+                      }
+
+                      portalMutation.mutate();
+                    }}
+                    disabled={
+                      !canManageBilling ||
+                      portalMutation.isPending ||
+                      nativeRestoreMutation.isPending
+                    }
                     className="rounded-2xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
                   >
                     {portalMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      t("Manage Billing")
+                      nativeBillingActive ? t("Manage in Store") : t("Manage Billing")
                     )}
                   </Button>
+                  {nativeBillingActive ? (
+                    <Button
+                      variant="outline"
+                      className="rounded-2xl"
+                      onClick={() => nativeRestoreMutation.mutate()}
+                      disabled={nativeRestoreMutation.isPending}
+                    >
+                      {nativeRestoreMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        t("Restore Purchases")
+                      )}
+                    </Button>
+                  ) : null}
                   <Button
                     variant="outline"
                     className="rounded-2xl"
                     onClick={() =>
-                      checkoutMutation.mutate(
-                        currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
-                          ? PLAN_IDS.PREMIUM_YEARLY
-                          : PLAN_IDS.PREMIUM_MONTHLY,
-                      )
+                      nativeBillingActive
+                        ? nativePurchaseMutation.mutate(
+                            currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
+                              ? PLAN_IDS.PREMIUM_YEARLY
+                              : PLAN_IDS.PREMIUM_MONTHLY,
+                          )
+                        : checkoutMutation.mutate(
+                            currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
+                              ? PLAN_IDS.PREMIUM_YEARLY
+                              : PLAN_IDS.PREMIUM_MONTHLY,
+                          )
                     }
                     disabled={
-                      checkoutMutation.isPending ||
-                      !billing.checkout_enabled?.[
-                        currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
-                          ? PLAN_IDS.PREMIUM_YEARLY
-                          : PLAN_IDS.PREMIUM_MONTHLY
-                      ]
+                      (nativeBillingActive
+                        ? nativePurchaseMutation.isPending
+                        : checkoutMutation.isPending) ||
+                      !(nativeBillingActive
+                        ? nativePlanAvailabilityQuery.data?.[
+                            currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
+                              ? PLAN_IDS.PREMIUM_YEARLY
+                              : PLAN_IDS.PREMIUM_MONTHLY
+                          ]
+                        : billing.checkout_enabled?.[
+                            currentPlanId === PLAN_IDS.PREMIUM_MONTHLY
+                              ? PLAN_IDS.PREMIUM_YEARLY
+                              : PLAN_IDS.PREMIUM_MONTHLY
+                          ])
                     }
                   >
                     {t("Switch Plan")}
@@ -560,7 +691,9 @@ export default function Profile() {
 
                 {!canManageBilling ? (
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {t("Billing portal will appear after this membership is linked to a Stripe customer record.")}
+                    {nativeBillingActive
+                      ? t("Store subscription management will appear after this purchase is linked on the current device.")
+                      : t("Billing portal will appear after this membership is linked to a Stripe customer record.")}
                   </p>
                 ) : null}
               </div>

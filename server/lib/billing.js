@@ -5,6 +5,7 @@ import {
   isPremiumPlan,
   normalizePlan,
 } from "../../src/lib/plan-access.js";
+import { getRevenueCatPublicBillingConfig } from "./revenuecat.js";
 
 const STRIPE_PRICE_ENV = {
   [PLAN_IDS.PREMIUM_MONTHLY]: "STRIPE_PRICE_PREMIUM_MONTHLY",
@@ -48,6 +49,7 @@ export function resolvePlanFromPriceId(priceId) {
 export function getBillingConfig(user = null) {
   const stripe = getStripeClient();
   const hasStripeCustomer = Boolean(user?.stripe_customer_id);
+  const revenueCat = getRevenueCatPublicBillingConfig();
 
   return {
     stripe_enabled: Boolean(stripe),
@@ -56,6 +58,11 @@ export function getBillingConfig(user = null) {
       [PLAN_IDS.PREMIUM_YEARLY]: Boolean(stripe && getPlanPriceId(PLAN_IDS.PREMIUM_YEARLY)),
     },
     portal_enabled: user ? Boolean(stripe && hasStripeCustomer) : Boolean(stripe),
+    revenuecat_enabled: revenueCat.enabled,
+    mobile_checkout_enabled: revenueCat.checkout_enabled,
+    mobile_offering_identifier: revenueCat.offering_identifier,
+    mobile_api_keys: revenueCat.api_keys,
+    mobile_portal_enabled: revenueCat.enabled,
   };
 }
 

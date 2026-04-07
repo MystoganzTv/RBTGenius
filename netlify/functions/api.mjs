@@ -36,6 +36,10 @@ import {
   syncConfirmedCheckout,
 } from "../../server/lib/stripe-sync.js";
 import {
+  applyRevenueCatSync,
+  buildRevenueCatSyncResult,
+} from "../../server/lib/mobile-billing-sync.js";
+import {
   countTutorMessagesToday,
   getEntitlements,
   isPremiumPlan,
@@ -195,6 +199,8 @@ function buildProfilePayload(db, user) {
       role: user.role,
       plan: user.plan,
       stripe_customer_id: user.stripe_customer_id || null,
+      revenuecat_app_user_id: user.revenuecat_app_user_id || user.id,
+      revenuecat_management_url: user.revenuecat_management_url || null,
     },
     progress,
     entitlements,
@@ -1095,6 +1101,39 @@ export default async (request) => {
       return json(session);
     } catch (error) {
       return json({ message: error.message || "Unable to open billing portal" }, { status: 400 });
+    }
+  }
+
+  if (apiPath === "/billing/mobile/sync" && request.method === "POST") {
+    const auth = await requireUser(request);
+    if (auth.error) {
+      return auth.error;
+    }
+
+    try {
+      const body = await request.json();
+      const syncResult = await buildRevenueCatSyncResult(auth.user, {
+        ...(body?.customer_info || {}),
+        plan: body?.plan,
+      });
+
+      await updateDb((current) =>
+        applyRevenueCatSync(
+          current,
+          auth.user.id,
+          {
+            ...syncResult,
+            plan: syncResult.plan || body?.plan,
+          },
+          createId,
+        ),
+      );
+
+      const db = await readDb();
+      const nextUser = db.users.find((user) => user.id === auth.user.id) || auth.user;
+      return json(buildProfilePayload(db, nextUser));
+    } catch (error) {
+      return json({ message: error.message || "Unable to sync mobile billing" }, { status: 400 });
     }
   }
 

@@ -110,8 +110,8 @@ export const ACCESS_COMPARISON = [
     id: "billing",
     label: "Billing tools",
     guest: "Not needed",
-    free: "Upgrade from pricing page",
-    premium: "Stripe checkout and billing portal",
+    free: "Upgrade on web or from the mobile app store flow",
+    premium: "Stripe on web, native store billing on mobile",
   },
 ];
 

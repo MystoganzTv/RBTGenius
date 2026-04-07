@@ -29,6 +29,9 @@ Do not market these as already included inside the app listing yet:
 - [x] splash screen handoff
 - [ ] Apple in-app purchase
 - [ ] Google Play Billing
+- [x] RevenueCat client integration
+- [ ] RevenueCat store products + entitlement configured
+- [ ] RevenueCat server env vars set
 - [ ] offline-safe flashcards
 - [ ] push notifications
 

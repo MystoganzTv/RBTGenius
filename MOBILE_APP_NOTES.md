@@ -39,7 +39,14 @@ RBT Genius now uses a shared mobile path on top of the existing web app:
 
 ## What still must happen before store submission
 
-1. Replace web-only subscription checkout with native in-app purchase flows for Apple and Google if premium will be sold inside the app.
+1. Finish real store configuration in RevenueCat and the app stores:
+   - `REVENUECAT_IOS_API_KEY`
+   - `REVENUECAT_ANDROID_API_KEY`
+   - `REVENUECAT_SECRET_KEY`
+   - `REVENUECAT_PROJECT_ID`
+   - `REVENUECAT_PREMIUM_ENTITLEMENT_ID`
+   - `REVENUECAT_PRODUCTS_PREMIUM_MONTHLY`
+   - `REVENUECAT_PRODUCTS_PREMIUM_YEARLY`
 2. Add clearer mobile-native value:
    - push reminders
    - offline flashcards

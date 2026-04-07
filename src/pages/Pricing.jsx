@@ -15,6 +15,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import {
+  getNativePlanAvailability,
+  isNativeBillingAvailable,
+  isNativePurchaseCancelled,
+  openNativeManagement,
+  purchaseNativePlan,
+  restoreNativePurchases,
+} from "@/lib/mobile-billing";
+import {
   ACCESS_COMPARISON,
   FREE_DAILY_PRACTICE_LIMIT,
   FREE_DAILY_TUTOR_LIMIT,
@@ -44,14 +52,14 @@ const planFeatureMap = {
     "Unlimited AI tutor conversations",
     "Full mock exams",
     "Full analytics and readiness tracking",
-    "Manage billing with Stripe",
+    "Manage billing on web or in the app store",
   ],
   [PLAN_IDS.PREMIUM_YEARLY]: [
     "Everything in Premium Monthly",
     "Lower yearly cost than paying month to month",
     "Unlimited practice and AI tutor",
     "Full mock exams and analytics",
-    "Manage billing with Stripe",
+    "Manage billing on web or in the app store",
   ],
 };
 
@@ -82,7 +90,7 @@ function getActionLabel(planId, currentPlan, isAuthenticated) {
 export default function Pricing() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, checkUserAuth } = useAuth();
   const { language } = useLanguage();
   const t = (value) => translateUi(value, language);
 
@@ -99,6 +107,7 @@ export default function Pricing() {
 
   const currentPlan = profileData?.user?.plan || user?.plan || PLAN_IDS.FREE;
   const billing = getBillingAvailability(publicSettings, profileData);
+  const nativeBillingActive = isAuthenticated && isNativeBillingAvailable(billing);
   const visiblePlans = useMemo(() => {
     if (isAuthenticated && isPremiumPlan(currentPlan)) {
       return PLAN_CATALOG.filter((plan) => plan.id !== PLAN_IDS.FREE);
@@ -149,6 +158,57 @@ export default function Pricing() {
     },
   });
 
+  const nativePlanAvailabilityQuery = useQuery({
+    queryKey: ["native-plan-availability", user?.id, billing?.mobile_offering_identifier],
+    queryFn: () => getNativePlanAvailability({ user, billing }),
+    enabled: nativeBillingActive,
+    staleTime: 60_000,
+  });
+
+  const nativePurchaseMutation = useMutation({
+    mutationFn: (planId) => purchaseNativePlan({ user, billing, planId }),
+    onSuccess: async () => {
+      await refetchProfile();
+      await checkUserAuth();
+      toast({
+        title: t("Premium activated"),
+        description: t("Your mobile subscription is now linked to this account."),
+      });
+    },
+    onError: (error) => {
+      if (isNativePurchaseCancelled(error)) {
+        toast({
+          title: t("Purchase cancelled"),
+          description: t("Your plan was not changed."),
+        });
+        return;
+      }
+
+      toast({
+        title: t("Unable to complete in-app purchase"),
+        description: t(error.message || "Please try again in a moment."),
+      });
+    },
+  });
+
+  const nativeRestoreMutation = useMutation({
+    mutationFn: () => restoreNativePurchases({ user, billing }),
+    onSuccess: async () => {
+      await refetchProfile();
+      await checkUserAuth();
+      toast({
+        title: t("Purchases restored"),
+        description: t("Your mobile subscription access has been refreshed."),
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t("Unable to restore purchases"),
+        description: t(error.message || "Please try again in a moment."),
+      });
+    },
+  });
+
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const checkoutStatus = searchParams.get("checkout");
@@ -164,7 +224,7 @@ export default function Pricing() {
 
   const comparisonRows = useMemo(() => ACCESS_COMPARISON, []);
 
-  const handlePlanAction = (planId) => {
+  const handlePlanAction = async (planId) => {
     if (planId === PLAN_IDS.FREE) {
       if (isAuthenticated) {
         navigate(createPageUrl("Dashboard"));
@@ -182,8 +242,29 @@ export default function Pricing() {
 
     if (currentPlan === planId) {
       if (isPremiumPlan(currentPlan)) {
+        if (nativeBillingActive) {
+          try {
+            await openNativeManagement({
+              user,
+              billing,
+              fallbackUrl: profileData?.user?.revenuecat_management_url,
+            });
+          } catch (error) {
+            toast({
+              title: t("Store management unavailable"),
+              description: t(error.message || "Please try again in a moment."),
+            });
+          }
+          return;
+        }
+
         portalMutation.mutate();
       }
+      return;
+    }
+
+    if (nativeBillingActive) {
+      nativePurchaseMutation.mutate(planId);
       return;
     }
 
@@ -228,6 +309,26 @@ export default function Pricing() {
         <p className="mx-auto mt-4 inline-flex max-w-2xl rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300">
           {t("The 40-hour course is planned for a future release and is not included in current plans yet.")}
         </p>
+        {nativeBillingActive ? (
+          <div className="mx-auto mt-4 flex max-w-2xl flex-col items-center gap-3 rounded-3xl border border-[#1E5EFF]/15 bg-[#1E5EFF]/6 px-5 py-4 text-sm text-slate-600 dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/10 dark:text-slate-300">
+            <p className="text-center">
+              {t("This device is using native store billing. Premium upgrades here will run through the App Store or Google Play instead of Stripe.")}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={() => nativeRestoreMutation.mutate()}
+              disabled={nativeRestoreMutation.isPending}
+            >
+              {nativeRestoreMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                t("Restore Purchases")
+              )}
+            </Button>
+          </div>
+        ) : null}
         {isAuthenticated ? (
           <p className="mx-auto mt-4 inline-flex rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/12 dark:text-[#8EB0FF]">
             {t(`Current plan: ${profileData?.user?.plan === PLAN_IDS.PREMIUM_YEARLY
@@ -254,9 +355,15 @@ export default function Pricing() {
           {visiblePlans.map((plan) => {
             const isCurrent = isAuthenticated && currentPlan === plan.id;
             const checkoutReady =
-              plan.id === PLAN_IDS.FREE || billing.checkout_enabled?.[plan.id];
+              plan.id === PLAN_IDS.FREE ||
+              (nativeBillingActive
+                ? nativePlanAvailabilityQuery.data?.[plan.id]
+                : billing.checkout_enabled?.[plan.id]);
             const loading =
-              checkoutMutation.isPending && checkoutMutation.variables === plan.id;
+              nativeBillingActive
+                ? nativePurchaseMutation.isPending &&
+                  nativePurchaseMutation.variables === plan.id
+                : checkoutMutation.isPending && checkoutMutation.variables === plan.id;
             const topBadgeLabel = isCurrent ? t("Current") : plan.badge ? t(plan.badge) : null;
             const topBadgeClassName = isCurrent
               ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-300"
@@ -312,7 +419,11 @@ export default function Pricing() {
                   disabled={
                     loading ||
                     portalMutation.isPending ||
-                    (isCurrent && isPremiumPlan(plan.id) && !billing.portal_enabled) ||
+                    nativeRestoreMutation.isPending ||
+                    (isCurrent &&
+                      isPremiumPlan(plan.id) &&
+                      !nativeBillingActive &&
+                      !billing.portal_enabled) ||
                     (plan.id !== PLAN_IDS.FREE && !checkoutReady && !isCurrent)
                   }
                   className={cn(
@@ -325,11 +436,11 @@ export default function Pricing() {
                   {loading || portalMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isCurrent && isPremiumPlan(plan.id) ? (
-                    t("Manage Billing")
+                    nativeBillingActive ? t("Manage in Store") : t("Manage Billing")
                   ) : isCurrent ? (
                     t("Current Plan")
                   ) : !checkoutReady && plan.id !== PLAN_IDS.FREE ? (
-                    t("Stripe setup pending")
+                    nativeBillingActive ? t("Store setup pending") : t("Stripe setup pending")
                   ) : (
                     t(getActionLabel(plan.id, currentPlan, isAuthenticated))
                   )}
