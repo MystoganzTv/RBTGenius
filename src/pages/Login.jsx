@@ -43,6 +43,8 @@ const OAUTH_OPTIONS = [
   },
 ];
 
+const NATIVE_FALLBACK_PROVIDER_IDS = ["google"];
+
 const providerButtonStyles = {
   google:
     "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
@@ -99,9 +101,27 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [authProviders, setAuthProviders] = useState([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(true);
+  const fallbackNativeProviders = useMemo(
+    () => OAUTH_OPTIONS.filter((option) => NATIVE_FALLBACK_PROVIDER_IDS.includes(option.id)),
+    [],
+  );
   const availableProviders = useMemo(
-    () => OAUTH_OPTIONS.filter((option) => authProviders.some((provider) => provider.id === option.id)),
-    [authProviders],
+    () => {
+      const configuredProviders = OAUTH_OPTIONS.filter((option) =>
+        authProviders.some((provider) => provider.id === option.id),
+      );
+
+      if (configuredProviders.length > 0) {
+        return configuredProviders;
+      }
+
+      if (isNativeAppRuntime()) {
+        return fallbackNativeProviders;
+      }
+
+      return [];
+    },
+    [authProviders, fallbackNativeProviders],
   );
 
   useEffect(() => {
@@ -173,6 +193,9 @@ export default function Login() {
         }
 
         login({ token: authToken, user: nextUser });
+        if (isNativeAppRuntime()) {
+          api.clearPracticeSession().catch(() => {});
+        }
         navigate(redirectPath, { replace: true });
       })
       .catch((error) => {
@@ -199,6 +222,9 @@ export default function Login() {
     try {
       const authData = await api.login(loginForm);
       login(authData);
+      if (isNativeAppRuntime()) {
+        api.clearPracticeSession().catch(() => {});
+      }
       navigate(redirectPath, { replace: true });
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));

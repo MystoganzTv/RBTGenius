@@ -62,6 +62,10 @@ function normalizeQuestionList(value) {
   return Array.isArray(value) ? value : Array.isArray(value?.questions) ? value.questions : [];
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 function getResponseState(questionId, responses) {
   return responses?.[questionId] || {};
 }
@@ -268,16 +272,21 @@ export default function Practice() {
     queryFn: api.getPracticeSession,
   });
 
+  const normalizedSessionQuestions = useMemo(
+    () => normalizeQuestionList(sessionQuestions),
+    [sessionQuestions],
+  );
+
   const baseFilteredQuestions = useMemo(
     () =>
-      sessionQuestions.filter((question) => {
+      normalizedSessionQuestions.filter((question) => {
         const topicMatch = topicFilter === "all" || question.topic === topicFilter;
         const difficultyMatch =
           difficultyFilter === "all" || question.difficulty === difficultyFilter;
 
         return topicMatch && difficultyMatch;
       }),
-    [difficultyFilter, sessionQuestions, topicFilter],
+    [difficultyFilter, normalizedSessionQuestions, topicFilter],
   );
 
   const questions = useMemo(
@@ -325,14 +334,25 @@ export default function Practice() {
     }
 
     if (savedSession) {
+      const nextResponses = isPlainObject(savedSession.responses) ? savedSession.responses : {};
+      const nextQuestions = normalizeQuestionList(savedSession.questions);
+
       setTopicFilter(savedSession.topicFilter || "all");
       setDifficultyFilter(savedSession.difficultyFilter || "all");
       setReviewFilter(savedSession.reviewFilter || "all");
       setCurrentQuestionId(savedSession.currentQuestionId || null);
       setQuestionSeed(savedSession.questionSeed || null);
-      setSessionQuestions(normalizeQuestionList(savedSession.questions));
-      setResponses(savedSession.responses || {});
+      setSessionQuestions(nextQuestions);
+      setResponses(nextResponses);
       setStarted(Boolean(savedSession.started));
+
+      if (
+        savedSession.questions !== undefined &&
+        !Array.isArray(savedSession.questions) &&
+        !Array.isArray(savedSession?.questions?.questions)
+      ) {
+        api.clearPracticeSession().catch(() => {});
+      }
     }
 
     setSessionHydrated(true);
