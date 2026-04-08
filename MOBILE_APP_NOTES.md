@@ -25,6 +25,29 @@ RBT Genius now uses a shared mobile path on top of the existing web app:
 4. `npm run cap:run:ios`
 5. `npm run cap:run:android`
 
+## Local iPhone testing prerequisite
+
+Right now this machine does not have full `Xcode` installed, only `Command Line Tools`.
+
+That means:
+
+- `iOS Simulator` is not available yet
+- `xcodebuild` is not available yet
+- the Capacitor iOS project exists, but cannot be run locally until Xcode is installed
+
+To test the UI on iPhone without App Store membership:
+
+1. install full `Xcode` from the Mac App Store
+2. open Xcode once and finish the extra component install
+3. switch the developer directory to Xcode
+4. use `npm run mobile:ios`
+
+Important:
+
+- You do **not** need App Store Connect membership just to test the UI in Simulator.
+- You **do** need Apple store setup if you want to test real native iPhone subscriptions.
+- Android remains the easiest path to test native billing first.
+
 ## What is already true
 
 - We are not building a second product from scratch.
