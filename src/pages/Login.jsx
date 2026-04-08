@@ -56,6 +56,8 @@ const providerButtonStyles = {
     "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
 };
 
+const PENDING_NATIVE_AUTH_TOKEN_KEY = "rbt_genius_pending_native_auth_token";
+
 function normalizeRedirectPath(value) {
   if (!value) {
     return createPageUrl("Dashboard");
@@ -170,7 +172,12 @@ export default function Login() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const authToken = searchParams.get("authToken");
+    const queryAuthToken = searchParams.get("authToken");
+    const pendingNativeAuthToken =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(PENDING_NATIVE_AUTH_TOKEN_KEY)
+        : null;
+    const authToken = queryAuthToken || pendingNativeAuthToken;
     const oauthError = searchParams.get("oauthError");
 
     if (oauthError) {
@@ -192,6 +199,9 @@ export default function Login() {
           return;
         }
 
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+        }
         login({ token: authToken, user: nextUser });
         if (isNativeAppRuntime()) {
           api.clearPracticeSession().catch(() => {});
@@ -200,6 +210,9 @@ export default function Login() {
       })
       .catch((error) => {
         if (isMounted) {
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+          }
           setErrorMessage(t(error.message || "Unable to complete sign in"));
         }
       })
