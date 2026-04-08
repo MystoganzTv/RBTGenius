@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { resolveApiUrl } from "@/lib/api";
 import { appParams } from "@/lib/app-params";
 
 const AuthContext = createContext(null);
@@ -68,8 +69,9 @@ function getStoredAuthToken() {
 
 async function requestJson(url, options = {}, fetchImpl = fetch) {
   const { token, headers = {}, ...restOptions } = options;
+  const resolvedUrl = resolveApiUrl(url);
 
-  const response = await fetchImpl(url, {
+  const response = await fetchImpl(resolvedUrl, {
     ...restOptions,
     headers: {
       "Content-Type": "application/json",
@@ -82,6 +84,15 @@ async function requestJson(url, options = {}, fetchImpl = fetch) {
   const data = contentType.includes("application/json")
     ? await response.json()
     : await response.text();
+
+  if (
+    response.ok &&
+    typeof data === "string" &&
+    /<(?:!doctype|html|head|body)\b/i.test(data) &&
+    String(resolvedUrl).includes("/api/")
+  ) {
+    throw new Error("The app is not connected to the API correctly yet.");
+  }
 
   if (!response.ok) {
     const message =
@@ -150,9 +161,10 @@ export function AuthProvider({
 
   const resolvedEndpoints = useMemo(
     () => ({
-      me: endpoints.me || "/api/auth/me",
-      publicSettings: endpoints.publicSettings || "/api/public-settings",
-      logout: endpoints.logout || "/api/auth/logout",
+      me: endpoints.me || resolveApiUrl("/api/auth/me"),
+      publicSettings:
+        endpoints.publicSettings || resolveApiUrl("/api/public-settings"),
+      logout: endpoints.logout || resolveApiUrl("/api/auth/logout"),
     }),
     [endpoints.logout, endpoints.me, endpoints.publicSettings],
   );

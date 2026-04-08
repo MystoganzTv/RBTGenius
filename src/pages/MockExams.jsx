@@ -25,6 +25,10 @@ const TOTAL_QUESTIONS = 85;
 const EXAM_DURATION_MINUTES = 90;
 const PASS_SCORE = 80;
 
+function normalizeQuestionList(value) {
+  return Array.isArray(value) ? value : Array.isArray(value?.questions) ? value.questions : [];
+}
+
 async function saveMockExamResult(result) {
   return api.createMockExam(result);
 }
@@ -55,6 +59,7 @@ export default function MockExams() {
         limit: TOTAL_QUESTIONS,
         seed: examSeed,
       }),
+    select: normalizeQuestionList,
     enabled: examState === "in_progress" && Boolean(examSeed),
   });
 

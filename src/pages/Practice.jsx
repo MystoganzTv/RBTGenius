@@ -58,6 +58,10 @@ const reviewFilters = [
   { id: "unanswered", label: "Unanswered" },
 ];
 
+function normalizeQuestionList(value) {
+  return Array.isArray(value) ? value : Array.isArray(value?.questions) ? value.questions : [];
+}
+
 function getResponseState(questionId, responses) {
   return responses?.[questionId] || {};
 }
@@ -224,6 +228,7 @@ export default function Practice() {
         difficulty: difficultyFilter,
         limit: PRACTICE_BATCH_SIZE,
       }),
+    select: normalizeQuestionList,
     initialData: [],
     enabled: started && Boolean(questionSeed) && sessionQuestions.length === 0,
   });
@@ -325,7 +330,7 @@ export default function Practice() {
       setReviewFilter(savedSession.reviewFilter || "all");
       setCurrentQuestionId(savedSession.currentQuestionId || null);
       setQuestionSeed(savedSession.questionSeed || null);
-      setSessionQuestions(savedSession.questions || []);
+      setSessionQuestions(normalizeQuestionList(savedSession.questions));
       setResponses(savedSession.responses || {});
       setStarted(Boolean(savedSession.started));
     }

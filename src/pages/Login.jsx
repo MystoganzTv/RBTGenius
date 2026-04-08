@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Browser } from "@capacitor/browser";
 import {
   BadgeCheck,
   Building2,
@@ -14,7 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/hooks/use-language";
-import { api } from "@/lib/api";
+import { api, isNativeAppRuntime } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
@@ -221,9 +222,16 @@ export default function Login() {
     }
   };
 
-  const handleProviderAuth = (providerId) => {
+  const handleProviderAuth = async (providerId) => {
     setErrorMessage("");
-    window.location.assign(api.getOAuthStartUrl(providerId, redirectPath));
+    const authUrl = api.getOAuthStartUrl(providerId, redirectPath);
+
+    if (isNativeAppRuntime()) {
+      await Browser.open({ url: authUrl });
+      return;
+    }
+
+    window.location.assign(authUrl);
   };
 
   return (

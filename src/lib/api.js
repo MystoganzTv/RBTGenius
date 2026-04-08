@@ -1,3 +1,10 @@
+import { Capacitor } from "@capacitor/core";
+import { appParams } from "@/lib/app-params";
+
+const DEFAULT_NATIVE_APP_BASE_URL = "https://rbtgenius.com";
+export const NATIVE_AUTH_CALLBACK_SCHEME = "rbtgenius";
+export const NATIVE_AUTH_CALLBACK_ORIGIN = `${NATIVE_AUTH_CALLBACK_SCHEME}://auth`;
+
 function getAuthToken() {
   if (typeof window === "undefined") {
     return null;
@@ -9,10 +16,58 @@ function getAuthToken() {
   );
 }
 
+function trimTrailingSlash(value = "") {
+  return String(value).replace(/\/+$/, "");
+}
+
+function isHtmlResponse(value) {
+  return typeof value === "string" && /<(?:!doctype|html|head|body)\b/i.test(value);
+}
+
+export function isNativeAppRuntime() {
+  return typeof window !== "undefined" && Capacitor.isNativePlatform();
+}
+
+export function getAppBaseUrl() {
+  const configuredBaseUrl = trimTrailingSlash(appParams.appBaseUrl || "");
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  return isNativeAppRuntime() ? DEFAULT_NATIVE_APP_BASE_URL : "";
+}
+
+export function resolveApiUrl(path) {
+  if (!path) {
+    return getAppBaseUrl() || "";
+  }
+
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const baseUrl = getAppBaseUrl();
+  return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
+}
+
+export function getOAuthFrontendOrigin() {
+  if (isNativeAppRuntime()) {
+    return NATIVE_AUTH_CALLBACK_ORIGIN;
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  return getAppBaseUrl();
+}
+
 async function request(path, options = {}) {
   const { headers = {}, body, token: tokenOverride, ...restOptions } = options;
   const token = tokenOverride || getAuthToken();
-  const response = await fetch(path, {
+  const requestUrl = resolveApiUrl(path);
+  const response = await fetch(requestUrl, {
     ...restOptions,
     headers: {
       "Content-Type": "application/json",
@@ -30,6 +85,10 @@ async function request(path, options = {}) {
   const data = contentType.includes("application/json")
     ? await response.json()
     : await response.text();
+
+  if (response.ok && isHtmlResponse(data) && String(requestUrl).includes("/api/")) {
+    throw new Error("The app is not connected to the API correctly yet.");
+  }
 
   if (!response.ok) {
     const error = new Error(data?.message || response.statusText || "Request failed");
@@ -60,7 +119,10 @@ export const api = {
     return request("/api/public-settings");
   },
   getAuthProviders(options = {}) {
-    return request("/api/auth/providers", options);
+    return request("/api/auth/providers", options).then((data) => ({
+      ...data,
+      providers: Array.isArray(data?.providers) ? data.providers : [],
+    }));
   },
   register(payload) {
     return request("/api/auth/register", {
@@ -81,11 +143,17 @@ export const api = {
     return request("/api/auth/logout", { method: "POST" });
   },
   getOAuthStartUrl(provider, redirectTo = "/") {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return `/api/auth/oauth/${provider}/start${createQuery({ redirectTo, origin })}`;
+    return resolveApiUrl(
+      `/api/auth/oauth/${provider}/start${createQuery({
+        redirectTo,
+        origin: getOAuthFrontendOrigin(),
+      })}`,
+    );
   },
   listQuestions(params) {
-    return request(`/api/questions${createQuery(params)}`);
+    return request(`/api/questions${createQuery(params)}`).then((data) =>
+      Array.isArray(data) ? data : Array.isArray(data?.questions) ? data.questions : [],
+    );
   },
   getPracticeSession() {
     return request("/api/practice/session");

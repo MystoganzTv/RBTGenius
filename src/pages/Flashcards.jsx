@@ -45,6 +45,10 @@ async function storeAttempt(attempt) {
   return api.createAttempt(attempt);
 }
 
+function normalizeQuestionList(value) {
+  return Array.isArray(value) ? value : Array.isArray(value?.questions) ? value.questions : [];
+}
+
 export default function Flashcards() {
   const { language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -68,6 +72,7 @@ export default function Flashcards() {
   const { data: allQuestions = [], isLoading } = useQuery({
     queryKey: ["flashcard-questions"],
     queryFn: loadQuestions,
+    select: normalizeQuestionList,
     initialData: [],
   });
 

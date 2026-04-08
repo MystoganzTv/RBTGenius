@@ -42,6 +42,7 @@ dist-ssr
 [Rr]elease/
 x64/
 x86/
+ios/App/App.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 
 # Windows OS files
 Thumbs.db
