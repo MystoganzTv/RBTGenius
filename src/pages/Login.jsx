@@ -57,6 +57,22 @@ const providerButtonStyles = {
 };
 
 const PENDING_NATIVE_AUTH_TOKEN_KEY = "rbt_genius_pending_native_auth_token";
+const AUTH_STORAGE_KEYS = ["rbt_genius_auth_token", "access_token", "token"];
+
+function getStoredAuthToken() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  for (const key of AUTH_STORAGE_KEYS) {
+    const value = window.localStorage.getItem(key);
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+}
 
 function normalizeRedirectPath(value) {
   if (!value) {
@@ -173,11 +189,14 @@ export default function Login() {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const queryAuthToken = searchParams.get("authToken");
+    const nativeAuthRequested = searchParams.get("nativeAuth") === "1";
     const pendingNativeAuthToken =
       typeof window !== "undefined"
         ? window.localStorage.getItem(PENDING_NATIVE_AUTH_TOKEN_KEY)
         : null;
-    const authToken = queryAuthToken || pendingNativeAuthToken;
+    const storedAuthToken =
+      isNativeAppRuntime() && nativeAuthRequested ? getStoredAuthToken() : null;
+    const authToken = queryAuthToken || pendingNativeAuthToken || storedAuthToken;
     const oauthError = searchParams.get("oauthError");
 
     if (oauthError) {
@@ -212,6 +231,9 @@ export default function Login() {
         if (isMounted) {
           if (typeof window !== "undefined") {
             window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+            if (nativeAuthRequested) {
+              AUTH_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
+            }
           }
           setErrorMessage(t(error.message || "Unable to complete sign in"));
         }
