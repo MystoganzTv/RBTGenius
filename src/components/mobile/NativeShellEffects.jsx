@@ -28,12 +28,6 @@ function normalizeNativeRedirectPath(value) {
   return createPageUrl("Dashboard");
 }
 
-function buildInternalAuthRedirect(pathname, authToken) {
-  const nextUrl = new URL(pathname, "https://rbtgenius.app");
-  nextUrl.searchParams.set("access_token", authToken);
-  return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
-}
-
 export default function NativeShellEffects() {
   const { isDark } = useTheme();
 
@@ -119,7 +113,7 @@ export default function NativeShellEffects() {
         if (authToken) {
           window.localStorage.setItem("rbt_genius_auth_token", authToken);
           window.localStorage.setItem("access_token", authToken);
-          window.location.replace(buildInternalAuthRedirect(redirectTo, authToken));
+          window.location.replace(redirectTo);
           return;
         }
 
