@@ -8,8 +8,6 @@ import { useTheme } from "@/hooks/use-theme";
 import { NATIVE_AUTH_CALLBACK_SCHEME } from "@/lib/api";
 import { createPageUrl } from "@/utils";
 
-const PENDING_NATIVE_AUTH_TOKEN_KEY = "rbt_genius_pending_native_auth_token";
-
 function getStatusBarStyle(isDark) {
   return isDark ? Style.Dark : Style.Light;
 }
@@ -28,6 +26,12 @@ function normalizeNativeRedirectPath(value) {
   }
 
   return createPageUrl("Dashboard");
+}
+
+function buildInternalAuthRedirect(pathname, authToken) {
+  const nextUrl = new URL(pathname, "https://rbtgenius.app");
+  nextUrl.searchParams.set("access_token", authToken);
+  return `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
 }
 
 export default function NativeShellEffects() {
@@ -113,10 +117,7 @@ export default function NativeShellEffects() {
 
       window.setTimeout(() => {
         if (authToken) {
-          window.localStorage.setItem(PENDING_NATIVE_AUTH_TOKEN_KEY, authToken);
-          window.location.assign(
-            `/login?nativeOAuth=1&redirectTo=${encodeURIComponent(redirectTo)}`,
-          );
+          window.location.assign(buildInternalAuthRedirect(redirectTo, authToken));
           return;
         }
 
