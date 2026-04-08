@@ -6,6 +6,7 @@ import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useTheme } from "@/hooks/use-theme";
 import { NATIVE_AUTH_CALLBACK_SCHEME } from "@/lib/api";
+import { createPageUrl } from "@/utils";
 
 function getStatusBarStyle(isDark) {
   return isDark ? Style.Dark : Style.Light;
@@ -13,6 +14,18 @@ function getStatusBarStyle(isDark) {
 
 function getStatusBarColor(isDark) {
   return isDark ? "#081121" : "#f8fbff";
+}
+
+function normalizeNativeRedirectPath(value) {
+  if (!value) {
+    return createPageUrl("Dashboard");
+  }
+
+  if (value.startsWith("/")) {
+    return value;
+  }
+
+  return createPageUrl("Dashboard");
 }
 
 export default function NativeShellEffects() {
@@ -86,11 +99,27 @@ export default function NativeShellEffects() {
         return;
       }
 
-      const nextPath = `${targetUrl.pathname || "/login"}${targetUrl.search}${targetUrl.hash}`;
+      const authToken = targetUrl.searchParams.get("authToken");
+      const redirectTo = normalizeNativeRedirectPath(
+        targetUrl.searchParams.get("redirectTo"),
+      );
+      const loginPath = `${
+        targetUrl.pathname || "/login"
+      }${targetUrl.search}${targetUrl.hash}`;
+
       Browser.close().catch(() => {});
 
       window.setTimeout(() => {
-        window.location.assign(nextPath.startsWith("/") ? nextPath : `/${nextPath}`);
+        if (authToken) {
+          window.localStorage.setItem("rbt_genius_auth_token", authToken);
+          window.localStorage.setItem("access_token", authToken);
+          window.location.assign(redirectTo);
+          return;
+        }
+
+        window.location.assign(
+          loginPath.startsWith("/") ? loginPath : `/${loginPath}`,
+        );
       }, 0);
     });
 
