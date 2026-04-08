@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import { useAuth } from "@/lib/AuthContext";
@@ -37,15 +38,18 @@ export default function Layout({ children, currentPageName }) {
       <div className="transition-all duration-300 lg:ml-[260px]">
         <TopBar
           onMenuClick={() => setSidebarOpen((current) => !current)}
+          currentPageName={currentPageName}
           user={user}
           plan={plan}
           onLogout={() => logout()}
         />
 
-        <main className="app-main p-4 lg:p-6">
+        <main className="app-main px-4 pb-28 pt-4 lg:p-6">
           {children}
         </main>
       </div>
+
+      <MobileBottomNav currentPage={currentPageName} />
     </div>
   );
 }

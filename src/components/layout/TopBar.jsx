@@ -24,6 +24,7 @@ const planLabels = {
 
 export default function TopBar({
   onMenuClick,
+  currentPageName,
   user = null,
   plan = "free",
   onLogout,
@@ -39,7 +40,7 @@ export default function TopBar({
     .toUpperCase();
 
   return (
-    <header className="app-topbar sticky top-0 z-40 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 backdrop-blur-xl transition-colors dark:border-slate-800 dark:bg-slate-950/80 sm:px-6">
+    <header className="app-topbar sticky top-0 z-40 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 py-2 backdrop-blur-xl transition-colors dark:border-slate-800 dark:bg-slate-950/80 sm:px-6">
       <div className="flex items-center gap-3">
         {onMenuClick ? (
           <Button
@@ -51,6 +52,15 @@ export default function TopBar({
             <Menu className="h-5 w-5 text-slate-600 dark:text-slate-300" />
           </Button>
         ) : null}
+
+        <div className="min-w-0 lg:hidden">
+          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+            {translateUi(currentPageName || "Dashboard", language)}
+          </p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            {translateUi(planLabels[plan] ?? planLabels.free, language)}
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -108,7 +118,9 @@ export default function TopBar({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <LanguageSwitcher compact />
+        <div className="hidden sm:block">
+          <LanguageSwitcher compact />
+        </div>
       </div>
     </header>
   );

@@ -126,9 +126,157 @@ export default function Dashboard() {
 
   const badges = progress?.badges || [];
   const t = (value) => translateUi(value, language);
+  const dateLabel = new Intl.DateTimeFormat(language === "es" ? "es-US" : "en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date());
+  const mobileStats = [
+    {
+      label: t("Answered"),
+      value: totalQuestions,
+      icon: "✅",
+    },
+    {
+      label: t("Accuracy"),
+      value: `${bankAccuracy}%`,
+      icon: "🏆",
+    },
+    {
+      label: t("Streak"),
+      value: `${streak || 0}d`,
+      icon: "🔥",
+    },
+    {
+      label: t("Cards"),
+      value: totalQuestionsAvailable,
+      icon: "🗂️",
+    },
+  ];
+  const mobileStudyModes = [
+    {
+      title: t("Practice Quiz"),
+      subtitle: t("25 questions"),
+      icon: "📝",
+      to: createPageUrl("Practice"),
+      className: "bg-gradient-to-br from-[#34518B] to-[#29406D] text-white",
+    },
+    {
+      title: t("Flashcards"),
+      subtitle: t(`${Math.min(20, totalQuestionsAvailable || 20)} cards`),
+      icon: "🗂️",
+      to: createPageUrl("Flashcards"),
+      className: "bg-gradient-to-br from-[#67BDD1] to-[#4498B9] text-white",
+    },
+    {
+      title: t("Mock Exam"),
+      subtitle: t("75 questions"),
+      icon: "🎓",
+      to: createPageUrl("MockExams"),
+      className: "bg-gradient-to-br from-[#73339A] to-[#5A247B] text-white",
+    },
+    {
+      title: t("Progress"),
+      subtitle: t("View stats"),
+      icon: "📊",
+      to: createPageUrl("Analytics"),
+      className: "bg-gradient-to-br from-[#E89D31] to-[#CC7A1B] text-white",
+    },
+  ];
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
+      <section className="overflow-hidden rounded-[2rem] border border-[#1E5EFF]/10 bg-[#34518B] px-5 py-5 text-white shadow-[0_30px_80px_-40px_rgba(30,94,255,0.35)] md:hidden">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/65">
+          {t("RBT Genius")}
+        </p>
+        <h1 className="mt-4 text-[2rem] font-black leading-[0.95]">
+          {t("Welcome back!")}
+          <span className="ml-2 inline-block">👋</span>
+        </h1>
+        <p className="mt-2 text-sm text-white/72">{dateLabel}</p>
+
+        <div className="mt-5 flex items-center justify-between gap-3 text-sm">
+          <div>
+            <p className="font-semibold text-white/80">{t("Overall Progress")}</p>
+            <p className="mt-1 text-2xl font-black">{bankCoverage}%</p>
+          </div>
+          <div className="text-right">
+            <p className="font-semibold text-white/80">{t("Accuracy")}</p>
+            <p className="mt-1 text-2xl font-black">{bankAccuracy}%</p>
+          </div>
+        </div>
+
+        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/18">
+          <div
+            className="h-full rounded-full bg-[#FFD45D]"
+            style={{ width: `${Math.max(bankCoverage, 6)}%` }}
+          />
+        </div>
+
+        <div className="mt-5 grid grid-cols-4 gap-3">
+          {mobileStats.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-[1.45rem] bg-white px-2 py-3 text-center text-slate-900 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.5)]"
+            >
+              <p className="text-xl">{item.icon}</p>
+              <p className="mt-1 text-2xl font-black leading-none">{item.value}</p>
+              <p className="mt-1 text-[11px] font-medium text-slate-400">{item.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="md:hidden">
+        <div className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-[1.7rem] font-black leading-none text-slate-900 dark:text-slate-50">
+                {t("Study Modes")}
+              </h2>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                {t("Choose the format that matches how you want to study today.")}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {mobileStudyModes.map((item) => (
+              <Link key={item.title} to={item.to}>
+                <div className={`min-h-[140px] rounded-[1.6rem] p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] ${item.className}`}>
+                  <p className="text-2xl">{item.icon}</p>
+                  <p className="mt-8 text-[1.65rem] font-black leading-[0.95]">
+                    {item.title}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-white/78">{item.subtitle}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-5 rounded-[1.5rem] bg-slate-50 px-4 py-3 dark:bg-slate-900">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-semibold text-slate-500 dark:text-slate-400">
+                {t("Readiness")}
+              </span>
+              <span className="text-lg font-black text-[#1E5EFF] dark:text-[#8EB0FF]">
+                {readiness}%
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {t(
+                mockExamsTaken > 0
+                  ? "Your readiness is influenced most by mock exams, bank coverage, and overall accuracy."
+                  : "Take a mock exam once you feel steady in practice to unlock a stronger readiness signal.",
+              )}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="hidden md:block">
       <section className="relative overflow-hidden rounded-[2rem] border border-[#1E5EFF]/10 bg-white px-8 py-9 shadow-[0_30px_80px_-40px_rgba(30,94,255,0.35)] dark:border-slate-800 dark:bg-slate-950 sm:px-10">
         <div className="pointer-events-none absolute -bottom-10 -left-12 h-44 w-44 rounded-full bg-[#1E5EFF]/16 blur-[1px] dark:bg-[#1E5EFF]/20" />
         <div className="pointer-events-none absolute -right-3 -top-8 h-40 w-40 rounded-full bg-[#FFB800]/18 blur-[1px] dark:bg-[#FFB800]/12" />
@@ -443,6 +591,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
