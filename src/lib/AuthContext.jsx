@@ -266,6 +266,49 @@ export function AuthProvider({
     checkAppState();
   }, [checkAppState]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    const handleNativeOAuth = async (event) => {
+      const token = event?.detail?.token;
+      const redirectTo =
+        typeof event?.detail?.redirectTo === "string" &&
+        event.detail.redirectTo.startsWith("/")
+          ? event.detail.redirectTo
+          : "/";
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        persistAuthToken(token);
+        await checkUserAuth(token);
+
+        if (isMounted) {
+          window.location.assign(redirectTo);
+        }
+      } catch {
+        if (isMounted) {
+          clearAuthToken();
+          window.location.assign(
+            `/login?oauthError=${encodeURIComponent("Unable to complete sign in")}`,
+          );
+        }
+      }
+    };
+
+    window.addEventListener("rbt-genius-native-oauth", handleNativeOAuth);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("rbt-genius-native-oauth", handleNativeOAuth);
+    };
+  }, [checkUserAuth]);
+
   const login = useCallback((nextAuth = {}) => {
     const authPayload =
       nextAuth &&

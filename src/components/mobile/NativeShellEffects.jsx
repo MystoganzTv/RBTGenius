@@ -16,6 +16,21 @@ function getStatusBarColor(isDark) {
   return isDark ? "#081121" : "#f8fbff";
 }
 
+function emitNativeOAuthToken(token, redirectTo) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rbt-genius-native-oauth", {
+      detail: {
+        token,
+        redirectTo,
+      },
+    }),
+  );
+}
+
 function normalizeNativeRedirectPath(value) {
   if (!value) {
     return createPageUrl("Dashboard");
@@ -113,7 +128,7 @@ export default function NativeShellEffects() {
         if (authToken) {
           window.localStorage.setItem("rbt_genius_auth_token", authToken);
           window.localStorage.setItem("access_token", authToken);
-          window.location.replace(redirectTo);
+          emitNativeOAuthToken(authToken, redirectTo);
           return;
         }
 
