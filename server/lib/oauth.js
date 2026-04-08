@@ -262,7 +262,16 @@ export function normalizeRedirectPath(value) {
 
 export function normalizeOrigin(value, fallbackOrigin) {
   try {
-    return new URL(value).origin;
+    const url = new URL(value);
+    if (url.origin && url.origin !== "null") {
+      return url.origin;
+    }
+
+    if (url.protocol && url.host) {
+      return `${url.protocol}//${url.host}`;
+    }
+
+    return fallbackOrigin;
   } catch {
     return fallbackOrigin;
   }
