@@ -107,9 +107,10 @@ export default function Login() {
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
+    const providersLoadTimeout = isNativeAppRuntime() ? 10000 : 2500;
     const timeoutId = window.setTimeout(() => {
       controller.abort();
-    }, 2500);
+    }, providersLoadTimeout);
 
     api
       .getAuthProviders({ signal: controller.signal })
