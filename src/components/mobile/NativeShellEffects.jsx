@@ -117,7 +117,9 @@ export default function NativeShellEffects() {
 
       window.setTimeout(() => {
         if (authToken) {
-          window.location.assign(buildInternalAuthRedirect(redirectTo, authToken));
+          window.localStorage.setItem("rbt_genius_auth_token", authToken);
+          window.localStorage.setItem("access_token", authToken);
+          window.location.replace(buildInternalAuthRedirect(redirectTo, authToken));
           return;
         }
 
