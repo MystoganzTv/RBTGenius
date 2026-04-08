@@ -258,7 +258,56 @@ export default function Flashcards() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
+      <section className="overflow-hidden rounded-[2rem] border border-[#1E5EFF]/10 bg-gradient-to-br from-[#29406D] to-[#1E5EFF] px-5 py-5 text-white shadow-[0_28px_60px_-42px_rgba(30,94,255,0.6)] md:hidden">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/65">
+              {translateUi("Flashcards", language)}
+            </p>
+            <h1 className="mt-3 text-[1.95rem] font-black leading-[0.95]">
+              {translateUi("Memory Deck", language)}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-white/76">
+              {translateUi(
+                "Flip fast, keep rhythm, and review the same official-style bank in a cleaner mobile format.",
+                language,
+              )}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white/10 p-3">
+            <Zap className="h-6 w-6 text-white" />
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-4 gap-3">
+          <div className="rounded-[1.25rem] bg-white/10 px-2 py-3 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+              {translateUi("Cards", language)}
+            </p>
+            <p className="mt-1 text-xl font-black">{availableQuestions.length}</p>
+          </div>
+          <div className="rounded-[1.25rem] bg-white/10 px-2 py-3 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+              {translateUi("Done", language)}
+            </p>
+            <p className="mt-1 text-xl font-black">{reviewedCardIds.length}</p>
+          </div>
+          <div className="rounded-[1.25rem] bg-white/10 px-2 py-3 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+              {translateUi("Mastered", language)}
+            </p>
+            <p className="mt-1 text-xl font-black">{masteredCards.length}</p>
+          </div>
+          <div className="rounded-[1.25rem] bg-white/10 px-2 py-3 text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+              {translateUi("Review", language)}
+            </p>
+            <p className="mt-1 text-xl font-black">{reviewCards.length}</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="hidden items-center justify-between md:flex">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
             {translateUi("Flashcards Game 🎴", language)}
@@ -282,7 +331,7 @@ export default function Flashcards() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="hidden grid-cols-1 gap-4 md:grid md:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -329,7 +378,7 @@ export default function Flashcards() {
         </Card>
       </div>
 
-      <Card className="p-4">
+      <Card className="hidden p-4 md:block">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-slate-700">
             {translateUi("Overall Progress", language)}
@@ -365,7 +414,7 @@ export default function Flashcards() {
         </Card>
       ) : null}
 
-      <Card className="p-4">
+      <Card className="rounded-[1.7rem] p-4">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-slate-500" />
@@ -373,7 +422,7 @@ export default function Flashcards() {
           </div>
 
           <Select value={filterTopic} onValueChange={setFilterTopic}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full rounded-2xl sm:w-48">
               <SelectValue placeholder={translateUi("Topic", language)} />
             </SelectTrigger>
             <SelectContent>
@@ -390,7 +439,7 @@ export default function Flashcards() {
           </Select>
 
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full rounded-2xl sm:w-40">
               <SelectValue placeholder={translateUi("Difficulty", language)} />
             </SelectTrigger>
             <SelectContent>
@@ -406,7 +455,7 @@ export default function Flashcards() {
       {currentCard ? (
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 hidden items-center justify-between md:flex">
               <Badge variant="outline" className="text-xs">
                 {translateUi("Card", language)} {currentIndex + 1} / {filteredQuestions.length}
               </Badge>
@@ -423,6 +472,27 @@ export default function Flashcards() {
               </div>
             </div>
 
+            <div className="mb-4 rounded-[1.45rem] border border-slate-200/80 bg-white px-4 py-3 shadow-[0_18px_40px_-35px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-slate-950 md:hidden">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                    {translateUi("Card", language)}
+                  </p>
+                  <p className="mt-1 text-xl font-black text-slate-900 dark:text-slate-50">
+                    {currentIndex + 1} / {filteredQuestions.length}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {translateTopic(currentCard.topic, language)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {translateDifficulty(currentCard.difficulty, language)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div
               className="relative cursor-pointer [perspective:1000px]"
               style={{ height: `${cardHeight}px` }}
@@ -432,7 +502,7 @@ export default function Flashcards() {
                 className="relative h-full w-full transition-transform duration-700 [transform-style:preserve-3d]"
                 style={{ transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
               >
-                <Card className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1E5EFF] to-[#6366F1] p-8 text-white [backface-visibility:hidden]">
+                <Card className="absolute inset-0 flex items-center justify-center rounded-[1.8rem] bg-gradient-to-br from-[#34518B] to-[#1E5EFF] p-6 text-white [backface-visibility:hidden] sm:p-8">
                   <div ref={frontContentRef} className="text-center">
                     <p className="mb-4 text-xs uppercase tracking-wider opacity-80">
                       {translateUi("Question", language)}
@@ -449,7 +519,7 @@ export default function Flashcards() {
                 </Card>
 
                 <Card
-                  className="absolute inset-0 overflow-hidden border-2 border-[#1E5EFF] bg-white p-8 [backface-visibility:hidden] dark:bg-slate-950"
+                  className="absolute inset-0 overflow-hidden rounded-[1.8rem] border-2 border-[#1E5EFF] bg-white p-6 [backface-visibility:hidden] dark:bg-slate-950 sm:p-8"
                   style={{ transform: "rotateY(180deg)" }}
                 >
                   <div className="flex h-full flex-col justify-between pr-1">
@@ -536,12 +606,12 @@ export default function Flashcards() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-4">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
               <Button
                 onClick={handleNeedReview}
                 variant="outline"
                 size="lg"
-                className="gap-2 border-amber-200 hover:border-amber-300 hover:bg-amber-50"
+                className="h-12 gap-2 rounded-[1.2rem] border-amber-200 hover:border-amber-300 hover:bg-amber-50"
               >
                 <ThumbsDown className="h-5 w-5 text-amber-600" />
                 {translateUi("Need Review", language)}
@@ -549,7 +619,7 @@ export default function Flashcards() {
               <Button
                 onClick={handleMastered}
                 size="lg"
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                className="h-12 gap-2 rounded-[1.2rem] bg-emerald-600 hover:bg-emerald-700"
               >
                 <ThumbsUp className="h-5 w-5" />
                 {translateUi("Mastered!", language)}

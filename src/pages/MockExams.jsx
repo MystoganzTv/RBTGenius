@@ -166,7 +166,7 @@ export default function MockExams() {
   if (examState === "idle") {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 text-center">
+        <div className="mb-8 hidden text-center md:block">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200/70 bg-emerald-50/80 dark:border-emerald-500/20 dark:bg-emerald-500/10">
             <ClipboardCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-300" />
           </div>
@@ -221,6 +221,72 @@ export default function MockExams() {
             {translateUi("Begin Mock Exam", language)}
           </Button>
         </div>
+
+        <div className="space-y-5 md:hidden">
+          <section className="overflow-hidden rounded-[2rem] border border-emerald-200/40 bg-gradient-to-br from-[#1F3F67] to-[#0C8A6A] px-5 py-5 text-white shadow-[0_28px_65px_-42px_rgba(5,150,105,0.55)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/65">
+                  {translateUi("Mock Exam", language)}
+                </p>
+                <h1 className="mt-3 text-[1.95rem] font-black leading-[0.95]">
+                  {translateUi("Exam Simulation", language)}
+                </h1>
+                <p className="mt-3 text-sm leading-relaxed text-white/78">
+                  {translateUi(
+                    "Take a full-length timed exam in a cleaner mobile flow that feels closer to a real app session.",
+                    language,
+                  )}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-3">
+                <ClipboardCheck className="h-6 w-6 text-white" />
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <div className="rounded-[1.25rem] bg-white/10 px-3 py-3 text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                  {translateUi("Questions", language)}
+                </p>
+                <p className="mt-1 text-xl font-black">{TOTAL_QUESTIONS}</p>
+              </div>
+              <div className="rounded-[1.25rem] bg-white/10 px-3 py-3 text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                  {translateUi("Minutes", language)}
+                </p>
+                <p className="mt-1 text-xl font-black">{EXAM_DURATION_MINUTES}</p>
+              </div>
+              <div className="rounded-[1.25rem] bg-white/10 px-3 py-3 text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                  {translateUi("Pass", language)}
+                </p>
+                <p className="mt-1 text-xl font-black">{PASS_SCORE}%</p>
+              </div>
+            </div>
+          </section>
+
+          <div className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_55px_-40px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950">
+            <div className="rounded-[1.4rem] bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">
+                {translateUi("Before you begin", language)}
+              </p>
+              <div className="mt-2 space-y-2 leading-relaxed">
+                <p>{translateUi("Answer all questions within the time limit", language)}</p>
+                <p>{translateUi("You can navigate between questions freely", language)}</p>
+                <p>{translateUi("Results are shown after submission", language)}</p>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleStartExam}
+              className="mt-5 h-14 w-full gap-2 rounded-[1.45rem] bg-emerald-600 text-base font-semibold shadow-[0_22px_40px_-24px_rgba(5,150,105,0.75)] hover:bg-emerald-700"
+            >
+              <ClipboardCheck className="h-5 w-5" />
+              {translateUi("Begin Mock Exam", language)}
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -251,7 +317,7 @@ export default function MockExams() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-6">
+        <div className="rounded-[1.8rem] border border-slate-100 bg-white p-6">
           <div className="mb-6 text-center">
             <div
               className="text-6xl font-bold"
@@ -310,13 +376,13 @@ export default function MockExams() {
         <div className="flex gap-3">
           <Button
             variant="outline"
-            className="flex-1 rounded-xl"
+            className="flex-1 rounded-2xl"
             onClick={() => setExamState("idle")}
           >
             {translateUi("Back to Exams", language)}
           </Button>
           <Button
-            className="flex-1 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+            className="flex-1 rounded-2xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
             onClick={handleStartExam}
           >
             {translateUi("Retake Exam", language)}
@@ -339,7 +405,7 @@ export default function MockExams() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <div className="sticky top-20 z-30 flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-5 py-3">
+      <div className="sticky top-20 z-30 hidden items-center justify-between rounded-2xl border border-slate-100 bg-white px-5 py-3 md:flex">
         <div className="flex items-center gap-4">
           <Badge variant="secondary" className="text-xs">
             {currentIndex + 1}/{questions.length}
@@ -371,11 +437,59 @@ export default function MockExams() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-100 bg-white p-6">
+      <div className="rounded-[1.7rem] border border-slate-100 bg-white px-4 py-4 shadow-[0_24px_55px_-40px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950 md:hidden">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600 dark:text-emerald-300">
+              {translateUi("Mock in progress", language)}
+            </p>
+            <p className="mt-2 text-2xl font-black text-slate-900 dark:text-slate-50">
+              {currentIndex + 1} / {questions.length}
+            </p>
+          </div>
+          <div
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold",
+              timeLeft < 300
+                ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300"
+                : "bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-200",
+            )}
+          >
+            <Clock className="h-4 w-4" />
+            {formatTime(timeLeft)}
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <span className="font-medium text-slate-500 dark:text-slate-400">
+            {translateUi("Answered", language)}
+          </span>
+          <span className="font-semibold text-slate-800 dark:text-slate-100">
+            {Object.keys(answers).length}
+          </span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all"
+            style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+          />
+        </div>
+
+        <Button
+          size="sm"
+          variant="destructive"
+          className="mt-4 w-full rounded-2xl"
+          onClick={handleFinishExam}
+        >
+          {translateUi("Finish Exam", language)}
+        </Button>
+      </div>
+
+      <div className="rounded-[1.7rem] border border-slate-100 bg-white p-4 shadow-[0_24px_55px_-40px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950 sm:p-6">
         <BilingualText
           content={localizedCurrentQuestion?.localizedText}
           className="mb-6"
-          primaryClassName="text-base font-medium leading-relaxed text-slate-900"
+          primaryClassName="text-[1.02rem] font-semibold leading-relaxed text-slate-900 dark:text-slate-50"
           secondaryClassName="leading-relaxed text-slate-500"
         />
         <div className="space-y-3">
@@ -393,10 +507,10 @@ export default function MockExams() {
                   }))
                 }
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all",
+                  "flex w-full items-center gap-3 rounded-[1.15rem] border-2 p-4 text-left transition-all",
                   isSelected
                     ? "border-[#1E5EFF] bg-[#1E5EFF]/5"
-                    : "border-slate-200 hover:border-slate-300",
+                    : "border-slate-200 hover:border-slate-300 dark:border-slate-800",
                 )}
               >
                 <span
@@ -404,14 +518,14 @@ export default function MockExams() {
                     "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-sm font-semibold",
                     isSelected
                       ? "bg-[#1E5EFF] text-white"
-                      : "bg-slate-100 text-slate-500",
+                      : "bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400",
                   )}
                 >
                   {option.label}
                 </span>
                 <BilingualText
                   content={option.localizedText}
-                  primaryClassName="text-sm text-slate-900"
+                  primaryClassName="text-sm text-slate-900 dark:text-slate-100"
                   secondaryClassName="text-slate-500"
                 />
               </button>
@@ -420,10 +534,10 @@ export default function MockExams() {
         </div>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-3">
         <Button
           variant="outline"
-          className="gap-2 rounded-xl"
+          className="h-12 flex-1 gap-2 rounded-2xl"
           disabled={currentIndex === 0}
           onClick={() => setCurrentIndex((current) => current - 1)}
         >
@@ -431,7 +545,7 @@ export default function MockExams() {
           {translateUi("Previous", language)}
         </Button>
         <Button
-          className="gap-2 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+          className="h-12 flex-1 gap-2 rounded-2xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
           disabled={currentIndex >= questions.length - 1}
           onClick={() => setCurrentIndex((current) => current + 1)}
         >

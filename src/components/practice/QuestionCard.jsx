@@ -56,8 +56,8 @@ export default function QuestionCard({
       : localizedQuestion?.localizedExplanation || localizeText(explanation, language);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
-      <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-4 dark:border-slate-800 lg:flex-row lg:items-center lg:justify-between">
+    <div className="overflow-hidden rounded-[1.7rem] border border-slate-100 bg-white shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
+      <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 dark:border-slate-800 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
             {translateUi("Question", language)} {questionNumber} / {totalQuestions}
@@ -107,11 +107,11 @@ export default function QuestionCard({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <BilingualText
           content={localizedQuestion?.localizedText}
           className="mb-6"
-          primaryClassName="text-base font-medium leading-relaxed text-slate-900 dark:text-slate-50"
+          primaryClassName="text-[1.02rem] font-semibold leading-relaxed text-slate-900 dark:text-slate-50 sm:text-base"
           secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
         />
 
@@ -149,7 +149,7 @@ export default function QuestionCard({
                 onClick={() => !isSubmitted && onSelectAnswer?.(option.label)}
                 disabled={isSubmitted}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5EFF]/15 focus-visible:ring-offset-0",
+                  "flex w-full items-center gap-3 rounded-[1.15rem] border-2 p-4 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5EFF]/15 focus-visible:ring-offset-0",
                   optionStyle,
                 )}
               >
@@ -184,19 +184,19 @@ export default function QuestionCard({
         </div>
       </div>
 
-      <div className="border-t border-slate-100 px-6 py-4 dark:border-slate-800">
+      <div className="border-t border-slate-100 px-4 py-4 dark:border-slate-800 sm:px-6">
         {!isSubmitted ? (
           <Button
             onClick={handleSubmit}
             disabled={!selectedAnswer}
-            className="w-full rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+            className="h-12 w-full rounded-2xl bg-[#1E5EFF] text-sm font-semibold hover:bg-[#1E5EFF]/90"
           >
             {translateUi("Submit Answer", language)}
           </Button>
         ) : (
           <div className="space-y-4">
             {explanation ? (
-              <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
+              <div className="space-y-3 rounded-[1.2rem] border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
                 <div className="mb-2 flex items-center gap-2">
                   <Lightbulb className="h-4 w-4 text-[#FFB800]" />
                   <span className="text-xs font-semibold text-[#1E5EFF]">
@@ -253,7 +253,7 @@ export default function QuestionCard({
 
             <Button
               onClick={handleNext}
-              className="w-full gap-2 rounded-xl bg-[#1E5EFF] hover:bg-[#1E5EFF]/90"
+              className="h-12 w-full gap-2 rounded-2xl bg-[#1E5EFF] text-sm font-semibold hover:bg-[#1E5EFF]/90"
             >
               {translateUi("Next Question", language)} <ArrowRight className="h-4 w-4" />
             </Button>

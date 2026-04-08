@@ -517,7 +517,7 @@ export default function Practice() {
   if (!started) {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="mb-8 text-center">
+        <div className="mb-8 hidden text-center md:block">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1E5EFF]/8">
             <HelpCircle className="h-8 w-8 text-[#1E5EFF]" />
           </div>
@@ -627,6 +627,111 @@ export default function Practice() {
             <Zap className="h-5 w-5" />
             {translateUi("Start Practice Session", language)}
           </Button>
+        </div>
+
+        <div className="space-y-5 md:hidden">
+          <section className="overflow-hidden rounded-[2rem] border border-[#1E5EFF]/10 bg-gradient-to-br from-[#34518B] to-[#243A66] px-5 py-5 text-white shadow-[0_28px_60px_-40px_rgba(30,94,255,0.6)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/65">
+                  {translateUi("Practice Mode", language)}
+                </p>
+                <h1 className="mt-3 text-[1.95rem] font-black leading-[0.95]">
+                  {translateUi("Practice Questions", language)}
+                </h1>
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">
+                  {translateUi(
+                    "Train with short bursts, exam-style clues, and cleaner mobile review.",
+                    language,
+                  )}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-3">
+                <HelpCircle className="h-7 w-7 text-white" />
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <div className="rounded-[1.3rem] bg-white/10 px-3 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                  {translateUi("Bank", language)}
+                </p>
+                <p className="mt-1 text-xl font-black">{TOTAL_PRACTICE_QUESTIONS}</p>
+              </div>
+              <div className="rounded-[1.3rem] bg-white/10 px-3 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                  {translateUi("Daily Free", language)}
+                </p>
+                <p className="mt-1 text-xl font-black">{FREE_DAILY_PRACTICE_LIMIT}</p>
+              </div>
+              <div className="rounded-[1.3rem] bg-white/10 px-3 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                  {translateUi("Pattern", language)}
+                </p>
+                <p className="mt-1 text-lg font-black">{translateUi("On", language)}</p>
+              </div>
+            </div>
+          </section>
+
+          <div className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_55px_-40px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  {translateUi("Topic", language)}
+                </label>
+                <Select value={topicFilter} onValueChange={setTopicFilter}>
+                  <SelectTrigger className="h-12 rounded-2xl border-slate-200 dark:border-slate-800">
+                    <SelectValue placeholder={translateUi("All Topics", language)} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{translateUi("All Topics", language)}</SelectItem>
+                    {Object.entries(topicLabels).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>
+                        {translateTopic(key, language) || label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  {translateUi("Difficulty", language)}
+                </label>
+                <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                  <SelectTrigger className="h-12 rounded-2xl border-slate-200 dark:border-slate-800">
+                    <SelectValue placeholder={translateUi("All Levels", language)} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{translateUi("All Levels", language)}</SelectItem>
+                    <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
+                    <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
+                    <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-[1.4rem] bg-slate-50 px-4 py-4 text-sm text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                {translateUi("How this mode helps", language)}
+              </p>
+              <p className="mt-2 leading-relaxed">
+                {translateUi(
+                  "Practice mode is built to spot patterns, not just memorize one answer at a time.",
+                  language,
+                )}
+              </p>
+            </div>
+
+            <Button
+              onClick={handleStartSession}
+              className="mt-5 h-14 w-full gap-2 rounded-[1.45rem] bg-[#1E5EFF] text-base font-semibold shadow-[0_22px_40px_-24px_rgba(30,94,255,0.7)] hover:bg-[#1E5EFF]/90"
+            >
+              <Zap className="h-5 w-5" />
+              {translateUi("Start Practice Session", language)}
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -743,7 +848,103 @@ export default function Practice() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
-      <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
+      <div className="rounded-[1.7rem] border border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950 md:hidden">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+              {translateUi("Practice Session", language)}
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-slate-900 dark:text-slate-50">
+              {translateUi("Stay in rhythm", language)}
+            </h2>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-2xl"
+            onClick={() => setNavigatorOpen(true)}
+          >
+            <ListChecks className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="rounded-[1.2rem] bg-slate-50 px-3 py-3 text-center dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+              {translateUi("Accuracy", language)}
+            </p>
+            <p className="mt-1 text-2xl font-black text-[#1E5EFF]">{accuracy}%</p>
+          </div>
+          <div className="rounded-[1.2rem] bg-slate-50 px-3 py-3 text-center dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+              {translateUi("Answered", language)}
+            </p>
+            <p className="mt-1 text-2xl font-black text-slate-900 dark:text-slate-50">
+              {answeredCount}
+            </p>
+          </div>
+          <div className="rounded-[1.2rem] bg-slate-50 px-3 py-3 text-center dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+              {translateUi("Flagged", language)}
+            </p>
+            <p className="mt-1 text-2xl font-black text-amber-500">{flaggedCount}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <span className="font-medium text-slate-500 dark:text-slate-400">
+            {translateUi("Progress", language)}
+          </span>
+          <span className="font-semibold text-slate-700 dark:text-slate-200">
+            {answeredCount}/{baseFilteredQuestions.length}
+          </span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
+          <div
+            className="h-full rounded-full bg-[#1E5EFF] transition-all duration-500"
+            style={{ width: `${(answeredCount / baseFilteredQuestions.length) * 100}%` }}
+          />
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          {reviewFilters.map((filter) => (
+            <button
+              key={filter.id}
+              type="button"
+              onClick={() => setReviewFilter(filter.id)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                reviewFilter === filter.id
+                  ? "border-[#1E5EFF] bg-[#1E5EFF]/10 text-[#1E5EFF]"
+                  : "border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
+              )}
+            >
+              {translateUi(filter.label, language)}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 rounded-2xl"
+            onClick={endSession}
+          >
+            {translateUi("End Session", language)}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 rounded-2xl"
+            onClick={() => setNavigatorOpen(true)}
+          >
+            {translateUi("Navigator", language)}
+          </Button>
+        </div>
+      </div>
+
+      <div className="hidden rounded-2xl border border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950 md:block">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
@@ -843,7 +1044,7 @@ export default function Practice() {
         </div>
       ) : null}
 
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
+      <div className="hidden h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900 md:block">
         <div
           className="h-full rounded-full bg-[#1E5EFF] transition-all duration-500"
           style={{
