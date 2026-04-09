@@ -219,6 +219,20 @@ export default function Login() {
       logNativeAuthDebug("login_complete_start", nextRedirectPath);
 
       try {
+        if (isNativeAppRuntime()) {
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("rbt_genius_auth_token", authToken);
+            window.localStorage.setItem("access_token", authToken);
+            window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+            window.localStorage.removeItem(PENDING_NATIVE_AUTH_STATE_KEY);
+          }
+
+          login({ token: authToken });
+          logNativeAuthDebug("login_native_bypass_navigate", nextRedirectPath);
+          navigate(nextRedirectPath, { replace: true });
+          return;
+        }
+
         const nextUser = await api.getMe(authToken);
         logNativeAuthDebug(
           "login_complete_get_me_success",

@@ -371,7 +371,11 @@ export function AuthProvider({
     setUser(authPayload.user || null);
     setIsAuthenticated(Boolean(authPayload.token || authPayload.user));
     setAuthError(null);
-  }, []);
+
+    if (authPayload.token && !authPayload.user) {
+      checkUserAuth(authPayload.token).catch(() => {});
+    }
+  }, [checkUserAuth]);
 
   const logout = useCallback(
     async (shouldRedirect = true) => {
