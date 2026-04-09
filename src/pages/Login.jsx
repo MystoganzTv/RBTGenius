@@ -227,9 +227,8 @@ export default function Login() {
             window.localStorage.removeItem(PENDING_NATIVE_AUTH_STATE_KEY);
           }
 
-          login({ token: authToken });
-          logNativeAuthDebug("login_native_bypass_navigate", nextRedirectPath);
-          navigate(nextRedirectPath, { replace: true });
+          logNativeAuthDebug("login_native_bypass_reload", nextRedirectPath);
+          window.location.assign(nextRedirectPath);
           return;
         }
 
