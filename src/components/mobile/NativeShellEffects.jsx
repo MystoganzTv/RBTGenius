@@ -8,6 +8,18 @@ import { useTheme } from "@/hooks/use-theme";
 import { NATIVE_AUTH_CALLBACK_SCHEME } from "@/lib/api";
 import { createPageUrl } from "@/utils";
 
+function emitNativeOAuthToken(token, redirectTo) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("rbt-genius-native-oauth-token", {
+      detail: { token, redirectTo },
+    }),
+  );
+}
+
 function getStatusBarStyle(isDark) {
   return isDark ? Style.Dark : Style.Light;
 }
@@ -113,9 +125,7 @@ export default function NativeShellEffects() {
         if (authToken) {
           window.localStorage.setItem("rbt_genius_auth_token", authToken);
           window.localStorage.setItem("access_token", authToken);
-          window.location.assign(
-            `/login?nativeAuth=1&authToken=${encodeURIComponent(authToken)}&redirectTo=${encodeURIComponent(redirectTo)}`,
-          );
+          emitNativeOAuthToken(authToken, redirectTo);
           return;
         }
 

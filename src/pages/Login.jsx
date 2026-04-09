@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Browser } from "@capacitor/browser";
 import {
@@ -182,6 +182,42 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate, redirectPath, user]);
 
+  const completeTokenSignIn = useCallback(
+    async (authToken, nextRedirectPath = redirectPath) => {
+      if (!authToken) {
+        return;
+      }
+
+      setIsSubmitting(true);
+      setErrorMessage("");
+
+      try {
+        const nextUser = await api.getMe(authToken);
+
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+        }
+
+        login({ token: authToken, user: nextUser });
+
+        if (isNativeAppRuntime()) {
+          api.clearPracticeSession().catch(() => {});
+        }
+
+        navigate(nextRedirectPath, { replace: true });
+      } catch (error) {
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+        }
+
+        setErrorMessage(t(error.message || "Unable to complete sign in"));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [login, navigate, redirectPath, t],
+  );
+
   useEffect(() => {
     setActiveTab(initialMode);
   }, [initialMode]);
@@ -207,47 +243,34 @@ export default function Login() {
       return;
     }
 
-    let isMounted = true;
-    setIsSubmitting(true);
-    setErrorMessage("");
+    completeTokenSignIn(authToken, redirectPath).catch(() => {
+      if (typeof window !== "undefined" && nativeAuthRequested) {
+        AUTH_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
+      }
+    });
+  }, [completeTokenSignIn, location.search, redirectPath]);
 
-    api
-      .getMe(authToken)
-      .then((nextUser) => {
-        if (!isMounted) {
-          return;
-        }
+  useEffect(() => {
+    if (typeof window === "undefined" || !isNativeAppRuntime()) {
+      return undefined;
+    }
 
-        if (typeof window !== "undefined") {
-          window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
-        }
-        login({ token: authToken, user: nextUser });
-        if (isNativeAppRuntime()) {
-          api.clearPracticeSession().catch(() => {});
-        }
-        navigate(redirectPath, { replace: true });
-      })
-      .catch((error) => {
-        if (isMounted) {
-          if (typeof window !== "undefined") {
-            window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
-            if (nativeAuthRequested) {
-              AUTH_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
-            }
-          }
-          setErrorMessage(t(error.message || "Unable to complete sign in"));
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsSubmitting(false);
-        }
-      });
+    const handleNativeOAuthToken = (event) => {
+      const nextToken = event?.detail?.token;
+      const nextRedirectPath = normalizeRedirectPath(event?.detail?.redirectTo);
+
+      completeTokenSignIn(nextToken, nextRedirectPath).catch(() => {});
+    };
+
+    window.addEventListener("rbt-genius-native-oauth-token", handleNativeOAuthToken);
 
     return () => {
-      isMounted = false;
+      window.removeEventListener(
+        "rbt-genius-native-oauth-token",
+        handleNativeOAuthToken,
+      );
     };
-  }, [location.search, login, navigate, redirectPath]);
+  }, [completeTokenSignIn]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
