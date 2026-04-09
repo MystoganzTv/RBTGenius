@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Loader2,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,7 @@ import {
   logNativeAuthDebug,
   readNativeAuthDebug,
 } from "@/lib/native-auth-debug";
+import { enableNativePreviewMode } from "@/lib/native-preview";
 import { createPageUrl } from "@/utils";
 
 const OAUTH_OPTIONS = [
@@ -423,6 +425,11 @@ export default function Login() {
     window.location.assign(authUrl);
   };
 
+  const handleNativePreviewMode = () => {
+    enableNativePreviewMode();
+    window.location.assign(createPageUrl("Dashboard"));
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] p-6 dark:bg-slate-950">
       <Card className="w-full max-w-md rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
@@ -463,6 +470,21 @@ export default function Login() {
                   {t(label)}
                 </Button>
               ))}
+
+              {isNativeAppRuntime() ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSubmitting}
+                  onClick={handleNativePreviewMode}
+                  className="h-14 w-full justify-start gap-4 rounded-2xl border border-dashed border-[#1E5EFF]/35 bg-[#1E5EFF]/5 px-5 text-base font-semibold text-[#1E5EFF] shadow-[0_14px_35px_-25px_rgba(30,94,255,0.35)] hover:bg-[#1E5EFF]/10"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current">
+                    <Zap className="h-5 w-5" />
+                  </span>
+                  {t("Continue in Preview Mode")}
+                </Button>
+              ) : null}
             </div>
 
             <div className="mb-6 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">

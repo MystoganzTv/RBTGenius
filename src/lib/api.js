@@ -1,5 +1,19 @@
 import { Capacitor } from "@capacitor/core";
 import { appParams } from "@/lib/app-params";
+import {
+  clearPreviewPracticeSession,
+  createPreviewAttempt,
+  createPreviewMockExam,
+  getPreviewAnalytics,
+  getPreviewDashboard,
+  getPreviewPracticeSession,
+  getPreviewProfile,
+  isNativePreviewMode,
+  listPreviewAttempts,
+  listPreviewMockExams,
+  previewListQuestions,
+  savePreviewPracticeSession,
+} from "@/lib/native-preview";
 
 const DEFAULT_NATIVE_APP_BASE_URL = "https://rbtgenius.com";
 export const NATIVE_AUTH_CALLBACK_SCHEME = "rbtgenius";
@@ -137,6 +151,9 @@ export const api = {
     });
   },
   getMe(token) {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(getPreviewProfile().user);
+    }
     return request("/api/auth/me", token ? { token } : {});
   },
   logout() {
@@ -151,47 +168,80 @@ export const api = {
     );
   },
   listQuestions(params) {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(previewListQuestions(params));
+    }
     return request(`/api/questions${createQuery(params)}`).then((data) =>
       Array.isArray(data) ? data : Array.isArray(data?.questions) ? data.questions : [],
     );
   },
   getPracticeSession() {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(getPreviewPracticeSession());
+    }
     return request("/api/practice/session");
   },
   savePracticeSession(session) {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(savePreviewPracticeSession(session));
+    }
     return request("/api/practice/session", {
       method: "PUT",
       body: session,
     });
   },
   clearPracticeSession() {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(clearPreviewPracticeSession());
+    }
     return request("/api/practice/session", { method: "DELETE" });
   },
   listAttempts() {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(listPreviewAttempts());
+    }
     return request("/api/question-attempts");
   },
   createAttempt(payload) {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(createPreviewAttempt(payload));
+    }
     return request("/api/question-attempts", {
       method: "POST",
       body: payload,
     });
   },
   listMockExams() {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(listPreviewMockExams());
+    }
     return request("/api/mock-exams");
   },
   createMockExam(payload) {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(createPreviewMockExam(payload));
+    }
     return request("/api/mock-exams", {
       method: "POST",
       body: payload,
     });
   },
   getDashboard() {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(getPreviewDashboard());
+    }
     return request("/api/dashboard");
   },
   getAnalytics() {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(getPreviewAnalytics());
+    }
     return request("/api/analytics");
   },
   getProfile() {
+    if (isNativePreviewMode()) {
+      return Promise.resolve(getPreviewProfile());
+    }
     return request("/api/profile");
   },
   updateProfile(payload) {

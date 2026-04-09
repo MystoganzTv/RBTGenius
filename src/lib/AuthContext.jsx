@@ -9,6 +9,11 @@ import {
 import { resolveApiUrl } from "@/lib/api";
 import { appParams } from "@/lib/app-params";
 import { logNativeAuthDebug } from "@/lib/native-auth-debug";
+import {
+  disableNativePreviewMode,
+  getPreviewUser,
+  isNativePreviewMode,
+} from "@/lib/native-preview";
 
 const AuthContext = createContext(null);
 const AUTH_STORAGE_KEY = "rbt_genius_auth_token";
@@ -172,6 +177,14 @@ export function AuthProvider({
 
   const checkUserAuth = useCallback(
     async (tokenOverride) => {
+      if (isNativePreviewMode()) {
+        setUser(getPreviewUser());
+        setIsAuthenticated(true);
+        setIsLoadingAuth(false);
+        setAuthError(null);
+        return;
+      }
+
       const token = tokenOverride || getStoredAuthToken();
 
       try {
@@ -215,6 +228,16 @@ export function AuthProvider({
   );
 
   const checkAppState = useCallback(async () => {
+    if (isNativePreviewMode()) {
+      setAppPublicSettings({ auth_required: true, preview_mode: true });
+      setUser(getPreviewUser());
+      setIsAuthenticated(true);
+      setIsLoadingAuth(false);
+      setIsLoadingPublicSettings(false);
+      setAuthError(null);
+      return;
+    }
+
     const token = getStoredAuthToken();
 
     try {
@@ -397,6 +420,7 @@ export function AuthProvider({
       }
 
       clearAuthToken();
+      disableNativePreviewMode();
       setUser(null);
       setIsAuthenticated(false);
       setAuthError(null);
