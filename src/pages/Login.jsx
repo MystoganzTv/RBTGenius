@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import {
   BadgeCheck,
@@ -57,6 +58,7 @@ const providerButtonStyles = {
 };
 
 const PENDING_NATIVE_AUTH_TOKEN_KEY = "rbt_genius_pending_native_auth_token";
+const PENDING_NATIVE_AUTH_STATE_KEY = "rbt_genius_native_auth_pending";
 const AUTH_STORAGE_KEYS = ["rbt_genius_auth_token", "access_token", "token"];
 
 function getStoredAuthToken() {
@@ -196,6 +198,7 @@ export default function Login() {
 
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+          window.localStorage.removeItem(PENDING_NATIVE_AUTH_STATE_KEY);
         }
 
         login({ token: authToken, user: nextUser });
@@ -208,6 +211,7 @@ export default function Login() {
       } catch (error) {
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
+          window.localStorage.removeItem(PENDING_NATIVE_AUTH_STATE_KEY);
         }
 
         setErrorMessage(t(error.message || "Unable to complete sign in"));
@@ -217,6 +221,22 @@ export default function Login() {
     },
     [login, navigate, redirectPath, t],
   );
+
+  const tryCompletePendingNativeSignIn = useCallback(() => {
+    if (typeof window === "undefined" || !isNativeAppRuntime()) {
+      return;
+    }
+
+    const nativeAuthPending =
+      window.localStorage.getItem(PENDING_NATIVE_AUTH_STATE_KEY) === "1";
+    const storedToken = getStoredAuthToken();
+
+    if (!nativeAuthPending || !storedToken || isSubmitting || isAuthenticated) {
+      return;
+    }
+
+    completeTokenSignIn(storedToken, redirectPath).catch(() => {});
+  }, [completeTokenSignIn, isAuthenticated, isSubmitting, redirectPath]);
 
   useEffect(() => {
     setActiveTab(initialMode);
@@ -272,6 +292,31 @@ export default function Login() {
     };
   }, [completeTokenSignIn]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !isNativeAppRuntime()) {
+      return undefined;
+    }
+
+    const handleVisibilityOrFocus = () => {
+      tryCompletePendingNativeSignIn();
+    };
+
+    const appStateListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        tryCompletePendingNativeSignIn();
+      }
+    });
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      appStateListener.then((listener) => listener.remove()).catch(() => {});
+    };
+  }, [tryCompletePendingNativeSignIn]);
+
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -312,6 +357,9 @@ export default function Login() {
     const authUrl = api.getOAuthStartUrl(providerId, redirectPath);
 
     if (isNativeAppRuntime()) {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(PENDING_NATIVE_AUTH_STATE_KEY, "1");
+      }
       await Browser.open({ url: authUrl });
       return;
     }
