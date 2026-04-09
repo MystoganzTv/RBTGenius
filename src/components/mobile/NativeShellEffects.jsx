@@ -121,10 +121,22 @@ export default function NativeShellEffects() {
 
       Browser.close().catch(() => {});
 
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
         if (authToken) {
           window.localStorage.setItem("rbt_genius_auth_token", authToken);
           window.localStorage.setItem("access_token", authToken);
+
+          if (typeof window.__rbtNativeCompleteAuth === "function") {
+            const handled = await window.__rbtNativeCompleteAuth({
+              token: authToken,
+              redirectTo,
+            });
+
+            if (handled) {
+              return;
+            }
+          }
+
           emitNativeOAuthToken(authToken, redirectTo);
           return;
         }

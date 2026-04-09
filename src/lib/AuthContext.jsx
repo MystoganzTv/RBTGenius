@@ -309,6 +309,47 @@ export function AuthProvider({
     };
   }, [checkUserAuth]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    window.__rbtNativeCompleteAuth = async ({ token, redirectTo } = {}) => {
+      if (!token) {
+        return false;
+      }
+
+      try {
+        persistAuthToken(token);
+        const currentUser = await requestJson(
+          resolvedEndpoints.me,
+          { token },
+          fetchImpl,
+        );
+
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        setAuthError(null);
+        setIsLoadingAuth(false);
+
+        if (redirectTo) {
+          window.location.assign(redirectTo);
+        }
+
+        return true;
+      } catch {
+        clearAuthToken();
+        setUser(null);
+        setIsAuthenticated(false);
+        return false;
+      }
+    };
+
+    return () => {
+      delete window.__rbtNativeCompleteAuth;
+    };
+  }, [fetchImpl, resolvedEndpoints.me]);
+
   const login = useCallback((nextAuth = {}) => {
     const authPayload =
       nextAuth &&
