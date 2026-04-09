@@ -6,6 +6,7 @@ import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useTheme } from "@/hooks/use-theme";
 import { NATIVE_AUTH_CALLBACK_SCHEME } from "@/lib/api";
+import { logNativeAuthDebug } from "@/lib/native-auth-debug";
 import { createPageUrl } from "@/utils";
 
 function emitNativeOAuthToken(token, redirectTo) {
@@ -99,15 +100,19 @@ export default function NativeShellEffects() {
         return;
       }
 
+      logNativeAuthDebug("callback_received", url);
+
       let targetUrl;
 
       try {
         targetUrl = new URL(url);
       } catch {
+        logNativeAuthDebug("callback_invalid_url", url);
         return;
       }
 
       if (targetUrl.protocol !== `${NATIVE_AUTH_CALLBACK_SCHEME}:`) {
+        logNativeAuthDebug("callback_ignored_protocol", targetUrl.protocol);
         return;
       }
 
@@ -123,24 +128,31 @@ export default function NativeShellEffects() {
 
       window.setTimeout(async () => {
         if (authToken) {
+          logNativeAuthDebug("callback_token_found", redirectTo);
           window.localStorage.setItem("rbt_genius_auth_token", authToken);
           window.localStorage.setItem("access_token", authToken);
 
           if (typeof window.__rbtNativeCompleteAuth === "function") {
+            logNativeAuthDebug("callback_auth_context_start", redirectTo);
             const handled = await window.__rbtNativeCompleteAuth({
               token: authToken,
               redirectTo,
             });
 
             if (handled) {
+              logNativeAuthDebug("callback_auth_context_success", redirectTo);
               return;
             }
+
+            logNativeAuthDebug("callback_auth_context_failed", redirectTo);
           }
 
+          logNativeAuthDebug("callback_emit_fallback_event", redirectTo);
           emitNativeOAuthToken(authToken, redirectTo);
           return;
         }
 
+        logNativeAuthDebug("callback_no_token_redirect", loginPath);
         window.location.assign(
           loginPath.startsWith("/") ? loginPath : `/${loginPath}`,
         );

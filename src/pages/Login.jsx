@@ -19,6 +19,12 @@ import { useLanguage } from "@/hooks/use-language";
 import { api, isNativeAppRuntime } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
+import {
+  clearNativeAuthDebug,
+  DEBUG_EVENT_NAME,
+  logNativeAuthDebug,
+  readNativeAuthDebug,
+} from "@/lib/native-auth-debug";
 import { createPageUrl } from "@/utils";
 
 const OAUTH_OPTIONS = [
@@ -121,6 +127,7 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [authProviders, setAuthProviders] = useState([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(true);
+  const [debugEntries, setDebugEntries] = useState(() => readNativeAuthDebug());
   const fallbackNativeProviders = useMemo(
     () => OAUTH_OPTIONS.filter((option) => NATIVE_FALLBACK_PROVIDER_IDS.includes(option.id)),
     [],
@@ -180,9 +187,26 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
+      logNativeAuthDebug("login_effect_authenticated", redirectPath);
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, navigate, redirectPath, user]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !isNativeAppRuntime()) {
+      return undefined;
+    }
+
+    const refreshDebug = (event) => {
+      setDebugEntries(event?.detail?.entries || readNativeAuthDebug());
+    };
+
+    window.addEventListener(DEBUG_EVENT_NAME, refreshDebug);
+
+    return () => {
+      window.removeEventListener(DEBUG_EVENT_NAME, refreshDebug);
+    };
+  }, []);
 
   const completeTokenSignIn = useCallback(
     async (authToken, nextRedirectPath = redirectPath) => {
@@ -192,9 +216,14 @@ export default function Login() {
 
       setIsSubmitting(true);
       setErrorMessage("");
+      logNativeAuthDebug("login_complete_start", nextRedirectPath);
 
       try {
         const nextUser = await api.getMe(authToken);
+        logNativeAuthDebug(
+          "login_complete_get_me_success",
+          nextUser?.email || nextUser?.id || "ok",
+        );
 
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
@@ -207,6 +236,7 @@ export default function Login() {
           api.clearPracticeSession().catch(() => {});
         }
 
+        logNativeAuthDebug("login_complete_navigate", nextRedirectPath);
         navigate(nextRedirectPath, { replace: true });
       } catch (error) {
         if (typeof window !== "undefined") {
@@ -214,6 +244,7 @@ export default function Login() {
           window.localStorage.removeItem(PENDING_NATIVE_AUTH_STATE_KEY);
         }
 
+        logNativeAuthDebug("login_complete_failed", error?.message || "unknown");
         setErrorMessage(t(error.message || "Unable to complete sign in"));
       } finally {
         setIsSubmitting(false);
@@ -235,6 +266,7 @@ export default function Login() {
       return;
     }
 
+    logNativeAuthDebug("login_retry_pending_native", redirectPath);
     completeTokenSignIn(storedToken, redirectPath).catch(() => {});
   }, [completeTokenSignIn, isAuthenticated, isSubmitting, redirectPath]);
 
@@ -256,6 +288,7 @@ export default function Login() {
     const oauthError = searchParams.get("oauthError");
 
     if (oauthError) {
+      logNativeAuthDebug("login_oauth_error_param", oauthError);
       setErrorMessage(t(oauthError));
     }
 
@@ -263,6 +296,10 @@ export default function Login() {
       return;
     }
 
+    logNativeAuthDebug(
+      "login_token_detected",
+      nativeAuthRequested ? "native" : "query_or_pending",
+    );
     completeTokenSignIn(authToken, redirectPath).catch(() => {
       if (typeof window !== "undefined" && nativeAuthRequested) {
         AUTH_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
@@ -279,6 +316,7 @@ export default function Login() {
       const nextToken = event?.detail?.token;
       const nextRedirectPath = normalizeRedirectPath(event?.detail?.redirectTo);
 
+      logNativeAuthDebug("login_received_native_event", nextRedirectPath);
       completeTokenSignIn(nextToken, nextRedirectPath).catch(() => {});
     };
 
@@ -298,11 +336,13 @@ export default function Login() {
     }
 
     const handleVisibilityOrFocus = () => {
+      logNativeAuthDebug("login_visibility_or_focus");
       tryCompletePendingNativeSignIn();
     };
 
     const appStateListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
+        logNativeAuthDebug("login_app_active");
         tryCompletePendingNativeSignIn();
       }
     });
@@ -360,6 +400,9 @@ export default function Login() {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(PENDING_NATIVE_AUTH_STATE_KEY, "1");
       }
+      clearNativeAuthDebug();
+      setDebugEntries([]);
+      logNativeAuthDebug("login_open_provider", providerId);
       await Browser.open({ url: authUrl });
       return;
     }
@@ -522,6 +565,48 @@ export default function Login() {
         {errorMessage ? (
           <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {errorMessage}
+          </div>
+        ) : null}
+
+        {isNativeAppRuntime() ? (
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Native Auth Debug
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  clearNativeAuthDebug();
+                  setDebugEntries([]);
+                }}
+                className="text-[11px] font-semibold text-[#1E5EFF]"
+              >
+                Clear
+              </button>
+            </div>
+
+            <div className="max-h-44 space-y-2 overflow-y-auto text-[11px] leading-relaxed">
+              {debugEntries.length > 0 ? (
+                debugEntries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-950"
+                  >
+                    <p className="font-semibold text-slate-700 dark:text-slate-200">
+                      {entry.step}
+                    </p>
+                    {entry.detail ? (
+                      <p className="mt-1 break-all text-slate-500 dark:text-slate-400">
+                        {entry.detail}
+                      </p>
+                    ) : null}
+                  </div>
+                ))
+              ) : (
+                <p className="text-slate-500 dark:text-slate-400">No debug events yet.</p>
+              )}
+            </div>
           </div>
         ) : null}
 

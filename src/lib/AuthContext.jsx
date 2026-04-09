@@ -8,6 +8,7 @@ import {
 } from "react";
 import { resolveApiUrl } from "@/lib/api";
 import { appParams } from "@/lib/app-params";
+import { logNativeAuthDebug } from "@/lib/native-auth-debug";
 
 const AuthContext = createContext(null);
 const AUTH_STORAGE_KEY = "rbt_genius_auth_token";
@@ -316,10 +317,12 @@ export function AuthProvider({
 
     window.__rbtNativeCompleteAuth = async ({ token, redirectTo } = {}) => {
       if (!token) {
+        logNativeAuthDebug("auth_context_missing_token");
         return false;
       }
 
       try {
+        logNativeAuthDebug("auth_context_get_me_start", redirectTo || "/");
         persistAuthToken(token);
         const currentUser = await requestJson(
           resolvedEndpoints.me,
@@ -331,13 +334,16 @@ export function AuthProvider({
         setIsAuthenticated(true);
         setAuthError(null);
         setIsLoadingAuth(false);
+        logNativeAuthDebug("auth_context_get_me_success", currentUser?.email || currentUser?.id || "ok");
 
         if (redirectTo) {
+          logNativeAuthDebug("auth_context_redirect", redirectTo);
           window.location.assign(redirectTo);
         }
 
         return true;
       } catch {
+        logNativeAuthDebug("auth_context_get_me_failed");
         clearAuthToken();
         setUser(null);
         setIsAuthenticated(false);
