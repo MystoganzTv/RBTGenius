@@ -9,6 +9,9 @@ import { NATIVE_AUTH_CALLBACK_SCHEME } from "@/lib/api";
 import { logNativeAuthDebug } from "@/lib/native-auth-debug";
 import { createPageUrl } from "@/utils";
 
+const PENDING_NATIVE_AUTH_TOKEN_KEY = "rbt_genius_pending_native_auth_token";
+const PENDING_NATIVE_AUTH_STATE_KEY = "rbt_genius_native_auth_pending";
+
 function emitNativeOAuthToken(token, redirectTo) {
   if (typeof window === "undefined") {
     return;
@@ -124,39 +127,57 @@ export default function NativeShellEffects() {
         targetUrl.pathname || "/login"
       }${targetUrl.search}${targetUrl.hash}`;
 
-      Browser.close().catch(() => {});
+      if (authToken) {
+        logNativeAuthDebug("callback_token_found", redirectTo);
+        window.localStorage.setItem("rbt_genius_auth_token", authToken);
+        window.localStorage.setItem("access_token", authToken);
+        window.localStorage.setItem(PENDING_NATIVE_AUTH_TOKEN_KEY, authToken);
+        window.localStorage.setItem(PENDING_NATIVE_AUTH_STATE_KEY, "1");
 
-      window.setTimeout(async () => {
-        if (authToken) {
-          logNativeAuthDebug("callback_token_found", redirectTo);
-          window.localStorage.setItem("rbt_genius_auth_token", authToken);
-          window.localStorage.setItem("access_token", authToken);
+        if (typeof window.__rbtNativeCompleteAuth === "function") {
+          logNativeAuthDebug("callback_auth_context_start", redirectTo);
+          window.__rbtNativeCompleteAuth({
+            token: authToken,
+            redirectTo,
+          })
+            .then((handled) => {
+              if (handled) {
+                logNativeAuthDebug("callback_auth_context_success", redirectTo);
+                return;
+              }
 
-          if (typeof window.__rbtNativeCompleteAuth === "function") {
-            logNativeAuthDebug("callback_auth_context_start", redirectTo);
-            const handled = await window.__rbtNativeCompleteAuth({
-              token: authToken,
-              redirectTo,
+              logNativeAuthDebug("callback_auth_context_failed", redirectTo);
+              logNativeAuthDebug("callback_emit_fallback_event", redirectTo);
+              emitNativeOAuthToken(authToken, redirectTo);
+              window.location.assign(
+                `/login?nativeAuth=1&redirectTo=${encodeURIComponent(redirectTo)}`,
+              );
+            })
+            .catch(() => {
+              logNativeAuthDebug("callback_auth_context_failed", redirectTo);
+              logNativeAuthDebug("callback_emit_fallback_event", redirectTo);
+              emitNativeOAuthToken(authToken, redirectTo);
+              window.location.assign(
+                `/login?nativeAuth=1&redirectTo=${encodeURIComponent(redirectTo)}`,
+              );
             });
-
-            if (handled) {
-              logNativeAuthDebug("callback_auth_context_success", redirectTo);
-              return;
-            }
-
-            logNativeAuthDebug("callback_auth_context_failed", redirectTo);
-          }
-
+        } else {
           logNativeAuthDebug("callback_emit_fallback_event", redirectTo);
           emitNativeOAuthToken(authToken, redirectTo);
-          return;
+          window.location.assign(
+            `/login?nativeAuth=1&redirectTo=${encodeURIComponent(redirectTo)}`,
+          );
         }
 
-        logNativeAuthDebug("callback_no_token_redirect", loginPath);
-        window.location.assign(
-          loginPath.startsWith("/") ? loginPath : `/${loginPath}`,
-        );
-      }, 0);
+        Browser.close().catch(() => {});
+        return;
+      }
+
+      logNativeAuthDebug("callback_no_token_redirect", loginPath);
+      Browser.close().catch(() => {});
+      window.location.assign(
+        loginPath.startsWith("/") ? loginPath : `/${loginPath}`,
+      );
     });
 
     return () => {
