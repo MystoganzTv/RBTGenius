@@ -185,6 +185,7 @@
     font-family: "Inter", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
     @apply bg-background text-foreground;
   }
 
@@ -247,6 +248,12 @@
 
   .app-main {
     padding-bottom: max(1rem, var(--safe-area-bottom));
+  }
+
+  @media (max-width: 1023px) {
+    .app-main {
+      padding-bottom: calc(5.75rem + var(--safe-area-bottom));
+    }
   }
 
   .app-sidebar {

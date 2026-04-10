@@ -38,9 +38,11 @@ export default function TopBar({
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const currentPageLabel = translateUi(currentPageName || "Dashboard", language);
+  const currentPlanLabel = translateUi(planLabels[plan] ?? planLabels.free, language);
 
   return (
-    <header className="app-topbar sticky top-0 z-40 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 py-2 backdrop-blur-xl transition-colors dark:border-slate-800 dark:bg-slate-950/80 sm:px-6">
+    <header className="app-topbar sticky top-0 z-40 flex items-center justify-between border-b border-slate-100 bg-white/88 px-4 py-2.5 backdrop-blur-xl transition-colors dark:border-slate-800 dark:bg-slate-950/88 sm:px-6">
       <div className="flex items-center gap-3">
         {onMenuClick ? (
           <Button
@@ -54,20 +56,37 @@ export default function TopBar({
         ) : null}
 
         <div className="min-w-0 lg:hidden">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+              {currentPageLabel}
+            </p>
+            <span className="rounded-full bg-[#1E5EFF]/8 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#1E5EFF]">
+              {isPremiumPlan(plan) ? "Pro" : "Free"}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500">
+            {currentPlanLabel}
+          </p>
+        </div>
+
+        <div className="hidden min-w-0 lg:block">
           <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
-            {translateUi(currentPageName || "Dashboard", language)}
+            {currentPageLabel}
           </p>
           <p className="text-[11px] text-slate-400 dark:text-slate-500">
-            {translateUi(planLabels[plan] ?? planLabels.free, language)}
+            {currentPlanLabel}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
+        <div className="sm:hidden">
+          <LanguageSwitcher compact />
+        </div>
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-xl text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+          className="rounded-2xl border border-slate-200/80 bg-white/80 text-slate-400 shadow-sm hover:text-slate-600 dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-500 dark:hover:bg-slate-900 dark:hover:text-slate-200"
           onClick={toggleTheme}
         >
           {isDark ? (
@@ -79,7 +98,7 @@ export default function TopBar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2.5 rounded-xl py-1.5 pl-2 pr-3 transition-all hover:bg-slate-50 dark:hover:bg-slate-900">
+            <button className="flex items-center gap-2.5 rounded-2xl border border-slate-200/80 bg-white/85 py-1.5 pl-2 pr-3 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80 dark:hover:bg-slate-900">
               <Avatar className="h-8 w-8 bg-gradient-to-br from-[#1E5EFF] to-[#6366F1]">
                 <AvatarFallback className="bg-transparent text-xs font-semibold text-white">
                   {initials || "?"}
@@ -88,7 +107,7 @@ export default function TopBar({
               <div className="hidden text-left sm:block">
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-100">{fullName}</p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                  {translateUi(planLabels[plan] ?? planLabels.free, language)}
+                  {currentPlanLabel}
                 </p>
               </div>
             </button>

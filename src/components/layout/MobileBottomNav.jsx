@@ -23,7 +23,7 @@ export default function MobileBottomNav({ currentPage }) {
   const { language } = useLanguage();
 
   return (
-    <nav className="fixed inset-x-3 bottom-3 z-40 rounded-[1.7rem] border border-slate-200/80 bg-white/92 px-2 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_22px_50px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/92 lg:hidden">
+    <nav className="fixed inset-x-3 bottom-3 z-40 rounded-[1.85rem] border border-slate-200/80 bg-white/95 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2.5 shadow-[0_26px_60px_-34px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95 lg:hidden">
       <div className="grid grid-cols-5 gap-1">
         {mobileNavItems.map((item) => {
           const isActive = currentPage === item.page;
@@ -33,14 +33,20 @@ export default function MobileBottomNav({ currentPage }) {
               key={item.page}
               to={createPageUrl(item.page)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition-all",
+                "relative flex min-h-[62px] flex-col items-center justify-center gap-1.5 rounded-2xl px-1 py-2 text-center transition-all",
                 isActive
-                  ? "bg-[#1E5EFF] text-white shadow-[0_16px_30px_-20px_rgba(30,94,255,0.85)]"
+                  ? "bg-[#1E5EFF] text-white shadow-[0_18px_32px_-20px_rgba(30,94,255,0.8)]"
                   : "text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-900 dark:hover:text-slate-200",
               )}
             >
+              <span
+                className={cn(
+                  "absolute top-1.5 h-1.5 w-8 rounded-full transition-all",
+                  isActive ? "bg-white/85" : "bg-transparent",
+                )}
+              />
               <item.icon className="h-[18px] w-[18px]" />
-              <span className="text-[10px] font-semibold leading-none">
+              <span className="text-[10px] font-semibold leading-none tracking-[0.01em]">
                 {translateUi(item.name, language)}
               </span>
             </Link>

@@ -88,6 +88,9 @@ function getAppParams() {
     appBaseUrl: getAppParamValue("app_base_url", {
       defaultValue: import.meta.env.VITE_APP_BASE_URL,
     }),
+    nativePreview: getAppParamValue("native_preview", {
+      defaultValue: import.meta.env.VITE_ENABLE_NATIVE_PREVIEW,
+    }),
   };
 }
 

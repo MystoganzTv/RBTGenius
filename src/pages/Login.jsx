@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/hooks/use-language";
 import { api, isNativeAppRuntime } from "@/lib/api";
+import { appParams } from "@/lib/app-params";
 import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
 import {
@@ -117,6 +118,8 @@ export default function Login() {
   }, [location.search]);
   const { user, isAuthenticated, login } = useAuth();
   const t = (value) => translateUi(value, language);
+  const canUseNativePreviewMode =
+    isNativeAppRuntime() && String(appParams.nativePreview || "").toLowerCase() === "true";
 
   const [activeTab, setActiveTab] = useState(initialMode);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -426,6 +429,10 @@ export default function Login() {
   };
 
   const handleNativePreviewMode = () => {
+    if (!canUseNativePreviewMode) {
+      return;
+    }
+
     enableNativePreviewMode();
     window.location.assign(createPageUrl("Dashboard"));
   };
@@ -485,7 +492,7 @@ export default function Login() {
           </div>
         ) : null}
 
-        {isNativeAppRuntime() ? (
+        {canUseNativePreviewMode ? (
           <div className="mb-6">
             <Button
               type="button"
