@@ -187,90 +187,98 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <section className="overflow-hidden rounded-[2rem] border border-[#1E5EFF]/10 bg-[#34518B] px-5 py-5 text-white shadow-[0_30px_80px_-40px_rgba(30,94,255,0.35)] md:hidden">
+      <section className="overflow-hidden rounded-[1.85rem] border border-[#1E5EFF]/10 bg-[#34518B] px-4 pb-4 pt-3.5 text-white shadow-[0_26px_70px_-42px_rgba(30,94,255,0.42)] md:hidden">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/65">
           {t("RBT Genius")}
         </p>
-        <h1 className="mt-4 text-[2rem] font-black leading-[0.95]">
+        <h1 className="mt-3 text-[1.75rem] font-black leading-[0.98]">
           {t("Welcome back!")}
           <span className="ml-2 inline-block">👋</span>
         </h1>
-        <p className="mt-2 text-sm text-white/72">{dateLabel}</p>
+        <p className="mt-1.5 text-[13px] text-white/72">{dateLabel}</p>
 
-        <div className="mt-5 flex items-center justify-between gap-3 text-sm">
-          <div>
-            <p className="font-semibold text-white/80">{t("Overall Progress")}</p>
-            <p className="mt-1 text-2xl font-black">{bankCoverage}%</p>
+        <div className="mt-4 flex items-end justify-between gap-3 text-sm">
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-white/72">
+              {t("Overall Progress")}
+            </p>
+            <p className="mt-1 text-[1.8rem] font-black leading-none">{bankCoverage}%</p>
           </div>
           <div className="text-right">
-            <p className="font-semibold text-white/80">{t("Accuracy")}</p>
-            <p className="mt-1 text-2xl font-black">{bankAccuracy}%</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-white/72">
+              {t("Accuracy")}
+            </p>
+            <p className="mt-1 text-[1.8rem] font-black leading-none">{bankAccuracy}%</p>
           </div>
         </div>
 
-        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/18">
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/18">
           <div
             className="h-full rounded-full bg-[#FFD45D]"
             style={{ width: `${Math.max(bankCoverage, 6)}%` }}
           />
         </div>
 
-        <div className="mt-5 grid grid-cols-4 gap-3">
+        <div className="mt-4 grid grid-cols-4 gap-2.5">
           {mobileStats.map((item) => (
             <div
               key={item.label}
-              className="rounded-[1.45rem] bg-white px-2 py-3 text-center text-slate-900 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.5)]"
+              className="rounded-[1.35rem] border border-slate-200/70 bg-white px-2 py-2.5 text-center text-slate-900 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.44)]"
             >
-              <p className="text-xl">{item.icon}</p>
-              <p className="mt-1 text-2xl font-black leading-none">{item.value}</p>
-              <p className="mt-1 text-[11px] font-medium text-slate-400">{item.label}</p>
+              <p className="text-lg">{item.icon}</p>
+              <p className="mt-1.5 text-[1.7rem] font-black leading-none tracking-[-0.03em]">
+                {item.value}
+              </p>
+              <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.03em] text-slate-400">
+                {item.label}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="md:hidden">
-        <div className="rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950">
+        <div className="rounded-[2rem] border border-slate-200/80 bg-white p-4 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.28)] dark:border-slate-800 dark:bg-slate-950">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-[1.7rem] font-black leading-none text-slate-900 dark:text-slate-50">
+              <h2 className="text-[1.6rem] font-black leading-none text-slate-900 dark:text-slate-50">
                 {t("Study Modes")}
               </h2>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              <p className="mt-2 max-w-[26ch] text-sm leading-6 text-slate-500 dark:text-slate-400">
                 {t("Choose the format that matches how you want to study today.")}
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3.5">
             {mobileStudyModes.map((item) => (
               <Link key={item.title} to={item.to}>
-                <div className={`min-h-[140px] rounded-[1.6rem] p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] ${item.className}`}>
-                  <p className="text-2xl">{item.icon}</p>
-                  <p className="mt-8 text-[1.65rem] font-black leading-[0.95]">
+                <div className={`min-h-[146px] rounded-[1.65rem] px-4 pb-4 pt-3.5 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] ${item.className}`}>
+                  <p className="text-[1.7rem]">{item.icon}</p>
+                  <p className="mt-9 text-[1.55rem] font-black leading-[0.95] tracking-[-0.03em]">
                     {item.title}
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-white/78">{item.subtitle}</p>
+                  <p className="mt-2 text-[13px] font-semibold text-white/78">{item.subtitle}</p>
                 </div>
               </Link>
             ))}
           </div>
 
-          <div className="mt-5 rounded-[1.5rem] bg-slate-50 px-4 py-3 dark:bg-slate-900">
+          <div className="mt-5 rounded-[1.6rem] border border-slate-200/80 bg-gradient-to-br from-slate-50 via-white to-slate-100/80 px-4 py-4 shadow-[0_18px_40px_-35px_rgba(15,23,42,0.25)] dark:border-slate-800 dark:bg-gradient-to-br dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-semibold text-slate-500 dark:text-slate-400">
+              <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
                 {t("Readiness")}
               </span>
-              <span className="text-lg font-black text-[#1E5EFF] dark:text-[#8EB0FF]">
+              <span className="text-xl font-black text-[#1E5EFF] dark:text-[#8EB0FF]">
                 {readiness}%
               </span>
             </div>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-[13px] leading-6 text-slate-500 dark:text-slate-400">
               {t(
                 mockExamsTaken > 0
                   ? "Your readiness is influenced most by mock exams, bank coverage, and overall accuracy."
                   : "Take a mock exam once you feel steady in practice to unlock a stronger readiness signal.",
-              )}
+            )}
             </p>
           </div>
         </div>

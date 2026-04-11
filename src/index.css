@@ -242,7 +242,7 @@
   }
 
   .app-topbar {
-    min-height: calc(4rem + var(--safe-area-top));
+    min-height: calc(3.65rem + var(--safe-area-top));
     padding-top: max(0px, var(--safe-area-top));
   }
 
@@ -252,7 +252,7 @@
 
   @media (max-width: 1023px) {
     .app-main {
-      padding-bottom: calc(5.75rem + var(--safe-area-bottom));
+      padding-bottom: calc(6.15rem + var(--safe-area-bottom));
     }
   }
 
