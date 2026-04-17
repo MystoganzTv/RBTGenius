@@ -15,7 +15,7 @@ import {
   savePreviewPracticeSession,
 } from "@/lib/native-preview";
 
-const DEFAULT_NATIVE_APP_BASE_URL = "https://rbtgenius.com";
+const DEFAULT_APP_BASE_URL = "https://rbtgenius.com";
 export const NATIVE_AUTH_CALLBACK_SCHEME = "rbtgenius";
 export const NATIVE_AUTH_CALLBACK_ORIGIN = `${NATIVE_AUTH_CALLBACK_SCHEME}://auth`;
 
@@ -42,13 +42,31 @@ export function isNativeAppRuntime() {
   return typeof window !== "undefined" && Capacitor.isNativePlatform();
 }
 
+function shouldUseRelativeApiPaths() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const hostname = String(window.location.hostname || "").toLowerCase();
+
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "0.0.0.0"
+  );
+}
+
 export function getAppBaseUrl() {
   const configuredBaseUrl = trimTrailingSlash(appParams.appBaseUrl || "");
   if (configuredBaseUrl) {
     return configuredBaseUrl;
   }
 
-  return isNativeAppRuntime() ? DEFAULT_NATIVE_APP_BASE_URL : "";
+  if (isNativeAppRuntime()) {
+    return DEFAULT_APP_BASE_URL;
+  }
+
+  return shouldUseRelativeApiPaths() ? "" : DEFAULT_APP_BASE_URL;
 }
 
 export function resolveApiUrl(path) {
