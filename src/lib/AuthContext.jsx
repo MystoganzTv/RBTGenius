@@ -52,6 +52,16 @@ function clearAuthToken() {
 function getStoredAuthToken() {
   const storage = getStorage();
 
+  if (typeof window !== "undefined") {
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryToken = searchParams.get("authToken");
+
+    if (queryToken) {
+      persistAuthToken(queryToken);
+      return queryToken;
+    }
+  }
+
   if (appParams.token) {
     persistAuthToken(appParams.token);
     return appParams.token;
@@ -182,7 +192,7 @@ export function AuthProvider({
         setIsAuthenticated(true);
         setIsLoadingAuth(false);
         setAuthError(null);
-        return;
+        return true;
       }
 
       const token = tokenOverride || getStoredAuthToken();
@@ -193,14 +203,14 @@ export function AuthProvider({
         if (!token) {
           setUser(null);
           setIsAuthenticated(false);
-          return;
+          return false;
         }
 
         persistAuthToken(token);
 
         if (!resolvedEndpoints.me) {
           setIsAuthenticated(true);
-          return;
+          return true;
         }
 
         const currentUser = await requestJson(
@@ -211,6 +221,8 @@ export function AuthProvider({
 
         setUser(currentUser);
         setIsAuthenticated(true);
+        setAuthError(null);
+        return true;
       } catch (error) {
         clearAuthToken();
         setUser(null);
@@ -220,6 +232,7 @@ export function AuthProvider({
             ? current
             : normalizeAuthError(error),
         );
+        return false;
       } finally {
         setIsLoadingAuth(false);
       }

@@ -116,7 +116,7 @@ export default function Login() {
     const searchParams = new URLSearchParams(location.search);
     return searchParams.get("mode") === "register" ? "register" : "login";
   }, [location.search]);
-  const { user, isAuthenticated, login } = useAuth();
+  const { user, isAuthenticated, login, checkUserAuth } = useAuth();
   const t = (value) => translateUi(value, language);
   const canUseNativePreviewMode =
     isNativeAppRuntime() && String(appParams.nativePreview || "").toLowerCase() === "true";
@@ -237,18 +237,23 @@ export default function Login() {
           return;
         }
 
-        const nextUser = await api.getMe(authToken);
-        logNativeAuthDebug(
-          "login_complete_get_me_success",
-          nextUser?.email || nextUser?.id || "ok",
-        );
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("rbt_genius_auth_token", authToken);
+          window.localStorage.setItem("access_token", authToken);
+        }
+
+        const authCompleted = await checkUserAuth(authToken);
+
+        if (!authCompleted) {
+          throw new Error("Unable to complete sign in");
+        }
+
+        logNativeAuthDebug("login_complete_get_me_success", "ok");
 
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(PENDING_NATIVE_AUTH_TOKEN_KEY);
           window.localStorage.removeItem(PENDING_NATIVE_AUTH_STATE_KEY);
         }
-
-        login({ token: authToken, user: nextUser });
 
         if (isNativeAppRuntime()) {
           api.clearPracticeSession().catch(() => {});
@@ -268,7 +273,7 @@ export default function Login() {
         setIsSubmitting(false);
       }
     },
-    [login, navigate, redirectPath, t],
+    [checkUserAuth, navigate, redirectPath, t],
   );
 
   const tryCompletePendingNativeSignIn = useCallback(() => {
@@ -305,9 +310,11 @@ export default function Login() {
     const authToken = queryAuthToken || pendingNativeAuthToken || storedAuthToken;
     const oauthError = searchParams.get("oauthError");
 
-    if (oauthError) {
+    if (oauthError && !authToken) {
       logNativeAuthDebug("login_oauth_error_param", oauthError);
       setErrorMessage(t(oauthError));
+    } else if (authToken) {
+      setErrorMessage("");
     }
 
     if (!authToken) {
