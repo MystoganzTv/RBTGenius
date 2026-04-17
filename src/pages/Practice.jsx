@@ -44,6 +44,7 @@ import {
 } from "@/lib/plan-access";
 import {
   PRACTICE_BATCH_SIZE,
+  RBT_ALLOWED_DIFFICULTIES,
   topicLabels,
   TOTAL_PRACTICE_QUESTIONS,
 } from "@/lib/question-bank";
@@ -64,6 +65,10 @@ function normalizeQuestionList(value) {
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeDifficultyFilter(value) {
+  return value === "all" || RBT_ALLOWED_DIFFICULTIES.includes(value) ? value : "all";
 }
 
 function getResponseState(questionId, responses) {
@@ -338,7 +343,7 @@ export default function Practice() {
       const nextQuestions = normalizeQuestionList(savedSession.questions);
 
       setTopicFilter(savedSession.topicFilter || "all");
-      setDifficultyFilter(savedSession.difficultyFilter || "all");
+      setDifficultyFilter(normalizeDifficultyFilter(savedSession.difficultyFilter || "all"));
       setReviewFilter(savedSession.reviewFilter || "all");
       setCurrentQuestionId(savedSession.currentQuestionId || null);
       setQuestionSeed(savedSession.questionSeed || null);
@@ -565,7 +570,6 @@ export default function Practice() {
                   <SelectItem value="all">{translateUi("All Levels", language)}</SelectItem>
                   <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
                   <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
-                  <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -706,7 +710,6 @@ export default function Practice() {
                     <SelectItem value="all">{translateUi("All Levels", language)}</SelectItem>
                     <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
                     <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
-                    <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
