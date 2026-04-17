@@ -392,7 +392,6 @@ export default function Flashcards() {
               <SelectItem value="all">{translateUi("All", language)}</SelectItem>
               <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
               <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
-              <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -1915,6 +1915,9 @@ const questionConcepts = [
   ...additionalOfficialQuestionConcepts,
 ];
 
+export const RBT_ALLOWED_DIFFICULTIES = ["beginner", "intermediate"];
+const rbtAllowedDifficultySet = new Set(RBT_ALLOWED_DIFFICULTIES);
+
 export const questionConceptLookup = questionConcepts.reduce((result, concept) => {
   result[concept.id] = concept;
   return result;
@@ -2114,10 +2117,15 @@ function buildQuestionSeedSet(concept) {
 }
 
 export const baseQuestions = questionConcepts.flatMap(buildQuestionSeedSet);
-export const TOTAL_PRACTICE_QUESTIONS = baseQuestions.length;
-export const OFFICIAL_CONCEPT_COUNT = questionConcepts.length;
+export const rbtQuestions = baseQuestions.filter((question) =>
+  rbtAllowedDifficultySet.has(question.difficulty),
+);
+export const TOTAL_PRACTICE_QUESTIONS = rbtQuestions.length;
+export const OFFICIAL_CONCEPT_COUNT = questionConcepts.filter((concept) =>
+  rbtAllowedDifficultySet.has(concept.difficulty),
+).length;
 
-export const PRACTICE_TOPIC_TOTALS = baseQuestions.reduce(
+export const PRACTICE_TOPIC_TOTALS = rbtQuestions.reduce(
   (result, question) => ({
     ...result,
     [question.topic]: (result[question.topic] || 0) + 1,
@@ -2186,7 +2194,7 @@ function uniqueQuestions(questions) {
 function buildQuestionPool({
   seedValue,
   excludeIds = [],
-  sourceQuestions = baseQuestions,
+  sourceQuestions = rbtQuestions,
 }) {
   const blockedIds = new Set(excludeIds);
   const preferred = shuffleStable(sourceQuestions, `${seedValue}:preferred`).filter(
@@ -2276,7 +2284,7 @@ export function buildFlashcardBank(
   size = TOTAL_PRACTICE_QUESTIONS,
   seed = "flashcards-default",
 ) {
-  return shuffleStable(baseQuestions, `flashcards:${seed}:${size}`)
+  return shuffleStable(rbtQuestions, `flashcards:${seed}:${size}`)
     .slice(0, Math.min(size, TOTAL_PRACTICE_QUESTIONS))
     .map((question) => cloneQuestion(question));
 }
