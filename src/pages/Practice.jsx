@@ -43,6 +43,7 @@ import {
   isPremiumPlan,
 } from "@/lib/plan-access";
 import {
+  isRbtQuestion,
   PRACTICE_BATCH_SIZE,
   RBT_ALLOWED_DIFFICULTIES,
   topicLabels,
@@ -59,6 +60,19 @@ const reviewFilters = [
   { id: "unanswered", label: "Unanswered" },
 ];
 
+function normalizeQuestionList(value) {
+  const questions = Array.isArray(value)
+    ? value
+    : Array.isArray(value?.questions)
+      ? value.questions
+      : [];
+
+  return questions.filter(isRbtQuestion);
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
 function normalizeDifficultyFilter(value) {
   return value === "all" || RBT_ALLOWED_DIFFICULTIES.includes(value) ? value : "all";
 }
@@ -324,13 +338,16 @@ export default function Practice() {
     }
 
     if (savedSession) {
+      const nextResponses = isPlainObject(savedSession.responses) ? savedSession.responses : {};
+      const nextQuestions = normalizeQuestionList(savedSession.questions);
+
       setTopicFilter(savedSession.topicFilter || "all");
       setDifficultyFilter(normalizeDifficultyFilter(savedSession.difficultyFilter || "all"));
       setReviewFilter(savedSession.reviewFilter || "all");
       setCurrentQuestionId(savedSession.currentQuestionId || null);
       setQuestionSeed(savedSession.questionSeed || null);
-      setSessionQuestions(savedSession.questions || []);
-      setResponses(savedSession.responses || {});
+      setSessionQuestions(nextQuestions);
+      setResponses(nextResponses);
       setStarted(Boolean(savedSession.started));
     }
 
