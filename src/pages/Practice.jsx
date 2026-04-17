@@ -43,6 +43,7 @@ import {
   isPremiumPlan,
 } from "@/lib/plan-access";
 import {
+  isRbtQuestion,
   PRACTICE_BATCH_SIZE,
   RBT_ALLOWED_DIFFICULTIES,
   topicLabels,
@@ -60,7 +61,13 @@ const reviewFilters = [
 ];
 
 function normalizeQuestionList(value) {
-  return Array.isArray(value) ? value : Array.isArray(value?.questions) ? value.questions : [];
+  const questions = Array.isArray(value)
+    ? value
+    : Array.isArray(value?.questions)
+      ? value.questions
+      : [];
+
+  return questions.filter(isRbtQuestion);
 }
 
 function isPlainObject(value) {

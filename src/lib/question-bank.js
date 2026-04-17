@@ -1917,6 +1917,24 @@ const questionConcepts = [
 
 export const RBT_ALLOWED_DIFFICULTIES = ["beginner", "intermediate"];
 const rbtAllowedDifficultySet = new Set(RBT_ALLOWED_DIFFICULTIES);
+const RBT_EXCLUDED_CONCEPT_IDS = new Set([
+  "measurement_graph_trend",
+  "measurement_data_summarization",
+  "measurement_missing_data_impact",
+  "assessment_curriculum_based",
+  "assessment_developmental",
+  "assessment_social_skills",
+  "assessment_structured_interview",
+  "assessment_environmental_assessment",
+]);
+
+function isRbtEligibleConcept(concept) {
+  return (
+    Boolean(concept) &&
+    rbtAllowedDifficultySet.has(concept.difficulty) &&
+    !RBT_EXCLUDED_CONCEPT_IDS.has(concept.id)
+  );
+}
 
 export const questionConceptLookup = questionConcepts.reduce((result, concept) => {
   result[concept.id] = concept;
@@ -2118,11 +2136,11 @@ function buildQuestionSeedSet(concept) {
 
 export const baseQuestions = questionConcepts.flatMap(buildQuestionSeedSet);
 export const rbtQuestions = baseQuestions.filter((question) =>
-  rbtAllowedDifficultySet.has(question.difficulty),
+  isRbtEligibleConcept(questionConceptLookup[question.concept_id]),
 );
 export const TOTAL_PRACTICE_QUESTIONS = rbtQuestions.length;
 export const OFFICIAL_CONCEPT_COUNT = questionConcepts.filter((concept) =>
-  rbtAllowedDifficultySet.has(concept.difficulty),
+  isRbtEligibleConcept(concept),
 ).length;
 
 export const PRACTICE_TOPIC_TOTALS = rbtQuestions.reduce(
@@ -2246,6 +2264,22 @@ export function sanitizeQuestion(question, mode = "practice") {
 
 export function sanitizeQuestions(questions, mode = "practice") {
   return questions.map((question) => sanitizeQuestion(question, mode));
+}
+
+export function isRbtQuestion(question) {
+  if (!question) {
+    return false;
+  }
+
+  const concept = question.concept_id
+    ? questionConceptLookup[question.concept_id]
+    : null;
+
+  if (concept) {
+    return isRbtEligibleConcept(concept);
+  }
+
+  return rbtAllowedDifficultySet.has(question.difficulty);
 }
 
 export function evaluateQuestionAnswer(questionId, selectedAnswer) {
