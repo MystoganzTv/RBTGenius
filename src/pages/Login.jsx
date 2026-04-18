@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   BadgeCheck,
   Building2,
@@ -75,8 +75,15 @@ function getRedirectPath(search) {
   return normalizeRedirectPath(searchParams.get("redirectTo"));
 }
 
+function redirectAfterAuth(redirectPath) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.location.replace(redirectPath || createPageUrl("Dashboard"));
+}
+
 export default function Login() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
   const redirectPath = useMemo(() => getRedirectPath(location.search), [location.search]);
@@ -138,9 +145,9 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(redirectPath, { replace: true });
+      redirectAfterAuth(redirectPath);
     }
-  }, [isAuthenticated, navigate, redirectPath, user]);
+  }, [isAuthenticated, redirectPath, user]);
 
   useEffect(() => {
     setActiveTab(initialMode);
@@ -175,7 +182,7 @@ export default function Login() {
     try {
       const authData = await api.login(loginForm);
       login(authData);
-      navigate(redirectPath, { replace: true });
+      redirectAfterAuth(redirectPath);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
@@ -191,7 +198,7 @@ export default function Login() {
     try {
       const authData = await api.register(registerForm);
       login(authData);
-      navigate(redirectPath, { replace: true });
+      redirectAfterAuth(redirectPath);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
