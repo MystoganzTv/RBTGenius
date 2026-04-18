@@ -75,6 +75,18 @@ function getRedirectPath(search) {
   return normalizeRedirectPath(searchParams.get("redirectTo"));
 }
 
+function getStoredAuthTokenFromBrowser() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return (
+    window.localStorage.getItem("rbt_genius_auth_token") ||
+    window.localStorage.getItem("access_token") ||
+    window.localStorage.getItem("token")
+  );
+}
+
 function buildPostAuthRedirectUrl(redirectPath, token) {
   if (typeof window === "undefined") {
     return redirectPath || createPageUrl("Dashboard");
@@ -162,7 +174,7 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      redirectAfterAuth(redirectPath);
+      redirectAfterAuth(redirectPath, getStoredAuthTokenFromBrowser());
     }
   }, [isAuthenticated, redirectPath, user]);
 
@@ -205,7 +217,6 @@ export default function Login() {
     try {
       const authData = await api.login(loginForm);
       login(authData);
-      redirectAfterAuth(redirectPath, authData?.token);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
@@ -221,7 +232,6 @@ export default function Login() {
     try {
       const authData = await api.register(registerForm);
       login(authData);
-      redirectAfterAuth(redirectPath, authData?.token);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
