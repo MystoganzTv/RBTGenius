@@ -84,7 +84,7 @@ export default function Login() {
     const searchParams = new URLSearchParams(location.search);
     return searchParams.get("mode") === "register" ? "register" : "login";
   }, [location.search]);
-  const { user, isAuthenticated, login } = useAuth();
+  const { user, isAuthenticated, isLoadingAuth, authError, login } = useAuth();
   const t = (value) => translateUi(value, language);
 
   const [activeTab, setActiveTab] = useState(initialMode);
@@ -151,43 +151,21 @@ export default function Login() {
     const authToken = searchParams.get("authToken");
     const oauthError = searchParams.get("oauthError");
 
-    if (oauthError) {
-      setErrorMessage(t(oauthError));
-    }
+    if (authToken) {
+      setErrorMessage("");
+      setIsSubmitting(isLoadingAuth);
 
-    if (!authToken) {
+      if (!isLoadingAuth && authError) {
+        setErrorMessage(t(authError.message || "Unable to complete sign in"));
+      }
+
       return;
     }
 
-    let isMounted = true;
-    setIsSubmitting(true);
-    setErrorMessage("");
-
-    api
-      .getMe(authToken)
-      .then((nextUser) => {
-        if (!isMounted) {
-          return;
-        }
-
-        login({ token: authToken, user: nextUser });
-        navigate(redirectPath, { replace: true });
-      })
-      .catch((error) => {
-        if (isMounted) {
-          setErrorMessage(t(error.message || "Unable to complete sign in"));
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsSubmitting(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [location.search, login, navigate, redirectPath]);
+    if (oauthError) {
+      setErrorMessage(t(oauthError));
+    }
+  }, [authError, isLoadingAuth, location.search, t]);
 
   const handleLogin = async (event) => {
     event.preventDefault();

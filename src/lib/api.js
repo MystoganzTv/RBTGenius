@@ -28,7 +28,7 @@ function getAppBaseUrl() {
   return shouldUseRelativeApiPaths() ? "" : DEFAULT_APP_BASE_URL;
 }
 
-function resolveApiUrl(path) {
+export function resolveApiUrl(path) {
   if (!path) {
     return getAppBaseUrl() || "";
   }

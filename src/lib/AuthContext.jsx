@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { resolveApiUrl } from "@/lib/api";
 import { appParams } from "@/lib/app-params";
 
 const AuthContext = createContext(null);
@@ -45,6 +46,16 @@ function clearAuthToken() {
 function getStoredAuthToken() {
   const storage = getStorage();
 
+  if (typeof window !== "undefined") {
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryToken = searchParams.get("authToken");
+
+    if (queryToken) {
+      persistAuthToken(queryToken);
+      return queryToken;
+    }
+  }
+
   if (appParams.token) {
     persistAuthToken(appParams.token);
     return appParams.token;
@@ -68,8 +79,9 @@ function getStoredAuthToken() {
 
 async function requestJson(url, options = {}, fetchImpl = fetch) {
   const { token, headers = {}, ...restOptions } = options;
+  const resolvedUrl = resolveApiUrl(url);
 
-  const response = await fetchImpl(url, {
+  const response = await fetchImpl(resolvedUrl, {
     ...restOptions,
     headers: {
       "Content-Type": "application/json",
@@ -82,6 +94,15 @@ async function requestJson(url, options = {}, fetchImpl = fetch) {
   const data = contentType.includes("application/json")
     ? await response.json()
     : await response.text();
+
+  if (
+    response.ok &&
+    typeof data === "string" &&
+    /<(?:!doctype|html|head|body)\b/i.test(data) &&
+    String(resolvedUrl).includes("/api/")
+  ) {
+    throw new Error("The app is not connected to the API correctly yet.");
+  }
 
   if (!response.ok) {
     const message =
