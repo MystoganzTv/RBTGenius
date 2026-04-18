@@ -239,11 +239,6 @@ export default function Login() {
     }
   };
 
-  const handleProviderAuth = (providerId) => {
-    setErrorMessage("");
-    window.location.assign(api.getOAuthStartUrl(providerId, redirectPath));
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] p-6 dark:bg-slate-950">
       <Card className="w-full max-w-md rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
@@ -272,16 +267,20 @@ export default function Login() {
               {availableProviders.map(({ id, label, Icon }) => (
                 <Button
                   key={id}
-                  type="button"
+                  asChild
                   variant="outline"
                   disabled={isSubmitting}
-                  onClick={() => handleProviderAuth(id)}
                   className={`h-14 w-full justify-start gap-4 rounded-2xl border px-5 text-base font-semibold shadow-[0_14px_35px_-25px_rgba(15,23,42,0.45)] ${providerButtonStyles[id] || providerButtonStyles.google}`}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  {t(label)}
+                  <a
+                    href={api.getOAuthStartUrl(id, redirectPath)}
+                    onClick={() => setErrorMessage("")}
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    {t(label)}
+                  </a>
                 </Button>
               ))}
             </div>
