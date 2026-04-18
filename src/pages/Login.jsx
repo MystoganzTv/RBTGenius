@@ -75,12 +75,29 @@ function getRedirectPath(search) {
   return normalizeRedirectPath(searchParams.get("redirectTo"));
 }
 
-function redirectAfterAuth(redirectPath) {
+function buildPostAuthRedirectUrl(redirectPath, token) {
+  if (typeof window === "undefined") {
+    return redirectPath || createPageUrl("Dashboard");
+  }
+
+  const destination = new URL(
+    redirectPath || createPageUrl("Dashboard"),
+    window.location.origin,
+  );
+
+  if (token) {
+    destination.searchParams.set("authToken", token);
+  }
+
+  return `${destination.pathname}${destination.search}${destination.hash}`;
+}
+
+function redirectAfterAuth(redirectPath, token) {
   if (typeof window === "undefined") {
     return;
   }
 
-  window.location.replace(redirectPath || createPageUrl("Dashboard"));
+  window.location.replace(buildPostAuthRedirectUrl(redirectPath, token));
 }
 
 export default function Login() {
@@ -174,6 +191,12 @@ export default function Login() {
     }
   }, [authError, isLoadingAuth, location.search, t]);
 
+  useEffect(() => {
+    if (!isLoadingAuth && authError && !isAuthenticated) {
+      setErrorMessage(t(authError.message || "Unable to complete sign in"));
+    }
+  }, [authError, isAuthenticated, isLoadingAuth, t]);
+
   const handleLogin = async (event) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -182,7 +205,7 @@ export default function Login() {
     try {
       const authData = await api.login(loginForm);
       login(authData);
-      redirectAfterAuth(redirectPath);
+      redirectAfterAuth(redirectPath, authData?.token);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
@@ -198,7 +221,7 @@ export default function Login() {
     try {
       const authData = await api.register(registerForm);
       login(authData);
-      redirectAfterAuth(redirectPath);
+      redirectAfterAuth(redirectPath, authData?.token);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
