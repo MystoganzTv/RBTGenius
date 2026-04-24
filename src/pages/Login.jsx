@@ -15,6 +15,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
+const LOGIN_BUILD_STAMP = "manual-only-build-2026-04-24b";
+
 function normalizeRedirectPath(value) {
   if (!value) {
     return createPageUrl("Dashboard");
@@ -59,11 +61,23 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const redirectToDestination = useMemo(
+    () => () => {
+      if (typeof window === "undefined") {
+        navigate(redirectPath, { replace: true });
+        return;
+      }
+
+      window.location.replace(redirectPath);
+    },
+    [navigate, redirectPath],
+  );
+
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(redirectPath, { replace: true });
+      redirectToDestination();
     }
-  }, [isAuthenticated, navigate, redirectPath, user]);
+  }, [isAuthenticated, redirectToDestination, user]);
 
   useEffect(() => {
     setActiveTab(initialMode);
@@ -94,7 +108,7 @@ export default function Login() {
         }
 
         login({ token: authToken, user: nextUser });
-        navigate(redirectPath, { replace: true });
+        redirectToDestination();
       })
       .catch((error) => {
         if (isMounted) {
@@ -110,7 +124,7 @@ export default function Login() {
     return () => {
       isMounted = false;
     };
-  }, [location.search, login, navigate, redirectPath]);
+  }, [location.search, login, redirectToDestination, t]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -120,7 +134,7 @@ export default function Login() {
     try {
       const authData = await api.login(loginForm);
       login(authData);
-      navigate(redirectPath, { replace: true });
+      redirectToDestination();
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
@@ -136,7 +150,7 @@ export default function Login() {
     try {
       const authData = await api.register(registerForm);
       login(authData);
-      navigate(redirectPath, { replace: true });
+      redirectToDestination();
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
@@ -160,6 +174,9 @@ export default function Login() {
           </div>
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
             {t("Choose the easiest way to continue and keep your study progress synced.")}
+          </p>
+          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#1E5EFF]">
+            Manual access only · {LOGIN_BUILD_STAMP}
           </p>
         </div>
 
