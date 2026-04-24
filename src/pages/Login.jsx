@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  BadgeCheck,
-  Building2,
-  Github,
-  Globe,
   GraduationCap,
   Loader2,
   Sparkles,
@@ -18,40 +14,6 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
-
-const OAUTH_OPTIONS = [
-  {
-    id: "google",
-    label: "Continue with Google",
-    Icon: Globe,
-  },
-  {
-    id: "apple",
-    label: "Continue with Apple",
-    Icon: BadgeCheck,
-  },
-  {
-    id: "github",
-    label: "Continue with GitHub",
-    Icon: Github,
-  },
-  {
-    id: "microsoft",
-    label: "Continue with Microsoft",
-    Icon: Building2,
-  },
-];
-
-const providerButtonStyles = {
-  google:
-    "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
-  apple:
-    "border-black bg-black text-white hover:bg-black/90 dark:border-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100",
-  github:
-    "border-slate-900 bg-slate-900 text-white hover:bg-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700",
-  microsoft:
-    "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
-};
 
 function normalizeRedirectPath(value) {
   if (!value) {
@@ -96,45 +58,6 @@ export default function Login() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [authProviders, setAuthProviders] = useState([]);
-  const [isLoadingProviders, setIsLoadingProviders] = useState(true);
-  const availableProviders = useMemo(
-    () => OAUTH_OPTIONS.filter((option) => authProviders.some((provider) => provider.id === option.id)),
-    [authProviders],
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => {
-      controller.abort();
-    }, 2500);
-
-    api
-      .getAuthProviders({ signal: controller.signal })
-      .then((data) => {
-        if (isMounted) {
-          setAuthProviders(data?.providers || []);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setAuthProviders([]);
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingProviders(false);
-        }
-        window.clearTimeout(timeoutId);
-      });
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-      window.clearTimeout(timeoutId);
-    };
-  }, []);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -221,11 +144,6 @@ export default function Login() {
     }
   };
 
-  const handleProviderAuth = (providerId) => {
-    setErrorMessage("");
-    window.location.assign(api.getOAuthStartUrl(providerId, redirectPath));
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] p-6 dark:bg-slate-950">
       <Card className="w-full max-w-md rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
@@ -244,42 +162,6 @@ export default function Login() {
             {t("Choose the easiest way to continue and keep your study progress synced.")}
           </p>
         </div>
-
-        {availableProviders.length > 0 ? (
-          <>
-            <div className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-              {t("Quick sign in")}
-            </div>
-            <div className="mb-6 space-y-3">
-              {availableProviders.map(({ id, label, Icon }) => (
-                <Button
-                  key={id}
-                  type="button"
-                  variant="outline"
-                  disabled={isSubmitting}
-                  onClick={() => handleProviderAuth(id)}
-                  className={`h-14 w-full justify-start gap-4 rounded-2xl border px-5 text-base font-semibold shadow-[0_14px_35px_-25px_rgba(15,23,42,0.45)] ${providerButtonStyles[id] || providerButtonStyles.google}`}
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  {t(label)}
-                </Button>
-              ))}
-            </div>
-
-            <div className="mb-6 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-              <span>{t("or use email")}</span>
-              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-            </div>
-          </>
-        ) : isLoadingProviders ? (
-          <div className="mb-4 flex items-center justify-center py-1 text-sm text-slate-400 dark:text-slate-500">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {t("Loading sign-in options...")}
-          </div>
-        ) : null}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
