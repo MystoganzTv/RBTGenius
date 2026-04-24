@@ -72,6 +72,16 @@ function json(body, init = {}) {
   });
 }
 
+function redirect(url, init = {}) {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: url,
+      ...(init.headers || {}),
+    },
+  });
+}
+
 async function readDb() {
   const db = await withFreshStore((store) => store.get("db", { type: "json" }));
   if (db) {
@@ -455,6 +465,18 @@ export default async (request) => {
 
   if (apiPath === "/health" && request.method === "GET") {
     return json({ ok: true });
+  }
+
+  if (apiPath === "/reset-client" && request.method === "GET") {
+    const destination = new URL("/login?reset=hard", url.origin).toString();
+    return redirect(destination, {
+      headers: {
+        "Clear-Site-Data": "\"cache\", \"storage\", \"executionContexts\"",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+    });
   }
 
   if (apiPath === "/public-settings" && request.method === "GET") {
