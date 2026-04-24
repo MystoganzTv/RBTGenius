@@ -82,6 +82,16 @@ function redirect(url, init = {}) {
   });
 }
 
+function html(body, init = {}) {
+  return new Response(body, {
+    ...init,
+    headers: {
+      "Content-Type": "text/html; charset=UTF-8",
+      ...(init.headers || {}),
+    },
+  });
+}
+
 async function readDb() {
   const db = await withFreshStore((store) => store.get("db", { type: "json" }));
   if (db) {
@@ -468,8 +478,108 @@ export default async (request) => {
   }
 
   if (apiPath === "/reset-client" && request.method === "GET") {
-    const destination = new URL("/login?reset=hard", url.origin).toString();
-    return redirect(destination, {
+    const destination = new URL("/login?reset=hard-client", url.origin).toString();
+    return html(
+      `<!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+          <meta http-equiv="Pragma" content="no-cache" />
+          <meta http-equiv="Expires" content="0" />
+          <title>Resetting RBT Genius</title>
+          <style>
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: grid;
+              place-items: center;
+              background: #f8fafc;
+              color: #0f172a;
+              font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            }
+            .card {
+              width: min(92vw, 420px);
+              border-radius: 28px;
+              border: 1px solid rgba(148, 163, 184, 0.25);
+              background: #ffffff;
+              box-shadow: 0 24px 80px -40px rgba(15, 23, 42, 0.35);
+              padding: 32px 28px;
+              text-align: center;
+            }
+            .badge {
+              display: inline-flex;
+              width: 56px;
+              height: 56px;
+              align-items: center;
+              justify-content: center;
+              border-radius: 18px;
+              background: #1e5eff;
+              color: white;
+              font-weight: 700;
+              margin-bottom: 16px;
+            }
+            .muted {
+              color: #64748b;
+              line-height: 1.6;
+            }
+            .stamp {
+              margin-top: 14px;
+              font-size: 11px;
+              font-weight: 700;
+              letter-spacing: 0.18em;
+              text-transform: uppercase;
+              color: #1e5eff;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="badge">RG</div>
+            <h1>Resetting browser client…</h1>
+            <p class="muted">
+              Clearing old app data for this domain and sending you to the fresh login.
+            </p>
+            <p class="stamp">api-reset-2026-04-24</p>
+          </div>
+          <script>
+            (async () => {
+              try {
+                const keep = new Map();
+                const theme = window.localStorage.getItem("rbt_genius_theme");
+                if (theme !== null) keep.set("rbt_genius_theme", theme);
+
+                window.localStorage.clear();
+                window.sessionStorage.clear();
+                keep.forEach((value, key) => window.localStorage.setItem(key, value));
+
+                if ("serviceWorker" in navigator) {
+                  const registrations = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(
+                    registrations.map((registration) =>
+                      registration.unregister().catch(() => false),
+                    ),
+                  );
+                }
+
+                if ("caches" in window) {
+                  const cacheKeys = await caches.keys();
+                  await Promise.all(
+                    cacheKeys.map((cacheKey) => caches.delete(cacheKey).catch(() => false)),
+                  );
+                }
+              } catch (error) {
+                console.error("Failed to reset browser client", error);
+              } finally {
+                window.setTimeout(() => {
+                  window.location.replace(${JSON.stringify(destination)});
+                }, 800);
+              }
+            })();
+          </script>
+        </body>
+      </html>`,
       headers: {
         "Clear-Site-Data": "\"cache\", \"storage\", \"executionContexts\"",
         "Cache-Control": "no-store, no-cache, must-revalidate",
