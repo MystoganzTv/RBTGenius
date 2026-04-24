@@ -11,8 +11,6 @@ import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
-const LOGIN_BUILD_STAMP = "auth-reset-2026-04-24";
-
 function normalizeRedirectPath(value) {
   if (!value) {
     return createPageUrl("Dashboard");
@@ -126,9 +124,6 @@ export default function Login() {
           </div>
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
             {t("Use your email and password to continue.")}
-          </p>
-          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#1E5EFF]">
-            Auth reset · {LOGIN_BUILD_STAMP}
           </p>
         </div>
 

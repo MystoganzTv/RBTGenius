@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>RBT GENIUS</title>
     <script>
       (() => {
@@ -22,46 +19,6 @@
           document.documentElement.classList.add("dark");
           document.documentElement.style.colorScheme = "dark";
         }
-      })();
-    </script>
-    <script>
-      (() => {
-        const RESET_KEY = "rbt_genius_sw_cleanup_v2";
-
-        async function cleanupLegacyClients() {
-          if (!("serviceWorker" in navigator)) {
-            return;
-          }
-
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          if (registrations.length) {
-            await Promise.all(
-              registrations.map((registration) =>
-                registration.unregister().catch(() => false),
-              ),
-            );
-          }
-
-          if ("caches" in window) {
-            const cacheKeys = await caches.keys();
-            await Promise.all(
-              cacheKeys.map((cacheKey) => caches.delete(cacheKey).catch(() => false)),
-            );
-          }
-
-          if (
-            navigator.serviceWorker.controller &&
-            !window.sessionStorage.getItem(RESET_KEY)
-          ) {
-            window.sessionStorage.setItem(RESET_KEY, "1");
-            window.location.replace(window.location.href);
-            return;
-          }
-
-          window.sessionStorage.removeItem(RESET_KEY);
-        }
-
-        cleanupLegacyClients().catch(() => {});
       })();
     </script>
   </head>
