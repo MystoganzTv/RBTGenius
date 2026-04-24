@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BadgeCheck,
   Building2,
@@ -75,55 +75,8 @@ function getRedirectPath(search) {
   return normalizeRedirectPath(searchParams.get("redirectTo"));
 }
 
-function getStoredAuthTokenFromBrowser() {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return (
-    window.localStorage.getItem("rbt_genius_auth_token") ||
-    window.localStorage.getItem("access_token") ||
-    window.localStorage.getItem("token")
-  );
-}
-
-function navigateAtTopLevel(url, replace = false) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const targetWindow = window.top && window.top !== window.self ? window.top : window;
-
-  if (replace) {
-    targetWindow.location.replace(url);
-    return;
-  }
-
-  targetWindow.location.assign(url);
-}
-
-function buildPostAuthRedirectUrl(redirectPath, token) {
-  if (typeof window === "undefined") {
-    return redirectPath || createPageUrl("Dashboard");
-  }
-
-  const destination = new URL(
-    redirectPath || createPageUrl("Dashboard"),
-    window.location.origin,
-  );
-
-  if (token) {
-    destination.searchParams.set("authToken", token);
-  }
-
-  return `${destination.pathname}${destination.search}${destination.hash}`;
-}
-
-function redirectAfterAuth(redirectPath, token) {
-  navigateAtTopLevel(buildPostAuthRedirectUrl(redirectPath, token), true);
-}
-
 export default function Login() {
+  const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
   const redirectPath = useMemo(() => getRedirectPath(location.search), [location.search]);
@@ -131,7 +84,7 @@ export default function Login() {
     const searchParams = new URLSearchParams(location.search);
     return searchParams.get("mode") === "register" ? "register" : "login";
   }, [location.search]);
-  const { user, isAuthenticated, isLoadingAuth, authError, login } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
   const t = (value) => translateUi(value, language);
 
   const [activeTab, setActiveTab] = useState(initialMode);
@@ -149,8 +102,6 @@ export default function Login() {
     () => OAUTH_OPTIONS.filter((option) => authProviders.some((provider) => provider.id === option.id)),
     [authProviders],
   );
-
-  const getProviderHref = (providerId) => api.getOAuthStartUrl(providerId, redirectPath);
 
   useEffect(() => {
     let isMounted = true;
@@ -187,9 +138,9 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      redirectAfterAuth(redirectPath, getStoredAuthTokenFromBrowser());
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, redirectPath, user]);
+  }, [isAuthenticated, navigate, redirectPath, user]);
 
   useEffect(() => {
     setActiveTab(initialMode);
@@ -200,27 +151,43 @@ export default function Login() {
     const authToken = searchParams.get("authToken");
     const oauthError = searchParams.get("oauthError");
 
-    if (authToken) {
-      setErrorMessage("");
-      setIsSubmitting(isLoadingAuth);
-
-      if (!isLoadingAuth && authError) {
-        setErrorMessage(t(authError.message || "Unable to complete sign in"));
-      }
-
-      return;
-    }
-
     if (oauthError) {
       setErrorMessage(t(oauthError));
     }
-  }, [authError, isLoadingAuth, location.search, t]);
 
-  useEffect(() => {
-    if (!isLoadingAuth && authError && !isAuthenticated) {
-      setErrorMessage(t(authError.message || "Unable to complete sign in"));
+    if (!authToken) {
+      return;
     }
-  }, [authError, isAuthenticated, isLoadingAuth, t]);
+
+    let isMounted = true;
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    api
+      .getMe(authToken)
+      .then((nextUser) => {
+        if (!isMounted) {
+          return;
+        }
+
+        login({ token: authToken, user: nextUser });
+        navigate(redirectPath, { replace: true });
+      })
+      .catch((error) => {
+        if (isMounted) {
+          setErrorMessage(t(error.message || "Unable to complete sign in"));
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsSubmitting(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location.search, login, navigate, redirectPath]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -230,6 +197,7 @@ export default function Login() {
     try {
       const authData = await api.login(loginForm);
       login(authData);
+      navigate(redirectPath, { replace: true });
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
@@ -245,11 +213,17 @@ export default function Login() {
     try {
       const authData = await api.register(registerForm);
       login(authData);
+      navigate(redirectPath, { replace: true });
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleProviderAuth = (providerId) => {
+    setErrorMessage("");
+    window.location.assign(api.getOAuthStartUrl(providerId, redirectPath));
   };
 
   return (
@@ -280,28 +254,16 @@ export default function Login() {
               {availableProviders.map(({ id, label, Icon }) => (
                 <Button
                   key={id}
-                  asChild
+                  type="button"
                   variant="outline"
                   disabled={isSubmitting}
+                  onClick={() => handleProviderAuth(id)}
                   className={`h-14 w-full justify-start gap-4 rounded-2xl border px-5 text-base font-semibold shadow-[0_14px_35px_-25px_rgba(15,23,42,0.45)] ${providerButtonStyles[id] || providerButtonStyles.google}`}
                 >
-                  <a
-                    href={getProviderHref(id)}
-                    target="_top"
-                    onClick={(event) => {
-                      setErrorMessage("");
-
-                      if (typeof window !== "undefined" && window.top && window.top !== window.self) {
-                        event.preventDefault();
-                        navigateAtTopLevel(getProviderHref(id));
-                      }
-                    }}
-                  >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    {t(label)}
-                  </a>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  {t(label)}
                 </Button>
               ))}
             </div>

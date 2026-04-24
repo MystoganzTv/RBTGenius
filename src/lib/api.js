@@ -1,5 +1,3 @@
-const DEFAULT_APP_BASE_URL = "https://rbtgenius.com";
-
 function getAuthToken() {
   if (typeof window === "undefined") {
     return null;
@@ -11,41 +9,10 @@ function getAuthToken() {
   );
 }
 
-function trimTrailingSlash(value = "") {
-  return String(value).replace(/\/+$/, "");
-}
-
-function shouldUseRelativeApiPaths() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  const hostname = String(window.location.hostname || "").toLowerCase();
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0";
-}
-
-function getAppBaseUrl() {
-  return shouldUseRelativeApiPaths() ? "" : DEFAULT_APP_BASE_URL;
-}
-
-export function resolveApiUrl(path) {
-  if (!path) {
-    return getAppBaseUrl() || "";
-  }
-
-  if (/^https?:\/\//i.test(path)) {
-    return path;
-  }
-
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl = trimTrailingSlash(getAppBaseUrl());
-  return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
-}
-
 async function request(path, options = {}) {
   const { headers = {}, body, token: tokenOverride, ...restOptions } = options;
   const token = tokenOverride || getAuthToken();
-  const response = await fetch(resolveApiUrl(path), {
+  const response = await fetch(path, {
     ...restOptions,
     headers: {
       "Content-Type": "application/json",
@@ -115,9 +82,7 @@ export const api = {
   },
   getOAuthStartUrl(provider, redirectTo = "/") {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return resolveApiUrl(
-      `/api/auth/oauth/${provider}/start${createQuery({ redirectTo, origin })}`,
-    );
+    return `/api/auth/oauth/${provider}/start${createQuery({ redirectTo, origin })}`;
   },
   listQuestions(params) {
     return request(`/api/questions${createQuery(params)}`);
