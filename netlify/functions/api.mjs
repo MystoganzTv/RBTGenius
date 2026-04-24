@@ -580,13 +580,15 @@ export default async (request) => {
           </script>
         </body>
       </html>`,
-      headers: {
-        "Clear-Site-Data": "\"cache\", \"storage\", \"executionContexts\"",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+      {
+        headers: {
+          "Clear-Site-Data": "\"cache\", \"storage\", \"executionContexts\"",
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       },
-    });
+    );
   }
 
   if (apiPath === "/public-settings" && request.method === "GET") {
