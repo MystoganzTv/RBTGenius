@@ -136,7 +136,6 @@ function RoutedPage() {
 function AuthenticatedApp() {
   const {
     isLoadingAuth,
-    isLoadingPublicSettings,
     authError,
     isAuthenticated,
   } = useAuth();
@@ -151,7 +150,7 @@ function AuthenticatedApp() {
     (location.pathname === "/" && PUBLIC_PAGES.has(requestedPage)) ||
     PUBLIC_PAGES.has(legacyPageName);
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800 dark:border-slate-800 dark:border-t-slate-200" />
@@ -163,13 +162,7 @@ function AuthenticatedApp() {
     return <UserNotRegisteredError />;
   }
 
-  if (
-    authError?.type === "auth_required" &&
-    !isLoginRoute &&
-    !isLandingRoute &&
-    !isPublicRoute &&
-    !isAuthenticated
-  ) {
+  if (!isAuthenticated && !isLoginRoute && !isLandingRoute && !isPublicRoute) {
     return (
       <Navigate
         to={`/login?redirectTo=${encodeURIComponent(`${location.pathname}${location.search}${location.hash}`)}`}

@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  GraduationCap,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { GraduationCap, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +11,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
-const LOGIN_BUILD_STAMP = "manual-only-build-2026-04-24b";
+const LOGIN_BUILD_STAMP = "auth-reset-2026-04-24";
 
 function normalizeRedirectPath(value) {
   if (!value) {
@@ -28,27 +24,32 @@ function normalizeRedirectPath(value) {
 
   try {
     const url = new URL(value);
-    return `${url.pathname}${url.search}${url.hash}` || "/";
+    return `${url.pathname}${url.search}${url.hash}` || createPageUrl("Dashboard");
   } catch {
     return createPageUrl("Dashboard");
   }
 }
 
 function getRedirectPath(search) {
-  const searchParams = new URLSearchParams(search);
-  return normalizeRedirectPath(searchParams.get("redirectTo"));
+  const params = new URLSearchParams(search);
+  return normalizeRedirectPath(params.get("redirectTo"));
 }
 
 export default function Login() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
+  const {
+    user,
+    isAuthenticated,
+    isLoadingAuth,
+    authError,
+    login,
+  } = useAuth();
   const redirectPath = useMemo(() => getRedirectPath(location.search), [location.search]);
   const initialMode = useMemo(() => {
-    const searchParams = new URLSearchParams(location.search);
-    return searchParams.get("mode") === "register" ? "register" : "login";
+    const params = new URLSearchParams(location.search);
+    return params.get("mode") === "register" ? "register" : "login";
   }, [location.search]);
-  const { user, isAuthenticated, login } = useAuth();
   const t = (value) => translateUi(value, language);
 
   const [activeTab, setActiveTab] = useState(initialMode);
@@ -61,70 +62,21 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const redirectToDestination = useMemo(
-    () => () => {
-      if (typeof window === "undefined") {
-        navigate(redirectPath, { replace: true });
-        return;
-      }
-
-      window.location.replace(redirectPath);
-    },
-    [navigate, redirectPath],
-  );
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      redirectToDestination();
-    }
-  }, [isAuthenticated, redirectToDestination, user]);
-
   useEffect(() => {
     setActiveTab(initialMode);
   }, [initialMode]);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const authToken = searchParams.get("authToken");
-    const oauthError = searchParams.get("oauthError");
-
-    if (oauthError) {
-      setErrorMessage(t(oauthError));
+    if (authError?.message) {
+      setErrorMessage(t(authError.message));
     }
+  }, [authError, t]);
 
-    if (!authToken) {
-      return;
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated && user && typeof window !== "undefined") {
+      window.location.replace(redirectPath);
     }
-
-    let isMounted = true;
-    setIsSubmitting(true);
-    setErrorMessage("");
-
-    api
-      .getMe(authToken)
-      .then((nextUser) => {
-        if (!isMounted) {
-          return;
-        }
-
-        login({ token: authToken, user: nextUser });
-        redirectToDestination();
-      })
-      .catch((error) => {
-        if (isMounted) {
-          setErrorMessage(t(error.message || "Unable to complete sign in"));
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsSubmitting(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [location.search, login, redirectToDestination, t]);
+  }, [isAuthenticated, isLoadingAuth, redirectPath, user]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -133,8 +85,8 @@ export default function Login() {
 
     try {
       const authData = await api.login(loginForm);
-      login(authData);
-      redirectToDestination();
+      await login(authData);
+      window.location.replace(redirectPath);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
@@ -149,8 +101,8 @@ export default function Login() {
 
     try {
       const authData = await api.register(registerForm);
-      login(authData);
-      redirectToDestination();
+      await login(authData);
+      window.location.replace(redirectPath);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
@@ -173,10 +125,10 @@ export default function Login() {
             <Sparkles className="-mt-1 h-4 w-4 text-[#FFB800]" />
           </div>
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-            {t("Choose the easiest way to continue and keep your study progress synced.")}
+            {t("Use your email and password to continue.")}
           </p>
           <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#1E5EFF]">
-            Manual access only · {LOGIN_BUILD_STAMP}
+            Auth reset · {LOGIN_BUILD_STAMP}
           </p>
         </div>
 
@@ -193,6 +145,7 @@ export default function Login() {
               </p>
               <Input
                 type="email"
+                autoComplete="email"
                 placeholder={t("Email")}
                 value={loginForm.email}
                 onChange={(event) =>
@@ -204,6 +157,7 @@ export default function Login() {
               />
               <Input
                 type="password"
+                autoComplete="current-password"
                 placeholder={t("Password")}
                 value={loginForm.password}
                 onChange={(event) =>
@@ -230,6 +184,7 @@ export default function Login() {
                 {t("Manual registration")}
               </p>
               <Input
+                autoComplete="name"
                 placeholder={t("Full name")}
                 value={registerForm.full_name}
                 onChange={(event) =>
@@ -241,6 +196,7 @@ export default function Login() {
               />
               <Input
                 type="email"
+                autoComplete="email"
                 placeholder={t("Email")}
                 value={registerForm.email}
                 onChange={(event) =>
@@ -252,6 +208,7 @@ export default function Login() {
               />
               <Input
                 type="password"
+                autoComplete="new-password"
                 placeholder={t("Password (min 8 chars)")}
                 value={registerForm.password}
                 onChange={(event) =>
@@ -278,16 +235,10 @@ export default function Login() {
         </Tabs>
 
         {errorMessage ? (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {errorMessage}
           </div>
         ) : null}
-
-        <div className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-          <Link to="/" className="text-[#1E5EFF] hover:underline">
-            {t("Back to app")}
-          </Link>
-        </div>
       </Card>
     </div>
   );
