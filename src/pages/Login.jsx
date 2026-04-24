@@ -87,6 +87,21 @@ function getStoredAuthTokenFromBrowser() {
   );
 }
 
+function navigateAtTopLevel(url, replace = false) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const targetWindow = window.top && window.top !== window.self ? window.top : window;
+
+  if (replace) {
+    targetWindow.location.replace(url);
+    return;
+  }
+
+  targetWindow.location.assign(url);
+}
+
 function buildPostAuthRedirectUrl(redirectPath, token) {
   if (typeof window === "undefined") {
     return redirectPath || createPageUrl("Dashboard");
@@ -105,11 +120,7 @@ function buildPostAuthRedirectUrl(redirectPath, token) {
 }
 
 function redirectAfterAuth(redirectPath, token) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.location.replace(buildPostAuthRedirectUrl(redirectPath, token));
+  navigateAtTopLevel(buildPostAuthRedirectUrl(redirectPath, token), true);
 }
 
 export default function Login() {
@@ -138,6 +149,8 @@ export default function Login() {
     () => OAUTH_OPTIONS.filter((option) => authProviders.some((provider) => provider.id === option.id)),
     [authProviders],
   );
+
+  const getProviderHref = (providerId) => api.getOAuthStartUrl(providerId, redirectPath);
 
   useEffect(() => {
     let isMounted = true;
@@ -273,8 +286,16 @@ export default function Login() {
                   className={`h-14 w-full justify-start gap-4 rounded-2xl border px-5 text-base font-semibold shadow-[0_14px_35px_-25px_rgba(15,23,42,0.45)] ${providerButtonStyles[id] || providerButtonStyles.google}`}
                 >
                   <a
-                    href={api.getOAuthStartUrl(id, redirectPath)}
-                    onClick={() => setErrorMessage("")}
+                    href={getProviderHref(id)}
+                    target="_top"
+                    onClick={(event) => {
+                      setErrorMessage("");
+
+                      if (typeof window !== "undefined" && window.top && window.top !== window.self) {
+                        event.preventDefault();
+                        navigateAtTopLevel(getProviderHref(id));
+                      }
+                    }}
                   >
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
                       <Icon className="h-5 w-5" />
