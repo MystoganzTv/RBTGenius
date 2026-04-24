@@ -26,7 +26,15 @@ function getStorage() {
   return window.localStorage;
 }
 
-function persistAuthToken(token) {
+function getQueryParams() {
+  if (typeof window === "undefined") {
+    return new URLSearchParams();
+  }
+
+  return new URLSearchParams(window.location.search);
+}
+
+function writeToken(token) {
   const storage = getStorage();
 
   if (!storage || !token) {
@@ -35,9 +43,10 @@ function persistAuthToken(token) {
 
   storage.setItem(AUTH_STORAGE_KEY, token);
   storage.setItem("access_token", token);
+  storage.setItem("token", token);
 }
 
-function clearAuthToken() {
+function clearStoredToken() {
   const storage = getStorage();
 
   if (!storage) {
@@ -49,7 +58,7 @@ function clearAuthToken() {
   storage.removeItem("token");
 }
 
-function getStoredAuthToken() {
+function readStoredToken() {
   const storage = getStorage();
 
   if (typeof window !== "undefined") {
@@ -63,7 +72,7 @@ function getStoredAuthToken() {
   }
 
   if (appParams.token) {
-    persistAuthToken(appParams.token);
+    writeToken(appParams.token);
     return appParams.token;
   }
 
@@ -71,16 +80,11 @@ function getStoredAuthToken() {
     return null;
   }
 
-  const token =
+  return (
     storage.getItem(AUTH_STORAGE_KEY) ||
     storage.getItem("access_token") ||
-    storage.getItem("token");
-
-  if (token) {
-    persistAuthToken(token);
-  }
-
-  return token;
+    storage.getItem("token")
+  );
 }
 
 async function requestJson(url, options = {}, fetchImpl = fetch) {
@@ -95,6 +99,10 @@ async function requestJson(url, options = {}, fetchImpl = fetch) {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
+
+  if (response.status === 204) {
+    return null;
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const data = contentType.includes("application/json")
@@ -111,11 +119,11 @@ async function requestJson(url, options = {}, fetchImpl = fetch) {
   }
 
   if (!response.ok) {
-    const message =
+    const error = new Error(
       (typeof data === "object" && data?.message) ||
-      response.statusText ||
-      "Request failed";
-    const error = new Error(message);
+        response.statusText ||
+        "Request failed",
+    );
 
     error.status = response.status;
     error.data = data;
@@ -126,26 +134,10 @@ async function requestJson(url, options = {}, fetchImpl = fetch) {
 }
 
 function normalizeAuthError(error) {
-  if (error?.status === 403 && error?.data?.extra_data?.reason) {
-    const reason = error.data.extra_data.reason;
-
-    if (reason === "auth_required") {
-      return {
-        type: "auth_required",
-        message: "Authentication required",
-      };
-    }
-
-    if (reason === "user_not_registered") {
-      return {
-        type: "user_not_registered",
-        message: "User not registered for this app",
-      };
-    }
-
+  if (error?.status === 403 && error?.data?.extra_data?.reason === "user_not_registered") {
     return {
-      type: reason,
-      message: error.message,
+      type: "user_not_registered",
+      message: "User not registered for this app",
     };
   }
 
@@ -160,6 +152,26 @@ function normalizeAuthError(error) {
     type: "unknown",
     message: error?.message || "An unexpected error occurred",
   };
+}
+
+function stripAuthParamsFromUrl() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const hadAuthParams = params.has("authToken") || params.has("oauthError");
+
+  if (!hadAuthParams) {
+    return;
+  }
+
+  params.delete("authToken");
+  params.delete("oauthError");
+
+  const nextSearch = params.toString();
+  const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}${window.location.hash}`;
+  window.history.replaceState({}, document.title, nextUrl);
 }
 
 export function AuthProvider({
@@ -185,6 +197,7 @@ export function AuthProvider({
     [endpoints.logout, endpoints.me, endpoints.publicSettings],
   );
 
+<<<<<<< HEAD
   const checkUserAuth = useCallback(
     async (tokenOverride) => {
       if (isNativePreviewMode()) {
@@ -196,10 +209,23 @@ export function AuthProvider({
       }
 
       const token = tokenOverride || getStoredAuthToken();
+=======
+  const applyAuth = useCallback((authData = {}) => {
+    const nextUser =
+      authData && typeof authData === "object" && "user" in authData
+        ? authData.user
+        : authData;
+    const nextToken =
+      authData && typeof authData === "object" && "token" in authData
+        ? authData.token
+        : null;
+>>>>>>> main
 
-      try {
-        setIsLoadingAuth(true);
+    if (nextToken) {
+      writeToken(nextToken);
+    }
 
+<<<<<<< HEAD
         if (!token) {
           setUser(null);
           setIsAuthenticated(false);
@@ -235,11 +261,38 @@ export function AuthProvider({
         return false;
       } finally {
         setIsLoadingAuth(false);
+=======
+    setUser(nextUser || null);
+    setIsAuthenticated(Boolean(nextUser || nextToken));
+    setAuthError(null);
+  }, []);
+
+  const loadCurrentUser = useCallback(
+    async (token) => {
+      if (!token) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setAuthError(null);
+        return null;
+>>>>>>> main
       }
+
+      const currentUser = await requestJson(
+        resolvedEndpoints.me,
+        { token },
+        fetchImpl,
+      );
+
+      writeToken(token);
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      setAuthError(null);
+      return currentUser;
     },
     [fetchImpl, resolvedEndpoints.me],
   );
 
+<<<<<<< HEAD
   const checkAppState = useCallback(async () => {
     if (isNativePreviewMode()) {
       setAppPublicSettings({ auth_required: true, preview_mode: true });
@@ -252,57 +305,61 @@ export function AuthProvider({
     }
 
     const token = getStoredAuthToken();
+=======
+  const bootstrapAuth = useCallback(async () => {
+    const params = getQueryParams();
+    const urlToken = params.get("authToken");
+    const oauthError = params.get("oauthError");
+    const token = urlToken || readStoredToken();
+>>>>>>> main
 
     try {
-      setIsLoadingPublicSettings(true);
-      setAuthError(null);
+      setIsLoadingAuth(true);
+      setAuthError(
+        oauthError
+          ? {
+              type: "oauth_error",
+              message: oauthError,
+            }
+          : null,
+      );
 
       if (resolvedEndpoints.publicSettings) {
         const publicSettings = await requestJson(
           resolvedEndpoints.publicSettings,
           {
-            token,
             headers: appParams.appId ? { "X-App-Id": appParams.appId } : {},
           },
           fetchImpl,
         );
 
         setAppPublicSettings(publicSettings);
-
-        if (!token && publicSettings?.auth_required) {
-          setUser(null);
-          setIsAuthenticated(false);
-          setIsLoadingAuth(false);
-          setAuthError({
-            type: "auth_required",
-            message: "Authentication required",
-          });
-          return;
-        }
       }
 
-      if (token) {
-        await checkUserAuth(token);
-      } else {
+      if (!token) {
         setUser(null);
         setIsAuthenticated(false);
-        setIsLoadingAuth(false);
+        return;
       }
+
+      await loadCurrentUser(token);
+      stripAuthParamsFromUrl();
     } catch (error) {
-      setAppPublicSettings(null);
+      clearStoredToken();
       setUser(null);
       setIsAuthenticated(false);
-      setIsLoadingAuth(false);
       setAuthError(normalizeAuthError(error));
     } finally {
+      setIsLoadingAuth(false);
       setIsLoadingPublicSettings(false);
     }
-  }, [checkUserAuth, fetchImpl, resolvedEndpoints.publicSettings]);
+  }, [fetchImpl, loadCurrentUser, resolvedEndpoints.publicSettings]);
 
   useEffect(() => {
-    checkAppState();
-  }, [checkAppState]);
+    bootstrapAuth();
+  }, [bootstrapAuth]);
 
+<<<<<<< HEAD
   useEffect(() => {
     if (typeof window === "undefined") {
       return undefined;
@@ -412,12 +469,21 @@ export function AuthProvider({
       checkUserAuth(authPayload.token).catch(() => {});
     }
   }, [checkUserAuth]);
+=======
+  const login = useCallback(
+    async (authData = {}) => {
+      applyAuth(authData);
+      return authData;
+    },
+    [applyAuth],
+  );
+>>>>>>> main
 
   const logout = useCallback(
     async (shouldRedirect = true) => {
-      const token = getStoredAuthToken();
+      const token = readStoredToken();
 
-      if (resolvedEndpoints.logout && token) {
+      if (token) {
         try {
           await requestJson(
             resolvedEndpoints.logout,
@@ -428,12 +494,16 @@ export function AuthProvider({
             fetchImpl,
           );
         } catch {
-          // Ignore logout request failures and continue cleaning local state.
+          // Ignore logout network issues and continue local cleanup.
         }
       }
 
+<<<<<<< HEAD
       clearAuthToken();
       disableNativePreviewMode();
+=======
+      clearStoredToken();
+>>>>>>> main
       setUser(null);
       setIsAuthenticated(false);
       setAuthError(null);
@@ -451,14 +521,8 @@ export function AuthProvider({
         return;
       }
 
-      if (window.location.pathname === loginPath) {
-        return;
-      }
-
-      const destination = redirectTo || window.location.href;
       const url = new URL(loginPath, window.location.origin);
-
-      url.searchParams.set("redirectTo", destination);
+      url.searchParams.set("redirectTo", redirectTo || window.location.pathname);
       window.location.assign(url.toString());
     },
     [loginPath],
@@ -475,17 +539,17 @@ export function AuthProvider({
       login,
       logout,
       navigateToLogin,
-      checkAppState,
-      checkUserAuth,
+      checkAppState: bootstrapAuth,
+      checkUserAuth: loadCurrentUser,
     }),
     [
       appPublicSettings,
       authError,
-      checkAppState,
-      checkUserAuth,
+      bootstrapAuth,
       isAuthenticated,
       isLoadingAuth,
       isLoadingPublicSettings,
+      loadCurrentUser,
       login,
       logout,
       navigateToLogin,

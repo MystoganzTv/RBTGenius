@@ -73,11 +73,17 @@ function normalizeQuestionList(value) {
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
+<<<<<<< HEAD
 
 function normalizeDifficultyFilter(value) {
   return value === "all" || RBT_ALLOWED_DIFFICULTIES.includes(value) ? value : "all";
 }
 
+=======
+function normalizeDifficultyFilter(value) {
+  return value === "all" || RBT_ALLOWED_DIFFICULTIES.includes(value) ? value : "all";
+}
+>>>>>>> main
 function getResponseState(questionId, responses) {
   return responses?.[questionId] || {};
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { App as CapacitorApp } from "@capacitor/app";
@@ -12,6 +13,11 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+=======
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { GraduationCap, Loader2, Sparkles } from "lucide-react";
+>>>>>>> main
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +36,7 @@ import {
 import { enableNativePreviewMode } from "@/lib/native-preview";
 import { createPageUrl } from "@/utils";
 
+<<<<<<< HEAD
 const OAUTH_OPTIONS = [
   {
     id: "google",
@@ -85,6 +92,8 @@ function getStoredAuthToken() {
   return null;
 }
 
+=======
+>>>>>>> main
 function normalizeRedirectPath(value) {
   if (!value) {
     return createPageUrl("Dashboard");
@@ -96,27 +105,40 @@ function normalizeRedirectPath(value) {
 
   try {
     const url = new URL(value);
-    return `${url.pathname}${url.search}${url.hash}` || "/";
+    return `${url.pathname}${url.search}${url.hash}` || createPageUrl("Dashboard");
   } catch {
     return createPageUrl("Dashboard");
   }
 }
 
 function getRedirectPath(search) {
-  const searchParams = new URLSearchParams(search);
-  return normalizeRedirectPath(searchParams.get("redirectTo"));
+  const params = new URLSearchParams(search);
+  return normalizeRedirectPath(params.get("redirectTo"));
 }
 
 export default function Login() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
+  const {
+    user,
+    isAuthenticated,
+    isLoadingAuth,
+    authError,
+    login,
+  } = useAuth();
   const redirectPath = useMemo(() => getRedirectPath(location.search), [location.search]);
+  const googleAuthUrl = useMemo(
+    () => api.getOAuthStartUrl("google", redirectPath),
+    [redirectPath],
+  );
   const initialMode = useMemo(() => {
-    const searchParams = new URLSearchParams(location.search);
-    return searchParams.get("mode") === "register" ? "register" : "login";
+    const params = new URLSearchParams(location.search);
+    return params.get("mode") === "register" ? "register" : "login";
   }, [location.search]);
+<<<<<<< HEAD
   const { user, isAuthenticated, login, checkUserAuth } = useAuth();
+=======
+>>>>>>> main
   const t = (value) => translateUi(value, language);
   const canUseNativePreviewMode =
     isNativeAppRuntime() && String(appParams.nativePreview || "").toLowerCase() === "true";
@@ -130,6 +152,7 @@ export default function Login() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+<<<<<<< HEAD
   const [authProviders, setAuthProviders] = useState([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(true);
   const [debugEntries, setDebugEntries] = useState(() => readNativeAuthDebug());
@@ -196,6 +219,8 @@ export default function Login() {
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, navigate, redirectPath, user]);
+=======
+>>>>>>> main
 
   useEffect(() => {
     if (typeof window === "undefined" || !isNativeAppRuntime()) {
@@ -298,6 +323,7 @@ export default function Login() {
   }, [initialMode]);
 
   useEffect(() => {
+<<<<<<< HEAD
     const searchParams = new URLSearchParams(location.search);
     const queryAuthToken = searchParams.get("authToken");
     const nativeAuthRequested = searchParams.get("nativeAuth") === "1";
@@ -315,11 +341,18 @@ export default function Login() {
       setErrorMessage(t(oauthError));
     } else if (authToken) {
       setErrorMessage("");
+=======
+    if (authError?.message) {
+      setErrorMessage(t(authError.message));
+>>>>>>> main
     }
+  }, [authError, t]);
 
-    if (!authToken) {
-      return;
+  useEffect(() => {
+    if (!isLoadingAuth && isAuthenticated && user && typeof window !== "undefined") {
+      window.location.replace(redirectPath);
     }
+<<<<<<< HEAD
 
     logNativeAuthDebug(
       "login_token_detected",
@@ -381,6 +414,9 @@ export default function Login() {
       appStateListener.then((listener) => listener.remove()).catch(() => {});
     };
   }, [tryCompletePendingNativeSignIn]);
+=======
+  }, [isAuthenticated, isLoadingAuth, redirectPath, user]);
+>>>>>>> main
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -389,11 +425,16 @@ export default function Login() {
 
     try {
       const authData = await api.login(loginForm);
+<<<<<<< HEAD
       login(authData);
       if (isNativeAppRuntime()) {
         api.clearPracticeSession().catch(() => {});
       }
       navigate(redirectPath, { replace: true });
+=======
+      await login(authData);
+      window.location.replace(redirectPath);
+>>>>>>> main
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to sign in"));
     } finally {
@@ -408,8 +449,8 @@ export default function Login() {
 
     try {
       const authData = await api.register(registerForm);
-      login(authData);
-      navigate(redirectPath, { replace: true });
+      await login(authData);
+      window.location.replace(redirectPath);
     } catch (error) {
       setErrorMessage(t(error.message || "Unable to create account"));
     } finally {
@@ -417,6 +458,7 @@ export default function Login() {
     }
   };
 
+<<<<<<< HEAD
   const handleProviderAuth = async (providerId) => {
     setErrorMessage("");
     const authUrl = api.getOAuthStartUrl(providerId, redirectPath);
@@ -444,6 +486,8 @@ export default function Login() {
     window.location.assign(createPageUrl("Dashboard"));
   };
 
+=======
+>>>>>>> main
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] p-6 dark:bg-slate-950">
       <Card className="w-full max-w-md rounded-[2rem] border border-slate-200/80 bg-white p-8 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-950">
@@ -459,45 +503,46 @@ export default function Login() {
             <Sparkles className="-mt-1 h-4 w-4 text-[#FFB800]" />
           </div>
           <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-            {t("Choose the easiest way to continue and keep your study progress synced.")}
+            {t("Use your email and password to continue.")}
           </p>
         </div>
 
-        {availableProviders.length > 0 ? (
-          <>
-            <div className="mb-3 text-center text-xs font-medium uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-              {t("Quick sign in")}
-            </div>
-            <div className="mb-6 space-y-3">
-              {availableProviders.map(({ id, label, Icon }) => (
-                <Button
-                  key={id}
-                  type="button"
-                  variant="outline"
-                  disabled={isSubmitting}
-                  onClick={() => handleProviderAuth(id)}
-                  className={`h-14 w-full justify-start gap-4 rounded-2xl border px-5 text-base font-semibold shadow-[0_14px_35px_-25px_rgba(15,23,42,0.45)] ${providerButtonStyles[id] || providerButtonStyles.google}`}
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-current dark:bg-slate-950/30">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  {t(label)}
-                </Button>
-              ))}
-            </div>
-
-            <div className="mb-6 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-              <span>{t("or use email")}</span>
-              <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-            </div>
-          </>
-        ) : isLoadingProviders ? (
-          <div className="mb-4 flex items-center justify-center py-1 text-sm text-slate-400 dark:text-slate-500">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {t("Loading sign-in options...")}
+        <div className="mb-6 space-y-4">
+          <p className="text-center text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+            {t("Quick sign in")}
+          </p>
+          <a
+            href={googleAuthUrl}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+          >
+            <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
+              <path
+                fill="#EA4335"
+                d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.7 2.4 12 2.4 6.9 2.4 2.8 6.5 2.8 11.6S6.9 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"
+              />
+              <path
+                fill="#34A853"
+                d="M2.8 7.2l3.2 2.3c.9-1.7 2.7-2.9 5-2.9 1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.7 2.4 12 2.4c-3.6 0-6.7 2-8.3 4.8Z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M12 20.8c2.6 0 4.8-.9 6.4-2.5l-3-2.5c-.8.6-1.9 1-3.4 1-3.8 0-5.1-2.5-5.4-3.8l-3.2 2.5c1.6 3 4.7 5.3 8.6 5.3Z"
+              />
+              <path
+                fill="#4285F4"
+                d="M21.1 12.2c0-.6-.1-1.1-.2-1.6H12v3.9h5.4c-.2 1.1-.9 2-1.8 2.7l3 2.5c1.8-1.7 2.5-4.1 2.5-7.5Z"
+              />
+            </svg>
+            <span>{t("Continue with Google")}</span>
+          </a>
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+            <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+              {t("Or use email")}
+            </span>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
           </div>
-        ) : null}
+        </div>
 
         {canUseNativePreviewMode ? (
           <div className="mb-6">
@@ -529,6 +574,7 @@ export default function Login() {
               </p>
               <Input
                 type="email"
+                autoComplete="email"
                 placeholder={t("Email")}
                 value={loginForm.email}
                 onChange={(event) =>
@@ -540,6 +586,7 @@ export default function Login() {
               />
               <Input
                 type="password"
+                autoComplete="current-password"
                 placeholder={t("Password")}
                 value={loginForm.password}
                 onChange={(event) =>
@@ -566,6 +613,7 @@ export default function Login() {
                 {t("Manual registration")}
               </p>
               <Input
+                autoComplete="name"
                 placeholder={t("Full name")}
                 value={registerForm.full_name}
                 onChange={(event) =>
@@ -577,6 +625,7 @@ export default function Login() {
               />
               <Input
                 type="email"
+                autoComplete="email"
                 placeholder={t("Email")}
                 value={registerForm.email}
                 onChange={(event) =>
@@ -588,6 +637,7 @@ export default function Login() {
               />
               <Input
                 type="password"
+                autoComplete="new-password"
                 placeholder={t("Password (min 8 chars)")}
                 value={registerForm.password}
                 onChange={(event) =>
@@ -614,10 +664,11 @@ export default function Login() {
         </Tabs>
 
         {errorMessage ? (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {errorMessage}
           </div>
         ) : null}
+<<<<<<< HEAD
 
         {isNativeAppRuntime() ? (
           <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left dark:border-slate-800 dark:bg-slate-900">
@@ -666,6 +717,8 @@ export default function Login() {
             {t("Back to app")}
           </Link>
         </div>
+=======
+>>>>>>> main
       </Card>
     </div>
   );

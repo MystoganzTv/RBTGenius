@@ -76,6 +76,16 @@ function json(body, init = {}) {
   });
 }
 
+function redirect(url, init = {}) {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: url,
+      ...(init.headers || {}),
+    },
+  });
+}
+
 async function readDb() {
   const db = await withFreshStore((store) => store.get("db", { type: "json" }));
   if (db) {
