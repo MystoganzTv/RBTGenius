@@ -518,17 +518,29 @@ export default function Practice() {
             <HelpCircle className="h-8 w-8 text-[#1E5EFF]" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            {translateUi("Practice Questions", language)}
+            {translateUi("RBT Practice", language)}
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             {translateUi(
-              "Choose your topic and difficulty to start practicing.",
+              "Train only with RBT-scoped questions focused on implementation, documentation, and professional conduct.",
               language,
             )}
           </p>
         </div>
 
-        <div className="space-y-6 rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-800 dark:bg-slate-950">
+        <div className="space-y-6 rounded-[1.75rem] border border-slate-100 bg-white p-8 shadow-[0_18px_55px_-38px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex flex-wrap gap-2">
+            <Badge className="rounded-full bg-[#1E5EFF]/10 px-3 py-1 text-[#1E5EFF] hover:bg-[#1E5EFF]/10">
+              {translateUi("RBT-only bank", language)}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="rounded-full border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300"
+            >
+              {translateUi("No BCaBA / BCBA drift", language)}
+            </Badge>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -566,14 +578,14 @@ export default function Practice() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4 text-sm text-slate-700 dark:text-slate-200">
+          <div className="rounded-2xl border border-[#1E5EFF]/12 bg-[linear-gradient(135deg,rgba(30,94,255,0.08),rgba(30,94,255,0.03))] p-4 text-sm text-slate-700 dark:text-slate-200">
             {isPremiumPlan(entitlements?.plan)
               ? translateUi(
-                  `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`,
+                  `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question RBT-only bank.`,
                   language,
                 )
               : translateUi(
-                  `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question official-style bank.`,
+                  `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question RBT-only bank.`,
                   language,
                 )}
           </div>
@@ -585,7 +597,7 @@ export default function Practice() {
               </p>
               <p className="mt-2 leading-relaxed">
                 {translateUi(
-                  "Learn the type of exam move the question is testing, not just the answer.",
+                  "See the exact RBT skill the question is checking, not just the answer choice.",
                   language,
                 )}
               </p>
@@ -596,7 +608,7 @@ export default function Practice() {
               </p>
               <p className="mt-2 leading-relaxed">
                 {translateUi(
-                  "Train your eye to spot the single detail that points to the correct concept.",
+                  "Train your eye to spot the one operational detail that identifies the correct RBT concept.",
                   language,
                 )}
               </p>
@@ -607,7 +619,7 @@ export default function Practice() {
               </p>
               <p className="mt-2 leading-relaxed">
                 {translateUi(
-                  "See the distractor the exam wants you to pick, and why it is wrong.",
+                  "Catch the distractor that sounds advanced or clinical but is not the best RBT answer.",
                   language,
                 )}
               </p>

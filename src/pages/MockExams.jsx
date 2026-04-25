@@ -169,7 +169,7 @@ export default function MockExams() {
             {translateUi("Mock RBT Exam", language)}
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            {translateUi("Simulate the real BACB RBT certification exam.", language)}
+            {translateUi("Simulate an RBT-only mock exam built from implementation-level content.", language)}
           </p>
         </div>
 

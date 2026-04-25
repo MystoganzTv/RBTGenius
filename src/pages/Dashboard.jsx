@@ -146,8 +146,8 @@ export default function Dashboard() {
             <p className="mt-6 max-w-2xl text-xl leading-relaxed text-slate-500 dark:text-slate-300">
               {t(
                 totalQuestions < 20 && exams.length === 0
-                ? `You have covered ${bankCoverage}% of the full bank so far. Readiness will become more meaningful as coverage grows.`
-                : `Exam readiness at ${readiness}% based on your overall progress, mock exam history, and bank coverage.`,
+                ? `You have covered ${bankCoverage}% of the RBT-only bank so far. Readiness will become more meaningful as coverage grows.`
+                : `Exam readiness at ${readiness}% based on your RBT-only bank progress, mock exam history, and coverage.`,
               )}
             </p>
 
@@ -160,7 +160,7 @@ export default function Dashboard() {
                     : t("Start your streak")}
               </div>
               <div className="rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-                {t(`${totalQuestions}/${totalQuestionsAvailable} answered`)}
+                {t(`${totalQuestions}/${totalQuestionsAvailable} RBT questions answered`)}
               </div>
               <div className={`rounded-full border px-5 py-3 text-base font-semibold ${activePlan.className}`}>
                 {t(activePlan.label)}
