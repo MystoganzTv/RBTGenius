@@ -33,8 +33,13 @@ import {
 } from "../../server/lib/billing.js";
 import {
   applyStripeWebhookEvent,
+  findUserForBilling,
   syncConfirmedCheckout,
 } from "../../server/lib/stripe-sync.js";
+import {
+  notifyNewMember,
+  notifyNewSubscription,
+} from "../../server/lib/admin-notify.js";
 import {
   countTutorMessagesToday,
   getEntitlements,
@@ -286,6 +291,7 @@ function buildFrontendLoginRedirect(frontendOrigin, redirectTo, params = {}) {
 async function upsertOAuthUser(profile, providerId) {
   let safeUser = null;
   let sessionToken = null;
+  let wasCreated = false;
 
   await updateDb((current) => {
     const existingUser = current.users.find(
@@ -341,6 +347,7 @@ async function upsertOAuthUser(profile, providerId) {
 
     if (!safeUser) {
       const createdUser = nextUsers[nextUsers.length - 1];
+      wasCreated = true;
       safeUser = createSafeUser(createdUser);
     }
 
@@ -350,7 +357,7 @@ async function upsertOAuthUser(profile, providerId) {
     };
   });
 
-  return { token: sessionToken, user: safeUser };
+  return { token: sessionToken, user: safeUser, created: wasCreated };
 }
 
 function getToken(request) {
@@ -453,7 +460,33 @@ export default async (request) => {
         request.headers.get("stripe-signature"),
       );
 
-      await updateDb((current) => applyStripeWebhookEvent(current, event, createId));
+      const current = await readDb();
+      if (current?.stripeEvents?.[event.id]) {
+        return json({ received: true, duplicate: true });
+      }
+
+      const next = applyStripeWebhookEvent(current, event, createId);
+      await writeDb(next);
+
+      if (event.type === "checkout.session.completed") {
+        const checkout = event.data?.object || {};
+        const user = findUserForBilling(next, {
+          userId: checkout.client_reference_id,
+          customerId:
+            typeof checkout.customer === "string" ? checkout.customer : checkout.customer?.id,
+          subscriptionId:
+            typeof checkout.subscription === "string"
+              ? checkout.subscription
+              : checkout.subscription?.id,
+          email: checkout.customer_details?.email || checkout.customer_email,
+        });
+
+        if (user) {
+          const plan = checkout.metadata?.plan || user.plan;
+          await notifyNewSubscription({ user, plan, checkout });
+        }
+      }
+
       return json({ received: true });
     } catch (error) {
       return json(
@@ -554,6 +587,13 @@ export default async (request) => {
       });
       const authData = await upsertOAuthUser(profile, providerId);
 
+      if (authData.created) {
+        await notifyNewMember(authData.user, {
+          source: "oauth",
+          authProvider: providerId,
+        });
+      }
+
       return Response.redirect(
         buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
           authToken: authData.token,
@@ -614,6 +654,11 @@ export default async (request) => {
       ...current,
       users: [...current.users, newUser],
     }));
+
+    await notifyNewMember(newUser, {
+      source: "manual_register",
+      authProvider: "password",
+    });
 
     return json({ token: newUser.token, user: createSafeUser(newUser) }, { status: 201 });
   }

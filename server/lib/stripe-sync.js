@@ -41,7 +41,7 @@ function resolveStripePlan({ metadata, priceId }) {
   return isPremiumPlan(pricePlan) ? pricePlan : PLAN_IDS.FREE;
 }
 
-function findUserForBilling(db, lookup = {}) {
+export function findUserForBilling(db, lookup = {}) {
   const {
     userId = null,
     customerId = null,

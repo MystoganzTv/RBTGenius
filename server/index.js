@@ -7,6 +7,7 @@ import {
   sanitizeQuestions,
   TOTAL_PRACTICE_QUESTIONS,
   updateDb,
+  writeDb,
 } from "./lib/store.js";
 import { createSessionToken, hashPassword, verifyPassword } from "./lib/auth.js";
 import {
@@ -27,8 +28,13 @@ import {
 } from "./lib/billing.js";
 import {
   applyStripeWebhookEvent,
+  findUserForBilling,
   syncConfirmedCheckout,
 } from "./lib/stripe-sync.js";
+import {
+  notifyNewMember,
+  notifyNewSubscription,
+} from "./lib/admin-notify.js";
 import {
   PLAN_IDS,
   countTutorMessagesToday,
@@ -48,7 +54,39 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
       req.headers["stripe-signature"],
     );
 
-    updateDb((current) => applyStripeWebhookEvent(current, event, createId));
+    const current = readDb();
+    if (current.stripeEvents?.[event.id]) {
+      res.json({ received: true, duplicate: true });
+      return;
+    }
+
+    const next = applyStripeWebhookEvent(current, event, createId);
+    const eventObject = event.data?.object || {};
+    writeDb(next);
+
+    if (event.type === "checkout.session.completed") {
+      const user = findUserForBilling(next, {
+        userId: eventObject.client_reference_id,
+        customerId:
+          typeof eventObject.customer === "string"
+            ? eventObject.customer
+            : eventObject.customer?.id,
+        subscriptionId:
+          typeof eventObject.subscription === "string"
+            ? eventObject.subscription
+            : eventObject.subscription?.id,
+        email: eventObject.customer_email || eventObject.customer_details?.email,
+      });
+
+      if (user) {
+        void notifyNewSubscription({
+          user,
+          plan: eventObject.metadata?.plan || user.plan,
+          checkout: eventObject,
+        });
+      }
+    }
+
     res.json({ received: true });
   } catch (error) {
     res.status(400).json({ message: error.message || "Invalid Stripe webhook event" });
@@ -275,6 +313,7 @@ function buildFrontendLoginRedirect(frontendOrigin, redirectTo, params = {}) {
 function upsertOAuthUser(profile, providerId) {
   let safeUser = null;
   let sessionToken = null;
+  let wasCreated = false;
 
   updateDb((current) => {
     const existingUser = current.users.find(
@@ -330,6 +369,7 @@ function upsertOAuthUser(profile, providerId) {
 
     if (!safeUser) {
       const createdUser = nextUsers[nextUsers.length - 1];
+      wasCreated = true;
       safeUser = createSafeUser(createdUser);
     }
 
@@ -339,7 +379,7 @@ function upsertOAuthUser(profile, providerId) {
     };
   });
 
-  return { token: sessionToken, user: safeUser };
+  return { token: sessionToken, user: safeUser, created: wasCreated };
 }
 
 app.get("/api/health", (_req, res) => {
@@ -439,6 +479,12 @@ async function handleOAuthCallback(req, res) {
       },
     });
     const authData = upsertOAuthUser(profile, providerId);
+    if (authData.created) {
+      void notifyNewMember(authData.user, {
+        source: "oauth",
+        authProvider: providerId,
+      });
+    }
 
     res.redirect(
       buildFrontendLoginRedirect(frontendOrigin, redirectTo, {
@@ -497,6 +543,11 @@ app.post("/api/auth/register", (req, res) => {
     ...current,
     users: [...current.users, newUser],
   }));
+
+  void notifyNewMember(newUser, {
+    source: "manual_register",
+    authProvider: "password",
+  });
 
   res.status(201).json({ token: newUser.token, user: createSafeUser(newUser) });
 });
