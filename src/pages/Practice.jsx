@@ -518,29 +518,17 @@ export default function Practice() {
             <HelpCircle className="h-8 w-8 text-[#1E5EFF]" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-            {translateUi("RBT Practice", language)}
+            {translateUi("Practice Questions", language)}
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             {translateUi(
-              "Train only with RBT-scoped questions focused on implementation, documentation, and professional conduct.",
+              "Choose your topic and difficulty to start practicing.",
               language,
             )}
           </p>
         </div>
 
         <div className="space-y-6 rounded-[1.75rem] border border-slate-100 bg-white p-8 shadow-[0_18px_55px_-38px_rgba(15,23,42,0.3)] dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex flex-wrap gap-2">
-            <Badge className="rounded-full bg-[#1E5EFF]/10 px-3 py-1 text-[#1E5EFF] hover:bg-[#1E5EFF]/10">
-              {translateUi("RBT-only bank", language)}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="rounded-full border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300"
-            >
-              {translateUi("No BCaBA / BCBA drift", language)}
-            </Badge>
-          </div>
-
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -581,11 +569,11 @@ export default function Practice() {
           <div className="rounded-2xl border border-[#1E5EFF]/12 bg-[linear-gradient(135deg,rgba(30,94,255,0.08),rgba(30,94,255,0.03))] p-4 text-sm text-slate-700 dark:text-slate-200">
             {isPremiumPlan(entitlements?.plan)
               ? translateUi(
-                  `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question RBT-only bank.`,
+                  `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question practice bank.`,
                   language,
                 )
               : translateUi(
-                  `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question RBT-only bank.`,
+                  `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question practice bank.`,
                   language,
                 )}
           </div>
@@ -597,7 +585,7 @@ export default function Practice() {
               </p>
               <p className="mt-2 leading-relaxed">
                 {translateUi(
-                  "See the exact RBT skill the question is checking, not just the answer choice.",
+                  "See the exact skill the question is checking, not just the answer choice.",
                   language,
                 )}
               </p>
@@ -608,7 +596,7 @@ export default function Practice() {
               </p>
               <p className="mt-2 leading-relaxed">
                 {translateUi(
-                  "Train your eye to spot the one operational detail that identifies the correct RBT concept.",
+                  "Train your eye to spot the one operational detail that identifies the correct concept.",
                   language,
                 )}
               </p>
@@ -619,7 +607,7 @@ export default function Practice() {
               </p>
               <p className="mt-2 leading-relaxed">
                 {translateUi(
-                  "Catch the distractor that sounds advanced or clinical but is not the best RBT answer.",
+                  "Catch the distractor the exam wants you to pick, and why it is wrong.",
                   language,
                 )}
               </p>
@@ -749,131 +737,170 @@ export default function Practice() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-              {translateUi("This Session", language)}
-            </h2>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+    <div className="mx-auto max-w-7xl">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_340px]">
+        <div className="order-2 space-y-4 xl:order-1">
+          {practiceLimitReached ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
               {translateUi(
-                "Session-only stats. Your dashboard tracks the bigger picture separately.",
+                "You reached today's free practice limit. You can keep reviewing these questions, or upgrade for unlimited answers.",
                 language,
               )}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            {practiceRemaining !== null && practiceRemaining !== undefined ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 font-semibold text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
-                <Crown className="h-3 w-3" />
-                {translateUi(`${practiceRemaining} free answers left today`, language)}
-              </span>
-            ) : null}
-          </div>
-        </div>
+            </div>
+          ) : null}
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Target className="h-4 w-4 text-[#1E5EFF]" />
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                {accuracy}% {translateUi("session accuracy", language)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <HelpCircle className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {answeredCount}/{baseFilteredQuestions.length} {translateUi("answered this session", language)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldAlert className="h-4 w-4 text-rose-400" />
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {incorrectCount} {translateUi("incorrect", language)}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Flag className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-slate-500 dark:text-slate-400">
-                {flaggedCount} {translateUi("flagged for review", language)}
-              </span>
-            </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
+            <div
+              className="h-full rounded-full bg-[#1E5EFF] transition-all duration-500"
+              style={{
+                width: `${(answeredCount / baseFilteredQuestions.length) * 100}%`,
+              }}
+            />
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl"
-              onClick={() => setNavigatorOpen(true)}
-            >
-              <ListChecks className="h-4 w-4" />
-              {translateUi("Navigator", language)}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl text-xs"
-              onClick={endSession}
-            >
-              {translateUi("End Session", language)}
-            </Button>
-          </div>
+          <QuestionCard
+            key={currentQuestion.id}
+            question={currentQuestion}
+            questionNumber={currentIndex + 1}
+            totalQuestions={questions.length}
+            selectedAnswer={currentResponse.selectedAnswer || null}
+            isSubmitted={Boolean(currentResponse.submitted)}
+            isFlagged={Boolean(currentResponse.flagged)}
+            correctAnswer={currentResponse.correctAnswer || ""}
+            explanation={currentResponse.explanation || ""}
+            onSelectAnswer={handleSelectAnswer}
+            onToggleFlag={handleToggleFlag}
+            onAnswer={handleAnswer}
+            onNext={handleNext}
+          />
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {reviewFilters.map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              onClick={() => setReviewFilter(filter.id)}
-              className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5EFF]/15",
-                reviewFilter === filter.id
-                  ? "border-[#1E5EFF] bg-[#1E5EFF]/10 text-[#1E5EFF]"
-                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900",
-              )}
-            >
-              {translateUi(filter.label, language)}
-            </button>
-          ))}
-        </div>
+        <aside className="order-1 xl:order-2">
+          <div className="rounded-2xl border border-slate-100 bg-white px-5 py-4 xl:sticky xl:top-24 dark:border-slate-800 dark:bg-slate-950">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {translateUi("This Session", language)}
+                </h2>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {translateUi(
+                    "Session-only stats. Your dashboard tracks the bigger picture separately.",
+                    language,
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                {practiceRemaining !== null && practiceRemaining !== undefined ? (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 font-semibold text-[#C88700] dark:border-[#FFB800]/25 dark:bg-[#FFB800]/12 dark:text-[#FFD36B]">
+                    <Crown className="h-3 w-3" />
+                    {translateUi(`${practiceRemaining} free answers left today`, language)}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <div className="rounded-2xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
+                <div className="flex items-center gap-2 text-[#1E5EFF]">
+                  <Target className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em]">
+                    {translateUi("Accuracy", language)}
+                  </span>
+                </div>
+                <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">
+                  {accuracy}%
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {translateUi("Current session score", language)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/70">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                  <HelpCircle className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em]">
+                    {translateUi("Answered", language)}
+                  </span>
+                </div>
+                <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">
+                  {answeredCount}/{baseFilteredQuestions.length}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {translateUi("Questions completed in this session", language)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 dark:border-rose-500/20 dark:bg-rose-500/10">
+                <div className="flex items-center gap-2 text-rose-500 dark:text-rose-300">
+                  <ShieldAlert className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em]">
+                    {translateUi("Incorrect", language)}
+                  </span>
+                </div>
+                <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">
+                  {incorrectCount}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {translateUi("Questions to revisit", language)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300">
+                  <Flag className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em]">
+                    {translateUi("Flagged", language)}
+                  </span>
+                </div>
+                <p className="mt-3 text-3xl font-black text-slate-900 dark:text-slate-50">
+                  {flaggedCount}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {translateUi("Marked for review", language)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
+                onClick={() => setNavigatorOpen(true)}
+              >
+                <ListChecks className="h-4 w-4" />
+                {translateUi("Navigator", language)}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs"
+                onClick={endSession}
+              >
+                {translateUi("End Session", language)}
+              </Button>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {reviewFilters.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setReviewFilter(filter.id)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1E5EFF]/15",
+                    reviewFilter === filter.id
+                      ? "border-[#1E5EFF] bg-[#1E5EFF]/10 text-[#1E5EFF]"
+                      : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-900",
+                  )}
+                >
+                  {translateUi(filter.label, language)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
-
-      {practiceLimitReached ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          {translateUi(
-            "You reached today's free practice limit. You can keep reviewing these questions, or upgrade for unlimited answers.",
-            language,
-          )}
-        </div>
-      ) : null}
-
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
-        <div
-          className="h-full rounded-full bg-[#1E5EFF] transition-all duration-500"
-          style={{
-            width: `${(answeredCount / baseFilteredQuestions.length) * 100}%`,
-          }}
-        />
-      </div>
-
-      <QuestionCard
-        key={currentQuestion.id}
-        question={currentQuestion}
-        questionNumber={currentIndex + 1}
-        totalQuestions={questions.length}
-        selectedAnswer={currentResponse.selectedAnswer || null}
-        isSubmitted={Boolean(currentResponse.submitted)}
-        isFlagged={Boolean(currentResponse.flagged)}
-        correctAnswer={currentResponse.correctAnswer || ""}
-        explanation={currentResponse.explanation || ""}
-        onSelectAnswer={handleSelectAnswer}
-        onToggleFlag={handleToggleFlag}
-        onAnswer={handleAnswer}
-        onNext={handleNext}
-      />
 
       <QuestionNavigator
         open={navigatorOpen}

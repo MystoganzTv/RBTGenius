@@ -256,11 +256,11 @@ export default function Flashcards() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            {translateUi("RBT Flashcards", language)}
+            {translateUi("Flashcards", language)}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             {translateUi(
-              "Review the same RBT-only bank in memorization mode, without drifting into BCaBA or BCBA content.",
+              "Review the same question bank in memorization mode, with pattern clues and common traps.",
               language,
             )}
           </p>
@@ -394,10 +394,6 @@ export default function Flashcards() {
               <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
             </SelectContent>
           </Select>
-
-          <Badge className="rounded-full bg-[#1E5EFF]/10 px-3 py-1 text-[#1E5EFF] hover:bg-[#1E5EFF]/10">
-            {translateUi("RBT-only", language)}
-          </Badge>
         </div>
       </Card>
 
