@@ -108,7 +108,7 @@ const UI_TRANSLATIONS = {
   "Keep Reviewing": "Seguir repasando",
   "Topic and pattern": "Tema y patrón",
   "Difficulty mix": "Nivel de dificultad",
-  "Shared official-style bank": "Banco compartido estilo oficial",
+  "Shared question bank": "Banco compartido de preguntas",
   "Free flashcards: 15 cards per session": "Tarjetas gratis: 15 por sesión",
   "Upgrade to Premium to unlock the full flashcard bank and keep reviewing without session limits.": "Mejora a Premium para desbloquear el banco completo de tarjetas y seguir repasando sin límites.",
   "Review the same shared RBT bank in memorization mode, with pattern clues and common traps.": "Repasa el mismo banco compartido de RBT en modo memorización, con pistas de patrón y trampas comunes.",
@@ -135,8 +135,10 @@ const UI_TRANSLATIONS = {
   "Thinking...": "Pensando...",
   "Upgrade to Premium for more tutor messages today": "Mejora a Premium para más mensajes del tutor hoy",
   "Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.": "Las cuentas gratis pueden enviar 5 mensajes al tutor IA por día. Mejora para continuar hoy.",
-  "Premium unlocks unlimited answers across the curated 600-question official-style bank.": "Premium desbloquea respuestas ilimitadas en el banco curado de 600 preguntas con estilo oficial.",
-  "Free accounts can answer 15 practice questions per day across the curated 600-question official-style bank.": "Las cuentas gratis pueden responder 15 preguntas de práctica por día dentro del banco curado de 600 preguntas con estilo oficial.",
+  "Premium unlocks unlimited answers across 600 practice questions.": "Premium desbloquea respuestas ilimitadas en 600 preguntas de práctica.",
+  "Free accounts can answer 15 practice questions per day.": "Las cuentas gratis pueden responder 15 preguntas de práctica por día.",
+  "Unlimited practice across 600 questions": "Práctica ilimitada en 600 preguntas",
+  "Answered out of each domain's share of the full question bank.": "Respondidas dentro de la parte correspondiente a cada dominio del banco completo de preguntas.",
   "Learn the type of exam move the question is testing, not just the answer.": "Aprende qué patrón del examen está evaluando la pregunta, no solo la respuesta.",
   "Train your eye to spot the single detail that points to the correct concept.": "Entrena tu ojo para detectar el detalle que apunta al concepto correcto.",
   "See the distractor the exam wants you to pick, and why it is wrong.": "Identifica el distractor que el examen quiere que elijas y entiende por qué está mal.",
@@ -1928,19 +1930,19 @@ function translateDynamicUi(label) {
     return `${match[1]} preguntas de práctica respondidas por día`;
   }
 
-  match = text.match(/^Premium unlocks unlimited answers across the curated (\d+)-question official-style bank\.$/);
+  match = text.match(/^Premium unlocks unlimited answers across (\d+) practice questions\.$/);
   if (match) {
-    return `Premium desbloquea respuestas ilimitadas en el banco curado de ${match[1]} preguntas con estilo oficial.`;
+    return `Premium desbloquea respuestas ilimitadas en ${match[1]} preguntas de práctica.`;
   }
 
-  match = text.match(/^Free accounts can answer (\d+) practice questions per day across the curated (\d+)-question official-style bank\.$/);
+  match = text.match(/^Free accounts can answer (\d+) practice questions per day\.$/);
   if (match) {
-    return `Las cuentas gratis pueden responder ${match[1]} preguntas de práctica por día dentro del banco curado de ${match[2]} preguntas con estilo oficial.`;
+    return `Las cuentas gratis pueden responder ${match[1]} preguntas de práctica por día.`;
   }
 
-  match = text.match(/^Unlimited practice from the curated (\d+)-question bank$/);
+  match = text.match(/^Unlimited practice across (\d+) questions$/);
   if (match) {
-    return `Práctica ilimitada del banco curado de ${match[1]} preguntas`;
+    return `Práctica ilimitada en ${match[1]} preguntas`;
   }
 
   match = text.match(/^Guided by (\d+) mock exams? and your (\d+)-question bank coverage$/);

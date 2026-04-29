@@ -569,11 +569,11 @@ export default function Practice() {
           <div className="rounded-2xl border border-[#1E5EFF]/12 bg-[linear-gradient(135deg,rgba(30,94,255,0.08),rgba(30,94,255,0.03))] p-4 text-sm text-slate-700 dark:text-slate-200">
             {isPremiumPlan(entitlements?.plan)
               ? translateUi(
-                  `Premium unlocks unlimited answers across the curated ${TOTAL_PRACTICE_QUESTIONS}-question practice bank.`,
+                  `Premium unlocks unlimited answers across ${TOTAL_PRACTICE_QUESTIONS} practice questions.`,
                   language,
                 )
               : translateUi(
-                  `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day across the curated ${TOTAL_PRACTICE_QUESTIONS}-question practice bank.`,
+                  `Free accounts can answer ${FREE_DAILY_PRACTICE_LIMIT} practice questions per day.`,
                   language,
                 )}
           </div>

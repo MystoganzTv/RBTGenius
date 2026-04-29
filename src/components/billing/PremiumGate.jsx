@@ -23,7 +23,7 @@ export default function PremiumGate({
   const resolvedBullets = bullets.length > 0
     ? bullets
     : [
-        `Unlimited practice from the curated ${TOTAL_PRACTICE_QUESTIONS}-question bank`,
+        `Unlimited practice across ${TOTAL_PRACTICE_QUESTIONS} questions`,
         "Full analytics and mock exams",
         "Unlimited AI tutor conversations",
       ];

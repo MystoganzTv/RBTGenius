@@ -186,7 +186,7 @@ export default function Analytics() {
               {t("Domain Coverage")}
             </h3>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              {t("Answered out of each domain's share of the curated bank.")}
+              {t("Answered out of each domain's share of the full question bank.")}
             </p>
             {analyticsQuery.isLoading ? (
               <span className="text-xs text-slate-400">{t("Loading...")}</span>

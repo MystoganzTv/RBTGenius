@@ -27,7 +27,7 @@ import { createPageUrl } from "@/utils";
 const featureCards = [
   {
     title: "Practice With a Curated Bank",
-    description: `Work through ${TOTAL_PRACTICE_QUESTIONS} curated official-style questions organized for steady progress.`,
+    description: `Work through ${TOTAL_PRACTICE_QUESTIONS} practice questions organized for steady progress.`,
     Icon: Target,
   },
   {

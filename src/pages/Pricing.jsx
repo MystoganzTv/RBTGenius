@@ -40,7 +40,7 @@ const planFeatureMap = {
     "No analytics",
   ],
   [PLAN_IDS.PREMIUM_MONTHLY]: [
-    `Unlimited practice from the curated ${TOTAL_PRACTICE_QUESTIONS}-question bank`,
+    `Unlimited practice across ${TOTAL_PRACTICE_QUESTIONS} questions`,
     "Unlimited AI tutor conversations",
     "Full mock exams",
     "Full analytics and readiness tracking",

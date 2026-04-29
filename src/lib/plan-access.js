@@ -69,7 +69,7 @@ export const ACCESS_COMPARISON = [
     label: "Practice questions",
     guest: "Preview only",
     free: `${FREE_DAILY_PRACTICE_LIMIT} answered per day`,
-    premium: `Unlimited from the curated ${TOTAL_PRACTICE_QUESTIONS}-question bank`,
+    premium: `Unlimited across ${TOTAL_PRACTICE_QUESTIONS} questions`,
   },
   {
     id: "flashcards",
