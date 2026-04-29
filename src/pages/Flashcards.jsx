@@ -3,8 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Filter,
   RotateCcw,
-  Search,
-  ShieldAlert,
   Shuffle,
   ThumbsDown,
   ThumbsUp,
@@ -260,7 +258,7 @@ export default function Flashcards() {
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             {translateUi(
-              "Review the same question bank in memorization mode, with pattern clues and common traps.",
+              "Review the same question bank in memorization mode with quick answer explanations.",
               language,
             )}
           </p>
@@ -409,11 +407,6 @@ export default function Flashcards() {
                   {translateTopic(currentCard.topic, language)}
                 </Badge>
                 <Badge variant="outline">{translateDifficulty(currentCard.difficulty, language)}</Badge>
-                {currentCard.exam_pattern ? (
-                  <Badge variant="outline" className="border-[#1E5EFF]/20 text-[#1E5EFF]">
-                    {localizedCurrentCard?.localizedExamPattern?.primary}
-                  </Badge>
-                ) : null}
               </div>
             </div>
 
@@ -482,46 +475,6 @@ export default function Flashcards() {
                             primaryClassName="text-sm text-slate-700 dark:text-slate-200"
                             secondaryClassName="text-slate-500 dark:text-slate-400"
                           />
-
-                          {currentCard.exam_pattern ? (
-                            <div className="grid gap-3 pt-1 md:grid-cols-3">
-                              <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                                  {translateUi("Pattern", language)}
-                                </p>
-                                <BilingualText
-                                  content={localizedCurrentCard?.localizedExamPattern}
-                                  className="mt-2"
-                                  primaryClassName="text-sm font-medium text-slate-800 dark:text-slate-100"
-                                  secondaryClassName="text-slate-500 dark:text-slate-400"
-                                />
-                              </div>
-                              <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
-                                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                                  <Search className="h-3.5 w-3.5" />
-                                  {translateUi("Clue", language)}
-                                </div>
-                                <BilingualText
-                                  content={localizedCurrentCard?.localizedExamClue}
-                                  className="mt-2"
-                                  primaryClassName="text-sm leading-relaxed text-slate-700 dark:text-slate-300"
-                                  secondaryClassName="text-slate-500 dark:text-slate-400"
-                                />
-                              </div>
-                              <div className="rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
-                                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
-                                  <ShieldAlert className="h-3.5 w-3.5" />
-                                  {translateUi("Common Trap", language)}
-                                </div>
-                                <BilingualText
-                                  content={localizedCurrentCard?.localizedCommonTrap}
-                                  className="mt-2"
-                                  primaryClassName="text-sm leading-relaxed text-amber-800 dark:text-amber-100/85"
-                                  secondaryClassName="text-amber-700/80 dark:text-amber-200/70"
-                                />
-                              </div>
-                            </div>
-                          ) : null}
                         </div>
                       ) : null}
                     </div>

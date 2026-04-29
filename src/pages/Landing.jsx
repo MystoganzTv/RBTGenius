@@ -287,7 +287,7 @@ const offeringCards = [
   {
     eyebrow: "Available now",
     title: "Flashcards",
-    description: "Study the same shared bank in memory mode with pattern clues and common traps.",
+    description: "Study the same shared bank in memory mode with quick answer explanations.",
     Icon: Brain,
     className:
       "border-emerald-300/35 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300",

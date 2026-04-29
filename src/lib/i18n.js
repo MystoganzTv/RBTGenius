@@ -36,9 +36,6 @@ const UI_TRANSLATIONS = {
   "Hide AI Reply": "Ocultar respuesta de IA",
   "AI Coach": "Asistente IA",
   "Preparing AI help...": "Preparando ayuda con IA...",
-  "Pattern": "Patrón",
-  "Clue": "Pista",
-  "Common Trap": "Trampa común",
   "Ethics": "Ética",
   "Flag": "Marcar",
   "Flagged": "Marcada",
@@ -118,7 +115,7 @@ const UI_TRANSLATIONS = {
   "Shared question bank": "Banco compartido de preguntas",
   "Free flashcards: 15 cards per session": "Tarjetas gratis: 15 por sesión",
   "Upgrade to Premium to unlock the full flashcard bank and keep reviewing without session limits.": "Mejora a Premium para desbloquear el banco completo de tarjetas y seguir repasando sin límites.",
-  "Review the same shared RBT bank in memorization mode, with pattern clues and common traps.": "Repasa el mismo banco compartido de RBT en modo memorización, con pistas de patrón y trampas comunes.",
+  "Review the same question bank in memorization mode with quick answer explanations.": "Repasa el mismo banco de preguntas en modo memorización con explicaciones rápidas.",
   "Card": "Tarjeta",
   "Built for RBT exam prep": "Hecho para preparar el examen RBT",
   "Study with structure, not guesswork.": "Estudia con estructura, no a ciegas.",
@@ -2115,18 +2112,6 @@ export function localizeQuestion(question, language) {
     language === "es"
       ? { primary: spanishExplanation, secondary: "" }
       : localizeText(question.explanation, language);
-  const localizedExamPattern =
-    language === "es"
-      ? { primary: translateUi(question.exam_pattern, "es"), secondary: "" }
-      : localizeText(question.exam_pattern, language);
-  const localizedExamClue =
-    language === "es"
-      ? { primary: translateQuestionSentence(question.exam_clue), secondary: "" }
-      : localizeText(question.exam_clue, language);
-  const localizedCommonTrap =
-    language === "es"
-      ? { primary: translateQuestionSentence(question.common_trap), secondary: "" }
-      : localizeText(question.common_trap, language);
   const localizedOptions = (question.options || []).map((option) => ({
     ...option,
     localizedText:
@@ -2140,8 +2125,6 @@ export function localizeQuestion(question, language) {
       ? [
           spanishQuestionText,
           spanishExplanation,
-          localizedExamClue.primary,
-          localizedCommonTrap.primary,
           ...localizedOptions.map((option) => option.localizedText.primary),
         ].map(countEnglishLeaks)
       : [];
@@ -2157,9 +2140,6 @@ export function localizeQuestion(question, language) {
       localizedDifficulty: translateDifficulty(question.difficulty, language),
       localizedText: localizeText(question.text, "en"),
       localizedExplanation: localizeText(question.explanation, "en"),
-      localizedExamPattern: localizeText(question.exam_pattern, "en"),
-      localizedExamClue: localizeText(question.exam_clue, "en"),
-      localizedCommonTrap: localizeText(question.common_trap, "en"),
       options: (question.options || []).map((option) => ({
         ...option,
         localizedText: localizeText(option.text, "en"),
@@ -2173,9 +2153,6 @@ export function localizeQuestion(question, language) {
     localizedDifficulty: translateDifficulty(question.difficulty, language),
     localizedText,
     localizedExplanation,
-    localizedExamPattern,
-    localizedExamClue,
-    localizedCommonTrap,
     options: localizedOptions,
   };
 }
