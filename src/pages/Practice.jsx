@@ -578,42 +578,6 @@ export default function Practice() {
                 )}
           </div>
 
-          <div className="grid gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200 md:grid-cols-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                {translateUi("Pattern", language)}
-              </p>
-              <p className="mt-2 leading-relaxed">
-                {translateUi(
-                  "See the exact skill the question is checking, not just the answer choice.",
-                  language,
-                )}
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                {translateUi("Clue", language)}
-              </p>
-              <p className="mt-2 leading-relaxed">
-                {translateUi(
-                  "Train your eye to spot the one operational detail that identifies the correct concept.",
-                  language,
-                )}
-              </p>
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600 dark:text-amber-300">
-                {translateUi("Common Trap", language)}
-              </p>
-              <p className="mt-2 leading-relaxed">
-                {translateUi(
-                  "Catch the distractor the exam wants you to pick, and why it is wrong.",
-                  language,
-                )}
-              </p>
-            </div>
-          </div>
-
           <Button
             onClick={handleStartSession}
             className="w-full gap-2 rounded-xl py-6 text-base shadow-lg shadow-[#1E5EFF]/20 hover:bg-[#1E5EFF]/90"
@@ -768,6 +732,8 @@ export default function Practice() {
             isFlagged={Boolean(currentResponse.flagged)}
             correctAnswer={currentResponse.correctAnswer || ""}
             explanation={currentResponse.explanation || ""}
+            entitlements={entitlements}
+            onEntitlementsChange={setEntitlements}
             onSelectAnswer={handleSelectAnswer}
             onToggleFlag={handleToggleFlag}
             onAnswer={handleAnswer}

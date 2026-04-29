@@ -1,16 +1,21 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
+  Bot,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Flag,
   Lightbulb,
-  Search,
-  ShieldAlert,
+  Loader2,
   XCircle,
 } from "lucide-react";
 import BilingualText from "@/components/i18n/BilingualText";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/hooks/use-language";
+import { toast } from "@/components/ui/use-toast";
+import { api } from "@/lib/api";
 import {
   localizeQuestion,
   localizeText,
@@ -29,12 +34,20 @@ export default function QuestionCard({
   isFlagged = false,
   correctAnswer = null,
   explanation = "",
+  entitlements = null,
+  onEntitlementsChange,
   onSelectAnswer,
   onAnswer,
   onNext,
   onToggleFlag,
 }) {
   const { language } = useLanguage();
+  const [explanationVisible, setExplanationVisible] = useState(false);
+  const [aiConversationId, setAiConversationId] = useState(null);
+  const [aiReply, setAiReply] = useState("");
+  const [aiReplyVisible, setAiReplyVisible] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
 
   const handleSubmit = () => {
     if (!selectedAnswer) {
@@ -54,6 +67,114 @@ export default function QuestionCard({
     explanation && explanation !== question?.explanation
       ? localizeText(explanation, language)
       : localizedQuestion?.localizedExplanation || localizeText(explanation, language);
+  const localizedQuestionText = localizedQuestion?.localizedText?.primary || "";
+  const aiPrompt = useMemo(() => {
+    const options = (localizedQuestion?.options || [])
+      .map((option) => `${option.label}) ${option.localizedText?.primary || ""}`)
+      .join("\n");
+    const correctOption = (localizedQuestion?.options || []).find(
+      (option) => option.label === correctAnswer,
+    );
+    const replyLanguage = language === "es" ? "Spanish" : "English";
+
+    return [
+      `Help me with this RBT practice question in ${replyLanguage}.`,
+      "Keep the tone supportive and concise.",
+      "Explain why the best answer is correct, then briefly say why the other options are not the best fit.",
+      "Do not mention BCBA or BACB unless the question itself requires it.",
+      "",
+      `Question: ${localizedQuestionText}`,
+      "Options:",
+      options,
+      `Correct answer: ${correctAnswer}) ${correctOption?.localizedText?.primary || ""}`,
+      localizedExplanation?.primary
+        ? `Current explanation: ${localizedExplanation.primary}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }, [
+    correctAnswer,
+    language,
+    localizedExplanation?.primary,
+    localizedQuestion?.options,
+    localizedQuestionText,
+  ]);
+
+  useEffect(() => {
+    setExplanationVisible(Boolean(isSubmitted && explanation));
+  }, [explanation, isSubmitted, question?.id]);
+
+  useEffect(() => {
+    setAiConversationId(null);
+    setAiReply("");
+    setAiReplyVisible(false);
+    setAiLoading(false);
+    setAiError("");
+  }, [question?.id]);
+
+  const handleAskAi = async () => {
+    if (aiLoading) {
+      return;
+    }
+
+    if (aiReply) {
+      setAiReplyVisible((current) => !current);
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError("");
+
+    try {
+      let conversationId = aiConversationId;
+
+      if (!conversationId) {
+        const created = await api.createTutorConversation({
+          name: `Question ${questionNumber}`,
+        });
+        conversationId = created?.conversation?.id || null;
+        setAiConversationId(conversationId);
+        onEntitlementsChange?.(created?.entitlements || entitlements);
+      }
+
+      if (!conversationId) {
+        throw new Error("Unable to start AI help.");
+      }
+
+      const payload = await api.sendTutorMessage(conversationId, {
+        content: aiPrompt,
+      });
+      const updatedConversation = payload?.conversation;
+      const assistantMessage = [...(updatedConversation?.messages || [])]
+        .reverse()
+        .find((message) => message.role === "assistant");
+      const nextReply = String(assistantMessage?.content || "").replaceAll("**", "").trim();
+
+      if (!nextReply) {
+        throw new Error("AI did not return an explanation.");
+      }
+
+      setAiReply(nextReply);
+      setAiReplyVisible(true);
+      onEntitlementsChange?.(payload?.entitlements || entitlements);
+    } catch (error) {
+      const isLimit = error?.data?.code === "plan_limit_reached";
+      const description = isLimit
+        ? translateUi("Free accounts include 5 AI tutor messages per day.", language)
+        : error?.message || translateUi("Please try again.", language);
+
+      setAiError(description);
+      toast({
+        title: isLimit
+          ? translateUi("Daily AI tutor limit reached", language)
+          : translateUi("Unable to send message", language),
+        description,
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white dark:border-slate-800 dark:bg-slate-950">
@@ -195,57 +316,84 @@ export default function QuestionCard({
           </Button>
         ) : (
           <div className="space-y-4">
-            {explanation ? (
-              <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
-                <div className="mb-2 flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-[#FFB800]" />
-                  <span className="text-xs font-semibold text-[#1E5EFF]">
-                    {translateUi("Explanation", language)}
-                  </span>
-                </div>
-                <BilingualText
-                  content={localizedExplanation}
-                  primaryClassName="text-sm leading-relaxed text-slate-600 dark:text-slate-300"
-                  secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
-                />
+            {(explanation || aiReply || aiLoading || aiError) ? (
+              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+                <div className="flex flex-wrap gap-2">
+                  {explanation ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setExplanationVisible((current) => !current)}
+                    >
+                      {explanationVisible ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                      {explanationVisible
+                        ? translateUi("Hide Explanation", language)
+                        : translateUi("Show Explanation", language)}
+                    </Button>
+                  ) : null}
 
-                {question?.exam_pattern ? (
-                  <div className="grid gap-3 pt-1 md:grid-cols-3">
-                    <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                        {translateUi("Pattern", language)}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full border-[#1E5EFF]/20 bg-[#1E5EFF]/5 text-[#1E5EFF] hover:bg-[#1E5EFF]/10"
+                    onClick={handleAskAi}
+                    disabled={aiLoading}
+                  >
+                    {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
+                    {aiLoading
+                      ? translateUi("Preparing AI help...", language)
+                      : aiReply
+                        ? aiReplyVisible
+                          ? translateUi("Hide AI Reply", language)
+                          : translateUi("Show AI Reply", language)
+                        : translateUi("Ask AI", language)}
+                  </Button>
+                </div>
+
+                {explanationVisible && explanation ? (
+                  <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="mb-1 flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4 text-[#FFB800]" />
+                      <span className="text-xs font-semibold text-[#1E5EFF]">
+                        {translateUi("Explanation", language)}
+                      </span>
+                    </div>
+                    <BilingualText
+                      content={localizedExplanation}
+                      primaryClassName="text-sm leading-relaxed text-slate-700 dark:text-slate-200"
+                      secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
+                    />
+                  </div>
+                ) : null}
+
+                {(aiReplyVisible || aiLoading || aiError) ? (
+                  <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
+                    <div className="flex items-center gap-2">
+                      <Bot className="h-4 w-4 text-[#1E5EFF]" />
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                        {translateUi("AI Coach", language)}
+                      </span>
+                    </div>
+
+                    {aiLoading ? (
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                        <Loader2 className="h-4 w-4 animate-spin text-[#1E5EFF]" />
+                        <span>{translateUi("Preparing AI help...", language)}</span>
+                      </div>
+                    ) : aiError ? (
+                      <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                        {aiError}
                       </p>
-                      <BilingualText
-                        content={localizedQuestion?.localizedExamPattern}
-                        className="mt-2"
-                        primaryClassName="text-sm font-medium text-slate-800 dark:text-slate-100"
-                        secondaryClassName="text-slate-500 dark:text-slate-400"
-                      />
-                    </div>
-                    <div className="rounded-lg border border-white/60 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-950/70">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                        <Search className="h-3.5 w-3.5" />
-                        {translateUi("Clue", language)}
-                      </div>
-                      <BilingualText
-                        content={localizedQuestion?.localizedExamClue}
-                        className="mt-2"
-                        primaryClassName="text-sm leading-relaxed text-slate-700 dark:text-slate-300"
-                        secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
-                      />
-                    </div>
-                    <div className="rounded-lg border border-amber-200/70 bg-amber-50/80 p-3 dark:border-amber-500/20 dark:bg-amber-500/10">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-300">
-                        <ShieldAlert className="h-3.5 w-3.5" />
-                        {translateUi("Common Trap", language)}
-                      </div>
-                      <BilingualText
-                        content={localizedQuestion?.localizedCommonTrap}
-                        className="mt-2"
-                        primaryClassName="text-sm leading-relaxed text-amber-800 dark:text-amber-100/85"
-                        secondaryClassName="leading-relaxed text-amber-700/80 dark:text-amber-200/70"
-                      />
-                    </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                        {aiReply}
+                      </p>
+                    )}
                   </div>
                 ) : null}
               </div>
