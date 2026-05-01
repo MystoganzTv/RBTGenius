@@ -181,27 +181,109 @@ export default function AITutor() {
     setInput("");
     setLoading(true);
 
+    // Optimistic insertion: show the user message immediately and a placeholder
+    // assistant message that we mutate as deltas arrive from the SSE stream.
+    const optimisticUserId = `tmp_user_${Date.now()}`;
+    const optimisticAssistantId = `tmp_assistant_${Date.now()}`;
+    const nowIso = new Date().toISOString();
+
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id !== conversationId
+          ? conversation
+          : {
+              ...conversation,
+              messages: [
+                ...(conversation.messages || []),
+                { id: optimisticUserId, role: "user", content: text, created_at: nowIso },
+                { id: optimisticAssistantId, role: "assistant", content: "", created_at: nowIso, streaming: true },
+              ],
+              updatedAt: nowIso,
+            },
+      ),
+    );
+
+    let streamedContent = "";
+    const appendDelta = (delta) => {
+      streamedContent += delta;
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id !== conversationId
+            ? conversation
+            : {
+                ...conversation,
+                messages: conversation.messages.map((message) =>
+                  message.id === optimisticAssistantId
+                    ? { ...message, content: streamedContent }
+                    : message,
+                ),
+              },
+        ),
+      );
+    };
+
     try {
-      const payload = await api.sendTutorMessage(conversationId, {
-        content: text,
-      });
-      const updatedConversation = payload?.conversation;
-      setEntitlements(payload?.entitlements || entitlements);
-
-      setConversations((current) => {
-        const exists = current.some((conversation) => conversation.id === updatedConversation.id);
-
-        if (!exists) {
-          return [updatedConversation, ...current];
-        }
-
-        return current.map((conversation) =>
-          conversation.id === updatedConversation.id ? updatedConversation : conversation,
-        );
-      });
-      queryClient.invalidateQueries({ queryKey: ["profile-data"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+      await api.streamTutorMessage(
+        conversationId,
+        { content: text },
+        {
+          onDelta: appendDelta,
+          onDone: ({ message, entitlements: nextEntitlements }) => {
+            if (nextEntitlements) setEntitlements(nextEntitlements);
+            // Replace the placeholder with the persisted assistant message so
+            // the id matches what the server saved.
+            setConversations((current) =>
+              current.map((conversation) =>
+                conversation.id !== conversationId
+                  ? conversation
+                  : {
+                      ...conversation,
+                      messages: conversation.messages.map((existing) =>
+                        existing.id === optimisticAssistantId
+                          ? { ...message, streaming: false }
+                          : existing,
+                      ),
+                    },
+              ),
+            );
+            queryClient.invalidateQueries({ queryKey: ["profile-data"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+          },
+          onError: (errorMessage) => {
+            setConversations((current) =>
+              current.map((conversation) =>
+                conversation.id !== conversationId
+                  ? conversation
+                  : {
+                      ...conversation,
+                      messages: conversation.messages.filter(
+                        (message) => message.id !== optimisticAssistantId,
+                      ),
+                    },
+              ),
+            );
+            toast({
+              title: "Tutor stream interrupted",
+              description: errorMessage,
+            });
+          },
+        },
+      );
     } catch (error) {
+      // Roll back the optimistic placeholders on hard failure.
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id !== conversationId
+            ? conversation
+            : {
+                ...conversation,
+                messages: conversation.messages.filter(
+                  (message) =>
+                    message.id !== optimisticUserId && message.id !== optimisticAssistantId,
+                ),
+              },
+        ),
+      );
       toast({
         title:
           error?.data?.code === "plan_limit_reached"
@@ -209,7 +291,9 @@ export default function AITutor() {
             : "Unable to send message",
         description:
           error?.data?.code === "plan_limit_reached"
-            ? "Free accounts include 5 AI tutor messages per day."
+            ? entitlements?.is_premium
+              ? "Premium includes a generous daily AI tutor allowance. You have reached today's limit."
+              : "Free accounts include 5 AI tutor messages per day."
             : error.message || "Please try again.",
       });
     } finally {
@@ -223,6 +307,9 @@ export default function AITutor() {
 
   const remainingMessages = entitlements?.usage?.tutor_messages_remaining;
   const limitReached = remainingMessages === 0;
+  const tutorLimitDescription = entitlements?.is_premium
+    ? "Premium includes a generous daily AI tutor allowance. You have reached today's limit."
+    : "Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.";
 
   return (
     <div className="mx-auto h-[calc(100vh-8rem)] max-w-7xl dark:rounded-[2rem] dark:bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_24rem),linear-gradient(180deg,rgba(15,23,42,0.92),rgba(15,23,42,0.82))] dark:p-3">
@@ -288,7 +375,15 @@ export default function AITutor() {
             {remainingMessages !== null && remainingMessages !== undefined ? (
               <div className="ml-auto inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 text-[11px] font-semibold text-[#C88700]">
                 <Crown className="h-3 w-3" />
-                {translateUi(`${remainingMessages} free messages left today`, language)}
+                <span>
+                  {remainingMessages}{" "}
+                  {translateUi(
+                    entitlements?.is_premium
+                      ? "tutor messages left today"
+                      : "free messages left today",
+                    language,
+                  )}
+                </span>
               </div>
             ) : null}
           </div>
@@ -379,10 +474,7 @@ export default function AITutor() {
             </form>
             {limitReached ? (
               <p className="mt-3 text-xs text-amber-600">
-                {translateUi(
-                  "Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.",
-                  language,
-                )}
+                {translateUi(tutorLimitDescription, language)}
               </p>
             ) : (
               <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">

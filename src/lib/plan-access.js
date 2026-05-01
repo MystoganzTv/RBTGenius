@@ -10,6 +10,9 @@ export const PLAN_IDS = {
 export const FREE_DAILY_PRACTICE_LIMIT = 15;
 export const FREE_DAILY_TUTOR_LIMIT = 5;
 export const FREE_FLASHCARD_LIMIT = 15;
+// Premium gets a "soft cap" — high enough no real student notices, low enough
+// to protect against scripted abuse running up the OpenAI bill.
+export const PREMIUM_DAILY_TUTOR_LIMIT = 150;
 
 export const PREMIUM_PLAN_IDS = [
   PLAN_IDS.PREMIUM_MONTHLY,
@@ -83,7 +86,7 @@ export const ACCESS_COMPARISON = [
     label: "AI tutor",
     guest: "Preview only",
     free: `${FREE_DAILY_TUTOR_LIMIT} messages per day`,
-    premium: "Unlimited tutor conversations",
+    premium: `${PREMIUM_DAILY_TUTOR_LIMIT} messages per day`,
   },
   {
     id: "mock_exams",
@@ -177,7 +180,7 @@ export function getEntitlements(plan, usage = {}) {
     normalizedPlan === PLAN_IDS.GUEST
       ? 0
       : premium
-        ? null
+        ? PREMIUM_DAILY_TUTOR_LIMIT
         : FREE_DAILY_TUTOR_LIMIT;
 
   return {
@@ -234,7 +237,7 @@ export function getGateCopy(feature) {
       return {
         title: "Daily AI tutor limit reached",
         description:
-          "Free accounts include a small daily AI tutor allowance. Upgrade for unlimited study conversations.",
+          "This plan includes a daily AI tutor allowance. Upgrade for more room if you need it.",
       };
     case "flashcards_limit":
       return {

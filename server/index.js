@@ -9,7 +9,18 @@ import {
   updateDb,
   writeDb,
 } from "./lib/store.js";
-import { createSessionToken, hashPassword, verifyPassword } from "./lib/auth.js";
+import {
+  buildSession,
+  hashPassword,
+  isSessionExpired,
+  shouldRotateSession,
+  verifyPassword,
+} from "./lib/auth.js";
+import {
+  checkRateLimit,
+  clearRateLimit,
+  recordRateLimitAttempt,
+} from "./lib/rate-limit.js";
 import {
   buildOAuthAuthorizationUrl,
   createOAuthState,
@@ -42,10 +53,34 @@ import {
   isPremiumPlan,
 } from "../src/lib/plan-access.js";
 import { topicLabels } from "../src/lib/question-bank.js";
-import { createTutorReply } from "./lib/tutor.js";
+import {
+  createTutorReply,
+  isOpenAIConfigured,
+  streamTutorReplyOpenAI,
+} from "./lib/tutor.js";
 
 const app = express();
+// Trust the first proxy hop so req.ip reflects the real client IP when running
+// behind Netlify / Heroku / Render / nginx. Safe default for a single proxy.
+app.set("trust proxy", 1);
 const port = Number(process.env.API_PORT || 8787);
+
+function getClientIp(req) {
+  // Express already does the X-Forwarded-For dance when trust proxy is set.
+  // Fallback to a literal "unknown" so missing IP can't accidentally collapse
+  // every attacker into one bucket.
+  return req.ip || req.connection?.remoteAddress || "unknown";
+}
+
+function sendRateLimited(res, decision, feature) {
+  res.setHeader("Retry-After", String(decision.retryAfterSeconds));
+  res.status(429).json({
+    message: "Too many attempts. Please wait and try again.",
+    code: "rate_limited",
+    feature,
+    retry_after_seconds: decision.retryAfterSeconds,
+  });
+}
 
 app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req, res) => {
   try {
@@ -99,6 +134,11 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  // Expose the rotation header so the browser can read it from cross-origin responses.
+  res.setHeader(
+    "Access-Control-Expose-Headers",
+    "X-New-Auth-Token, X-Auth-Token-Expires-At",
+  );
 
   if (req.method === "OPTIONS") {
     res.status(204).end();
@@ -124,7 +164,34 @@ function getCurrentUser(req) {
   }
 
   const db = readDb();
-  return db.users.find((user) => user.token === token) || null;
+  const user = db.users.find((entry) => entry.token === token) || null;
+  if (!user) return null;
+  if (isSessionExpired(user)) return null;
+  return user;
+}
+
+function rotateSessionIfNeeded(req, res, user) {
+  if (!user || !shouldRotateSession(user)) return user;
+
+  const session = buildSession();
+  let rotatedUser = user;
+  updateDb((current) => ({
+    ...current,
+    users: current.users.map((entry) => {
+      if (entry.id !== user.id) return entry;
+      rotatedUser = {
+        ...entry,
+        token: session.token,
+        token_issued_at: session.issued_at,
+        token_expires_at: session.expires_at,
+      };
+      return rotatedUser;
+    }),
+  }));
+
+  res.setHeader("X-New-Auth-Token", session.token);
+  res.setHeader("X-Auth-Token-Expires-At", session.expires_at);
+  return rotatedUser;
 }
 
 function requireUser(req, res, next) {
@@ -138,7 +205,7 @@ function requireUser(req, res, next) {
     return;
   }
 
-  req.currentUser = user;
+  req.currentUser = rotateSessionIfNeeded(req, res, user);
   next();
 }
 
@@ -312,7 +379,7 @@ function buildFrontendLoginRedirect(frontendOrigin, redirectTo, params = {}) {
 
 function upsertOAuthUser(profile, providerId) {
   let safeUser = null;
-  let sessionToken = null;
+  let session = null;
   let wasCreated = false;
 
   updateDb((current) => {
@@ -320,7 +387,7 @@ function upsertOAuthUser(profile, providerId) {
       (user) => user.email.toLowerCase() === profile.email.toLowerCase(),
     );
 
-    sessionToken = createSessionToken();
+    session = buildSession();
     const nextUsers = existingUser
       ? current.users.map((user) => {
           if (user.id !== existingUser.id) {
@@ -330,7 +397,9 @@ function upsertOAuthUser(profile, providerId) {
           const updatedUser = {
             ...user,
             full_name: user.full_name || profile.name,
-            token: sessionToken,
+            token: session.token,
+            token_issued_at: session.issued_at,
+            token_expires_at: session.expires_at,
             created_at: user.created_at || new Date().toISOString(),
             role: resolveUserRole(user.email, user.role || "student"),
             auth_provider: user.auth_provider || providerId,
@@ -355,7 +424,9 @@ function upsertOAuthUser(profile, providerId) {
             created_at: new Date().toISOString(),
             role: resolveUserRole(profile.email),
             plan: "free",
-            token: sessionToken,
+            token: session.token,
+            token_issued_at: session.issued_at,
+            token_expires_at: session.expires_at,
             auth_provider: providerId,
             oauth_accounts: {
               [providerId]: {
@@ -379,7 +450,7 @@ function upsertOAuthUser(profile, providerId) {
     };
   });
 
-  return { token: sessionToken, user: safeUser, created: wasCreated };
+  return { token: session.token, expires_at: session.expires_at, user: safeUser, created: wasCreated };
 }
 
 app.get("/api/health", (_req, res) => {
@@ -507,24 +578,40 @@ app.post("/api/auth/register", (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();
   const password = String(req.body?.password || "");
   const fullName = String(req.body?.full_name || "").trim();
+  const ip = getClientIp(req);
+
+  // Rate-limit registration before any processing so we don't even read the DB
+  // if an IP is hammering us.
+  const initialDb = readDb();
+  const registerCheck = checkRateLimit(initialDb, "register", [ip]);
+  if (!registerCheck.allowed) {
+    sendRateLimited(res, registerCheck, "register");
+    return;
+  }
 
   if (!email || !password || !fullName) {
+    // Count this as an attempt — otherwise an attacker can probe forever with
+    // empty bodies without using up their quota.
+    updateDb((current) => recordRateLimitAttempt(current, "register", [ip]));
     res.status(400).json({ message: "Full name, email, and password are required" });
     return;
   }
 
   if (password.length < 8) {
+    updateDb((current) => recordRateLimitAttempt(current, "register", [ip]));
     res.status(400).json({ message: "Password must be at least 8 characters" });
     return;
   }
 
   const db = readDb();
   if (db.users.some((user) => user.email.toLowerCase() === email)) {
+    updateDb((current) => recordRateLimitAttempt(current, "register", [ip]));
     res.status(409).json({ message: "An account with that email already exists" });
     return;
   }
 
   const passwordData = hashPassword(password);
+  const session = buildSession();
   const newUser = {
     id: createId("user"),
     full_name: fullName,
@@ -532,30 +619,49 @@ app.post("/api/auth/register", (req, res) => {
     created_at: new Date().toISOString(),
     role: resolveUserRole(email),
     plan: "free",
-    token: createSessionToken(),
+    token: session.token,
+    token_issued_at: session.issued_at,
+    token_expires_at: session.expires_at,
     auth_provider: "password",
     oauth_accounts: {},
     password_hash: passwordData.hash,
     password_salt: passwordData.salt,
   };
 
-  updateDb((current) => ({
-    ...current,
-    users: [...current.users, newUser],
-  }));
+  updateDb((current) => {
+    const withUser = { ...current, users: [...current.users, newUser] };
+    // Successful signup still counts toward the IP quota — prevents one IP
+    // from creating 50 accounts in a row even with valid bodies.
+    return recordRateLimitAttempt(withUser, "register", [ip]);
+  });
 
   void notifyNewMember(newUser, {
     source: "manual_register",
     authProvider: "password",
   });
 
-  res.status(201).json({ token: newUser.token, user: createSafeUser(newUser) });
+  res.status(201).json({
+    token: newUser.token,
+    expires_at: newUser.token_expires_at,
+    user: createSafeUser(newUser),
+  });
 });
 
 app.post("/api/auth/login", (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();
   const password = String(req.body?.password || "");
+  const ip = getClientIp(req);
+
   const db = readDb();
+  // Bucket per (IP, email) — keeps an attacker from drowning a victim's
+  // account by exhausting their global quota from elsewhere, while still
+  // preventing brute-force against any single account.
+  const loginCheck = checkRateLimit(db, "login", [ip, email]);
+  if (!loginCheck.allowed) {
+    sendRateLimited(res, loginCheck, "login");
+    return;
+  }
+
   const user = db.users.find((entry) => entry.email.toLowerCase() === email);
 
   if (
@@ -564,30 +670,41 @@ app.post("/api/auth/login", (req, res) => {
     !user.password_salt ||
     !verifyPassword(password, user.password_salt, user.password_hash)
   ) {
+    updateDb((current) => recordRateLimitAttempt(current, "login", [ip, email]));
     res.status(401).json({ message: "Invalid email or password" });
     return;
   }
 
-  const nextToken = createSessionToken();
+  const session = buildSession();
   let updatedUser = null;
 
-  updateDb((current) => ({
-    ...current,
-    users: current.users.map((entry) => {
-      if (entry.id !== user.id) {
-        return entry;
-      }
+  updateDb((current) => {
+    const withRotatedSession = {
+      ...current,
+      users: current.users.map((entry) => {
+        if (entry.id !== user.id) {
+          return entry;
+        }
 
         updatedUser = {
           ...entry,
           role: resolveUserRole(entry.email, entry.role || "student"),
-          token: nextToken,
+          token: session.token,
+          token_issued_at: session.issued_at,
+          token_expires_at: session.expires_at,
         };
         return updatedUser;
-    }),
-  }));
+      }),
+    };
+    // Successful login resets the failure counter for this (IP, email).
+    return clearRateLimit(withRotatedSession, "login", [ip, email]);
+  });
 
-  res.json({ token: nextToken, user: createSafeUser(updatedUser) });
+  res.json({
+    token: session.token,
+    expires_at: session.expires_at,
+    user: createSafeUser(updatedUser),
+  });
 });
 
 app.get("/api/auth/me", requireUser, (req, res) => {
@@ -602,6 +719,8 @@ app.post("/api/auth/logout", requireUser, (req, res) => {
         ? {
             ...user,
             token: null,
+            token_issued_at: null,
+            token_expires_at: null,
           }
         : user,
     ),
@@ -1149,7 +1268,151 @@ app.post("/api/ai-tutor/conversations", requireUser, (req, res) => {
   });
 });
 
-app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (req, res) => {
+app.post("/api/ai-tutor/conversations/:conversationId/messages/stream", requireUser, async (req, res) => {
+  const { conversationId } = req.params;
+  const content = String(req.body?.content || "").trim();
+
+  if (!content) {
+    res.status(400).json({ message: "Message content is required" });
+    return;
+  }
+
+  if (!isOpenAIConfigured()) {
+    res.status(503).json({
+      message: "Streaming tutor requires OPENAI_API_KEY. Use the non-streaming endpoint as fallback.",
+      code: "openai_not_configured",
+    });
+    return;
+  }
+
+  const db = readDb();
+  const { entitlements, progress } = buildUserAccessState(db, req.currentUser);
+
+  if (
+    entitlements.ai_tutor_daily_limit !== null &&
+    entitlements.usage.tutor_messages_remaining <= 0
+  ) {
+    sendPlanLimitReached(
+      res,
+      "ai_tutor_limit",
+      entitlements.ai_tutor_daily_limit,
+      entitlements.usage.tutor_messages_remaining,
+    );
+    return;
+  }
+
+  const currentConversation = (db.tutorConversations[req.currentUser.id] || []).find(
+    (conversation) => conversation.id === conversationId,
+  );
+
+  if (!currentConversation) {
+    res.status(404).json({ message: "Conversation not found" });
+    return;
+  }
+
+  // Open the SSE channel — must flush headers before first chunk.
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  const sendEvent = (eventName, data) => {
+    res.write(`event: ${eventName}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // Persist the user message immediately so the conversation reflects intent
+  // even if the LLM stream fails midway.
+  const userMessage = {
+    id: createId("msg"),
+    role: "user",
+    content,
+    created_at: new Date().toISOString(),
+  };
+
+  updateDb((current) => {
+    const list = current.tutorConversations[req.currentUser.id] || [];
+    return {
+      ...current,
+      tutorConversations: {
+        ...current.tutorConversations,
+        [req.currentUser.id]: list.map((conversation) =>
+          conversation.id !== conversationId
+            ? conversation
+            : {
+                ...conversation,
+                metadata: {
+                  ...conversation.metadata,
+                  name:
+                    conversation.metadata?.name === "New Chat"
+                      ? content.slice(0, 50)
+                      : conversation.metadata?.name || content.slice(0, 50),
+                },
+                messages: [...(conversation.messages || []), userMessage],
+                updatedAt: new Date().toISOString(),
+              },
+        ),
+      },
+    };
+  });
+
+  let fullContent = "";
+
+  try {
+    for await (const chunk of streamTutorReplyOpenAI({
+      content,
+      history: currentConversation.messages || [],
+      progress,
+    })) {
+      if (chunk.delta) {
+        sendEvent("delta", { content: chunk.delta });
+      }
+      if (chunk.done) {
+        fullContent = chunk.fullContent || fullContent;
+      }
+    }
+
+    const assistantMessage = {
+      id: createId("msg"),
+      role: "assistant",
+      content: fullContent,
+      created_at: new Date().toISOString(),
+    };
+
+    updateDb((current) => {
+      const list = current.tutorConversations[req.currentUser.id] || [];
+      return {
+        ...current,
+        tutorConversations: {
+          ...current.tutorConversations,
+          [req.currentUser.id]: list.map((conversation) =>
+            conversation.id !== conversationId
+              ? conversation
+              : {
+                  ...conversation,
+                  messages: [...(conversation.messages || []), assistantMessage],
+                  updatedAt: new Date().toISOString(),
+                },
+          ),
+        },
+      };
+    });
+
+    const nextDb = readDb();
+    sendEvent("done", {
+      message: assistantMessage,
+      entitlements: buildUserAccessState(nextDb, req.currentUser).entitlements,
+    });
+  } catch (error) {
+    console.error("[tutor stream] error:", error.message);
+    sendEvent("error", { message: error.message || "Stream failed" });
+  } finally {
+    res.end();
+  }
+});
+
+app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, async (req, res) => {
   const { conversationId } = req.params;
   const content = String(req.body?.content || "").trim();
 
@@ -1159,7 +1422,7 @@ app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (r
   }
 
   const db = readDb();
-  const { entitlements } = buildUserAccessState(db, req.currentUser);
+  const { entitlements, progress } = buildUserAccessState(db, req.currentUser);
 
   if (
     entitlements.ai_tutor_daily_limit !== null &&
@@ -1183,8 +1446,9 @@ app.post("/api/ai-tutor/conversations/:conversationId/messages", requireUser, (r
   const currentConversation = (db.tutorConversations[req.currentUser.id] || []).find(
     (conversation) => conversation.id === conversationId,
   );
-  const tutorReply = createTutorReply(content, {
+  const tutorReply = await createTutorReply(content, {
     history: currentConversation?.messages || [],
+    progress,
   });
   const assistantMessage = {
     id: createId("msg"),

@@ -1,4 +1,48 @@
 import { TOTAL_PRACTICE_QUESTIONS, topicLabels } from "./question-bank.js";
+import { TASK_LIST_SECTIONS } from "./task-list.js";
+
+// Topic buckets in question-bank.js map 1:1 to RBT 2.0 Task List sections.
+// Keep this in sync with question-bank.js -> topicLabels.
+const TOPIC_TO_SECTION = {
+  measurement: "A",
+  assessment: "B",
+  skill_acquisition: "C",
+  behavior_reduction: "D",
+  documentation: "E",
+  professional_conduct: "F",
+};
+
+/**
+ * Computes mastery (smoothed accuracy) and raw attempt counts for each of the
+ * 6 RBT 2.0 Task List sections, derived from the existing attempts data via
+ * their `topic` field. No schema changes required — works retroactively.
+ */
+function computeTaskListSectionMastery(attempts) {
+  const mastery = {};
+  const counts = {};
+  const correct = {};
+
+  TASK_LIST_SECTIONS.forEach(({ code }) => {
+    mastery[code] = 0;
+    counts[code] = 0;
+    correct[code] = 0;
+  });
+
+  attempts.forEach((attempt) => {
+    const section = TOPIC_TO_SECTION[attempt.topic];
+    if (!section) return;
+    counts[section] += 1;
+    if (attempt.is_correct) correct[section] += 1;
+  });
+
+  Object.keys(mastery).forEach((section) => {
+    if (counts[section] > 0) {
+      mastery[section] = getSmoothedRate(correct[section], counts[section]);
+    }
+  });
+
+  return { mastery, counts };
+}
 
 export const DEMO_USER_ID = "user-demo";
 
@@ -232,6 +276,10 @@ export function computeProgress(db, userId) {
     readinessScore,
   });
 
+  // RBT 2.0 Task List section breakdown — maps from the existing topic
+  // buckets (measurement/assessment/...) to official sections (A..F).
+  const taskListBreakdown = computeTaskListSectionMastery(attempts);
+
   return {
     total_questions_completed: totalQuestionsCompleted,
     total_questions_available: TOTAL_PRACTICE_QUESTIONS,
@@ -258,5 +306,7 @@ export function computeProgress(db, userId) {
     passed_mock_exams: passedMockExams,
     failed_mock_exams: failedMockExams,
     average_mock_exam_score: averageExamScore,
+    task_list_section_mastery: taskListBreakdown.mastery,
+    task_list_section_attempts: taskListBreakdown.counts,
   };
 }

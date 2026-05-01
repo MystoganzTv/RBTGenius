@@ -160,8 +160,14 @@ export default function QuestionCard({
       onEntitlementsChange?.(payload?.entitlements || entitlements);
     } catch (error) {
       const isLimit = error?.data?.code === "plan_limit_reached";
+      const isPremium = Boolean(entitlements?.is_premium);
       const description = isLimit
-        ? translateUi("Free accounts include 5 AI tutor messages per day.", language)
+        ? translateUi(
+            isPremium
+              ? "Premium includes a generous daily AI tutor allowance. You have reached today's limit."
+              : "Free accounts include 5 AI tutor messages per day.",
+            language,
+          )
         : error?.message || translateUi("Please try again.", language);
 
       setAiError(description);

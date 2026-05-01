@@ -23,6 +23,7 @@ import { translateTopic, translateUi } from "@/lib/i18n";
 import { isPremiumPlan } from "@/lib/plan-access";
 import { MIN_DOMAIN_ATTEMPTS } from "@/lib/backend-core";
 import { PRACTICE_TOPIC_TOTALS, TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
+import { TASK_LIST_SECTIONS } from "@/lib/task-list";
 
 const topicLabels = {
   measurement: "Measurement",
@@ -296,6 +297,56 @@ export default function Analytics() {
                 <span className="text-[11px] text-slate-500 dark:text-slate-400">{item.name}</span>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950 lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {t("RBT 2.0 Task List — Section Mastery")}
+            </h3>
+            <span className="text-xs text-slate-400">
+              {t("Aligned to BACB official structure")}
+            </span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {TASK_LIST_SECTIONS.map((section) => {
+              const mastery = progress?.task_list_section_mastery?.[section.code] || 0;
+              const attempts = progress?.task_list_section_attempts?.[section.code] || 0;
+              const hasEnough = attempts >= MIN_DOMAIN_ATTEMPTS;
+              const sectionTitle = language === "es" ? section.title_es : section.title;
+              return (
+                <div
+                  key={section.code}
+                  className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                        {t(`Section ${section.code}`)}
+                      </p>
+                      <p className="mt-0.5 truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+                        {sectionTitle}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-2xl font-black text-slate-900 dark:text-white">
+                      {hasEnough ? `${mastery}%` : "—"}
+                    </p>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                    <div
+                      className="h-full rounded-full bg-blue-500 transition-all"
+                      style={{ width: hasEnough ? `${mastery}%` : "0%" }}
+                    />
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                    {hasEnough
+                      ? t(`${attempts} answered`)
+                      : t(`Need ${MIN_DOMAIN_ATTEMPTS - attempts} more for stable mastery`)}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

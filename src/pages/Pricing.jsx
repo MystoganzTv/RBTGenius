@@ -20,6 +20,7 @@ import {
   FREE_DAILY_TUTOR_LIMIT,
   PLAN_CATALOG,
   PLAN_IDS,
+  PREMIUM_DAILY_TUTOR_LIMIT,
   isPremiumPlan,
 } from "@/lib/plan-access";
 import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
@@ -41,7 +42,7 @@ const planFeatureMap = {
   ],
   [PLAN_IDS.PREMIUM_MONTHLY]: [
     `Unlimited practice across ${TOTAL_PRACTICE_QUESTIONS} questions`,
-    "Unlimited AI tutor conversations",
+    `${PREMIUM_DAILY_TUTOR_LIMIT} AI tutor messages each day`,
     "Full mock exams",
     "Full analytics and readiness tracking",
     "Manage billing with Stripe",
@@ -49,7 +50,7 @@ const planFeatureMap = {
   [PLAN_IDS.PREMIUM_YEARLY]: [
     "Everything in Premium Monthly",
     "Lower yearly cost than paying month to month",
-    "Unlimited practice and AI tutor",
+    "Unlimited practice with higher daily AI tutor access",
     "Full mock exams and analytics",
     "Manage billing with Stripe",
   ],
@@ -91,7 +92,7 @@ export default function Pricing() {
     queryFn: api.getPublicSettings,
   });
 
-  const { data: profileData, refetch: refetchProfile } = useQuery({
+  const { data: profileData } = useQuery({
     queryKey: ["profile-data"],
     queryFn: api.getProfile,
     enabled: isAuthenticated,
@@ -223,7 +224,7 @@ export default function Pricing() {
           {t("Pick the level of support that fits your study pace.")}
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-slate-500 dark:text-slate-400">
-          {t("Guests can review the landing and pricing, free members get daily study tools, and Premium unlocks unlimited practice, AI tutor, timed mock exams, and analytics.")}
+          {t("Guests can review the landing and pricing, free members get daily study tools, and Premium unlocks unlimited practice, higher daily AI tutor access, timed mock exams, and analytics.")}
         </p>
         <p className="mx-auto mt-4 inline-flex max-w-2xl rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300">
           {t("The 40-hour course is planned for a future release and is not included in current plans yet.")}
