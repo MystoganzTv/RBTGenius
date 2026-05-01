@@ -86,7 +86,7 @@ export const ACCESS_COMPARISON = [
     label: "AI tutor",
     guest: "Preview only",
     free: `${FREE_DAILY_TUTOR_LIMIT} messages per day`,
-    premium: "Unlimited tutor conversations",
+    premium: `${PREMIUM_DAILY_TUTOR_LIMIT} messages per day`,
   },
   {
     id: "mock_exams",
@@ -237,7 +237,7 @@ export function getGateCopy(feature) {
       return {
         title: "Daily AI tutor limit reached",
         description:
-          "Free accounts include a small daily AI tutor allowance. Upgrade for unlimited study conversations.",
+          "This plan includes a daily AI tutor allowance. Upgrade for more room if you need it.",
       };
     case "flashcards_limit":
       return {

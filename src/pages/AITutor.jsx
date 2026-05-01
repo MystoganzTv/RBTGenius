@@ -250,6 +250,18 @@ export default function AITutor() {
             queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
           },
           onError: (errorMessage) => {
+            setConversations((current) =>
+              current.map((conversation) =>
+                conversation.id !== conversationId
+                  ? conversation
+                  : {
+                      ...conversation,
+                      messages: conversation.messages.filter(
+                        (message) => message.id !== optimisticAssistantId,
+                      ),
+                    },
+              ),
+            );
             toast({
               title: "Tutor stream interrupted",
               description: errorMessage,
@@ -279,7 +291,9 @@ export default function AITutor() {
             : "Unable to send message",
         description:
           error?.data?.code === "plan_limit_reached"
-            ? "Free accounts include 5 AI tutor messages per day."
+            ? entitlements?.is_premium
+              ? "Premium includes a generous daily AI tutor allowance. You have reached today's limit."
+              : "Free accounts include 5 AI tutor messages per day."
             : error.message || "Please try again.",
       });
     } finally {
@@ -293,6 +307,9 @@ export default function AITutor() {
 
   const remainingMessages = entitlements?.usage?.tutor_messages_remaining;
   const limitReached = remainingMessages === 0;
+  const tutorLimitDescription = entitlements?.is_premium
+    ? "Premium includes a generous daily AI tutor allowance. You have reached today's limit."
+    : "Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.";
 
   return (
     <div className="mx-auto h-[calc(100vh-8rem)] max-w-7xl dark:rounded-[2rem] dark:bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_24rem),linear-gradient(180deg,rgba(15,23,42,0.92),rgba(15,23,42,0.82))] dark:p-3">
@@ -358,7 +375,15 @@ export default function AITutor() {
             {remainingMessages !== null && remainingMessages !== undefined ? (
               <div className="ml-auto inline-flex items-center gap-1 rounded-full border border-[#FFB800]/20 bg-[#FFB800]/10 px-3 py-1 text-[11px] font-semibold text-[#C88700]">
                 <Crown className="h-3 w-3" />
-                {translateUi(`${remainingMessages} free messages left today`, language)}
+                <span>
+                  {remainingMessages}{" "}
+                  {translateUi(
+                    entitlements?.is_premium
+                      ? "tutor messages left today"
+                      : "free messages left today",
+                    language,
+                  )}
+                </span>
               </div>
             ) : null}
           </div>
@@ -449,10 +474,7 @@ export default function AITutor() {
             </form>
             {limitReached ? (
               <p className="mt-3 text-xs text-amber-600">
-                {translateUi(
-                  "Free accounts can send 5 AI tutor messages per day. Upgrade to continue today.",
-                  language,
-                )}
+                {translateUi(tutorLimitDescription, language)}
               </p>
             ) : (
               <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">

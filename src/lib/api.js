@@ -9,6 +9,15 @@ function getAuthToken() {
   );
 }
 
+function writeAuthToken(token) {
+  if (typeof window === "undefined" || !token) {
+    return;
+  }
+
+  window.localStorage.setItem("rbt_genius_auth_token", token);
+  window.localStorage.setItem("access_token", token);
+}
+
 async function request(path, options = {}) {
   const { headers = {}, body, token: tokenOverride, ...restOptions } = options;
   const token = tokenOverride || getAuthToken();
@@ -21,6 +30,11 @@ async function request(path, options = {}) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  const rotatedToken = response.headers.get("X-New-Auth-Token");
+  if (rotatedToken) {
+    writeAuthToken(rotatedToken);
+  }
 
   if (response.status === 204) {
     return null;
