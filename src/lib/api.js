@@ -195,4 +195,87 @@ export const api = {
       body: payload,
     });
   },
+  /**
+   * Streams a tutor reply via SSE.
+   *
+   * Calls onDelta(text) as tokens arrive, onDone({ message, entitlements })
+   * once the LLM finishes, and onError(message) on any failure. Returns a
+   * promise that resolves when the stream closes.
+   *
+   * Falls back to the non-streaming endpoint automatically when the server
+   * responds 503 with code "openai_not_configured".
+   */
+  async streamTutorMessage(conversationId, payload, { onDelta, onDone, onError } = {}) {
+    const token = getAuthToken();
+    const response = await fetch(
+      `/api/ai-tutor/conversations/${conversationId}/messages/stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      },
+    );
+
+    if (response.status === 503) {
+      const fallbackPayload = await response.json().catch(() => ({}));
+      if (fallbackPayload?.code === "openai_not_configured") {
+        const result = await api.sendTutorMessage(conversationId, payload);
+        const lastMessage = result?.conversation?.messages?.slice(-1)?.[0];
+        if (lastMessage?.content) {
+          onDelta?.(lastMessage.content);
+        }
+        onDone?.({ message: lastMessage, entitlements: result?.entitlements });
+        return;
+      }
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const error = new Error(errorBody?.message || "Stream request failed");
+      error.status = response.status;
+      error.data = errorBody;
+      throw error;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE events are separated by blank lines.
+      const events = buffer.split("\n\n");
+      buffer = events.pop() || "";
+
+      for (const event of events) {
+        const lines = event.split("\n");
+        const eventName = lines.find((line) => line.startsWith("event:"))?.slice(6).trim();
+        const dataLine = lines.find((line) => line.startsWith("data:"))?.slice(5).trim();
+
+        if (!dataLine) continue;
+
+        let data;
+        try {
+          data = JSON.parse(dataLine);
+        } catch {
+          continue;
+        }
+
+        if (eventName === "delta") {
+          onDelta?.(data.content || "");
+        } else if (eventName === "done") {
+          onDone?.(data);
+        } else if (eventName === "error") {
+          onError?.(data.message || "Tutor stream error");
+        }
+      }
+    }
+  },
 };

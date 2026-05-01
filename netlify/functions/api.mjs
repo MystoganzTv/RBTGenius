@@ -11,10 +11,17 @@ import {
   topicLabels,
 } from "../../src/lib/question-bank.js";
 import {
-  createSessionToken,
+  buildSession,
   hashPassword,
+  isSessionExpired,
+  shouldRotateSession,
   verifyPassword,
 } from "../../server/lib/auth.js";
+import {
+  checkRateLimit,
+  clearRateLimit,
+  recordRateLimitAttempt,
+} from "../../server/lib/rate-limit.js";
 import {
   buildOAuthAuthorizationUrl,
   createOAuthState,
@@ -45,7 +52,11 @@ import {
   getEntitlements,
   isPremiumPlan,
 } from "../../src/lib/plan-access.js";
-import { createTutorReply } from "../../server/lib/tutor.js";
+import {
+  createTutorReply,
+  isOpenAIConfigured,
+  streamTutorReplyOpenAI,
+} from "../../server/lib/tutor.js";
 
 function getDbStore() {
   return getStore({ name: "rbt-genius-data", consistency: "strong" });
@@ -290,7 +301,7 @@ function buildFrontendLoginRedirect(frontendOrigin, redirectTo, params = {}) {
 
 async function upsertOAuthUser(profile, providerId) {
   let safeUser = null;
-  let sessionToken = null;
+  let session = null;
   let wasCreated = false;
 
   await updateDb((current) => {
@@ -298,7 +309,7 @@ async function upsertOAuthUser(profile, providerId) {
       (user) => user.email.toLowerCase() === profile.email.toLowerCase(),
     );
 
-    sessionToken = createSessionToken();
+    session = buildSession();
     const nextUsers = existingUser
       ? current.users.map((user) => {
           if (user.id !== existingUser.id) {
@@ -308,7 +319,9 @@ async function upsertOAuthUser(profile, providerId) {
           const updatedUser = {
             ...user,
             full_name: user.full_name || profile.name,
-            token: sessionToken,
+            token: session.token,
+            token_issued_at: session.issued_at,
+            token_expires_at: session.expires_at,
             created_at: user.created_at || new Date().toISOString(),
             role: resolveUserRole(user.email, user.role || "student"),
             auth_provider: user.auth_provider || providerId,
@@ -333,7 +346,9 @@ async function upsertOAuthUser(profile, providerId) {
             created_at: new Date().toISOString(),
             role: resolveUserRole(profile.email),
             plan: "free",
-            token: sessionToken,
+            token: session.token,
+            token_issued_at: session.issued_at,
+            token_expires_at: session.expires_at,
             auth_provider: providerId,
             oauth_accounts: {
               [providerId]: {
@@ -357,7 +372,7 @@ async function upsertOAuthUser(profile, providerId) {
     };
   });
 
-  return { token: sessionToken, user: safeUser, created: wasCreated };
+  return { token: session.token, expires_at: session.expires_at, user: safeUser, created: wasCreated };
 }
 
 function getToken(request) {
@@ -369,6 +384,33 @@ function getToken(request) {
   return authHeader.slice("Bearer ".length);
 }
 
+function getClientIp(request) {
+  // Netlify exposes the real client IP in this header. Fall back to the
+  // standard X-Forwarded-For (first hop = original client) if needed.
+  const netlifyIp = request.headers.get("x-nf-client-connection-ip");
+  if (netlifyIp) return netlifyIp;
+
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+
+  return "unknown";
+}
+
+function rateLimited(decision, feature) {
+  return json(
+    {
+      message: "Too many attempts. Please wait and try again.",
+      code: "rate_limited",
+      feature,
+      retry_after_seconds: decision.retryAfterSeconds,
+    },
+    {
+      status: 429,
+      headers: { "Retry-After": String(decision.retryAfterSeconds) },
+    },
+  );
+}
+
 async function getCurrentUser(request) {
   const token = getToken(request);
   if (!token) {
@@ -376,7 +418,30 @@ async function getCurrentUser(request) {
   }
 
   const db = await readDb();
-  return db.users.find((user) => user.token === token) || null;
+  const user = db.users.find((entry) => entry.token === token) || null;
+  if (!user) return null;
+  if (isSessionExpired(user)) return null;
+  return user;
+}
+
+async function rotateUserSession(user) {
+  const session = buildSession();
+  let rotatedUser = user;
+  await updateDb((current) => ({
+    ...current,
+    users: current.users.map((entry) => {
+      if (entry.id !== user.id) return entry;
+      rotatedUser = {
+        ...entry,
+        token: session.token,
+        token_issued_at: session.issued_at,
+        token_expires_at: session.expires_at,
+      };
+      return rotatedUser;
+    }),
+  }));
+
+  return { user: rotatedUser, session };
 }
 
 async function requireUser(request) {
@@ -615,8 +680,16 @@ export default async (request) => {
     const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
     const fullName = String(body?.full_name || "").trim();
+    const ip = getClientIp(request);
+
+    const initialDb = await readDb();
+    const registerCheck = checkRateLimit(initialDb, "register", [ip]);
+    if (!registerCheck.allowed) {
+      return rateLimited(registerCheck, "register");
+    }
 
     if (!email || !password || !fullName) {
+      await updateDb((current) => recordRateLimitAttempt(current, "register", [ip]));
       return json(
         { message: "Full name, email, and password are required" },
         { status: 400 },
@@ -624,11 +697,13 @@ export default async (request) => {
     }
 
     if (password.length < 8) {
+      await updateDb((current) => recordRateLimitAttempt(current, "register", [ip]));
       return json({ message: "Password must be at least 8 characters" }, { status: 400 });
     }
 
     const db = await readDb();
     if (db.users.some((user) => user.email.toLowerCase() === email)) {
+      await updateDb((current) => recordRateLimitAttempt(current, "register", [ip]));
       return json(
         { message: "An account with that email already exists" },
         { status: 409 },
@@ -636,6 +711,7 @@ export default async (request) => {
     }
 
     const passwordData = hashPassword(password);
+    const session = buildSession();
     const newUser = {
       id: createId("user"),
       full_name: fullName,
@@ -643,31 +719,48 @@ export default async (request) => {
       created_at: new Date().toISOString(),
       role: resolveUserRole(email),
       plan: "free",
-      token: createSessionToken(),
+      token: session.token,
+      token_issued_at: session.issued_at,
+      token_expires_at: session.expires_at,
       auth_provider: "password",
       oauth_accounts: {},
       password_hash: passwordData.hash,
       password_salt: passwordData.salt,
     };
 
-    await updateDb((current) => ({
-      ...current,
-      users: [...current.users, newUser],
-    }));
+    await updateDb((current) => {
+      const withUser = { ...current, users: [...current.users, newUser] };
+      // Successful signup still counts toward the IP quota.
+      return recordRateLimitAttempt(withUser, "register", [ip]);
+    });
 
     await notifyNewMember(newUser, {
       source: "manual_register",
       authProvider: "password",
     });
 
-    return json({ token: newUser.token, user: createSafeUser(newUser) }, { status: 201 });
+    return json(
+      {
+        token: newUser.token,
+        expires_at: newUser.token_expires_at,
+        user: createSafeUser(newUser),
+      },
+      { status: 201 },
+    );
   }
 
   if (apiPath === "/auth/login" && request.method === "POST") {
     const body = await request.json();
     const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
+    const ip = getClientIp(request);
+
     const db = await readDb();
+    const loginCheck = checkRateLimit(db, "login", [ip, email]);
+    if (!loginCheck.allowed) {
+      return rateLimited(loginCheck, "login");
+    }
+
     const user = db.users.find((entry) => entry.email.toLowerCase() === email);
 
     if (
@@ -676,29 +769,40 @@ export default async (request) => {
       !user.password_salt ||
       !verifyPassword(password, user.password_salt, user.password_hash)
     ) {
+      await updateDb((current) => recordRateLimitAttempt(current, "login", [ip, email]));
       return json({ message: "Invalid email or password" }, { status: 401 });
     }
 
-    const nextToken = createSessionToken();
+    const session = buildSession();
     let updatedUser = null;
 
-    await updateDb((current) => ({
-      ...current,
-      users: current.users.map((entry) => {
-        if (entry.id !== user.id) {
-          return entry;
-        }
+    await updateDb((current) => {
+      const withRotatedSession = {
+        ...current,
+        users: current.users.map((entry) => {
+          if (entry.id !== user.id) {
+            return entry;
+          }
 
-        updatedUser = {
-          ...entry,
-          role: resolveUserRole(entry.email, entry.role || "student"),
-          token: nextToken,
-        };
-        return updatedUser;
-      }),
-    }));
+          updatedUser = {
+            ...entry,
+            role: resolveUserRole(entry.email, entry.role || "student"),
+            token: session.token,
+            token_issued_at: session.issued_at,
+            token_expires_at: session.expires_at,
+          };
+          return updatedUser;
+        }),
+      };
+      // Successful login resets the failure counter for this (IP, email).
+      return clearRateLimit(withRotatedSession, "login", [ip, email]);
+    });
 
-    return json({ token: nextToken, user: createSafeUser(updatedUser) });
+    return json({
+      token: session.token,
+      expires_at: session.expires_at,
+      user: createSafeUser(updatedUser),
+    });
   }
 
   if (apiPath === "/auth/me" && request.method === "GET") {
@@ -707,7 +811,21 @@ export default async (request) => {
       return auth.error;
     }
 
-    return json(createSafeUser(auth.user));
+    // Sliding rotation: when the session is within the refresh window,
+    // mint a new token and return it in the body so the client updates storage.
+    if (shouldRotateSession(auth.user)) {
+      const { user: rotatedUser, session } = await rotateUserSession(auth.user);
+      return json({
+        ...createSafeUser(rotatedUser),
+        token: session.token,
+        expires_at: session.expires_at,
+      });
+    }
+
+    return json({
+      ...createSafeUser(auth.user),
+      expires_at: auth.user.token_expires_at,
+    });
   }
 
   if (apiPath === "/auth/logout" && request.method === "POST") {
@@ -723,6 +841,8 @@ export default async (request) => {
           ? {
               ...user,
               token: null,
+              token_issued_at: null,
+              token_expires_at: null,
             }
           : user,
       ),
@@ -1377,6 +1497,158 @@ export default async (request) => {
     );
   }
 
+  const tutorStreamMatch = apiPath.match(/^\/ai-tutor\/conversations\/([^/]+)\/messages\/stream$/);
+  if (tutorStreamMatch && request.method === "POST") {
+    const auth = await requireUser(request);
+    if (auth.error) return auth.error;
+
+    const content = String((await request.json())?.content || "").trim();
+    if (!content) {
+      return json({ message: "Message content is required" }, { status: 400 });
+    }
+
+    if (!isOpenAIConfigured()) {
+      return json(
+        {
+          message: "Streaming tutor requires OPENAI_API_KEY. Use the non-streaming endpoint as fallback.",
+          code: "openai_not_configured",
+        },
+        { status: 503 },
+      );
+    }
+
+    const db = await readDb();
+    const { entitlements, progress } = buildUserAccessState(db, auth.user);
+    if (
+      entitlements.ai_tutor_daily_limit !== null &&
+      entitlements.usage.tutor_messages_remaining <= 0
+    ) {
+      return sendPlanLimitReached(
+        "ai_tutor_limit",
+        entitlements.ai_tutor_daily_limit,
+        entitlements.usage.tutor_messages_remaining,
+      );
+    }
+
+    const conversationId = tutorStreamMatch[1];
+    const currentConversation = (db.tutorConversations[auth.user.id] || []).find(
+      (conversation) => conversation.id === conversationId,
+    );
+
+    if (!currentConversation) {
+      return json({ message: "Conversation not found" }, { status: 404 });
+    }
+
+    // Persist the user message right away so it survives a stream interrupt.
+    const userMessage = {
+      id: createId("msg"),
+      role: "user",
+      content,
+      created_at: new Date().toISOString(),
+    };
+
+    await updateDb((current) => {
+      const list = current.tutorConversations[auth.user.id] || [];
+      return {
+        ...current,
+        tutorConversations: {
+          ...current.tutorConversations,
+          [auth.user.id]: list.map((conversation) =>
+            conversation.id !== conversationId
+              ? conversation
+              : {
+                  ...conversation,
+                  metadata: {
+                    ...conversation.metadata,
+                    name:
+                      conversation.metadata?.name === "New Chat"
+                        ? content.slice(0, 50)
+                        : conversation.metadata?.name || content.slice(0, 50),
+                  },
+                  messages: [...(conversation.messages || []), userMessage],
+                  updatedAt: new Date().toISOString(),
+                },
+          ),
+        },
+      };
+    });
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const sendEvent = (eventName, data) => {
+          controller.enqueue(
+            encoder.encode(`event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`),
+          );
+        };
+
+        let fullContent = "";
+
+        try {
+          for await (const chunk of streamTutorReplyOpenAI({
+            content,
+            history: currentConversation.messages || [],
+            progress,
+          })) {
+            if (chunk.delta) {
+              sendEvent("delta", { content: chunk.delta });
+            }
+            if (chunk.done) {
+              fullContent = chunk.fullContent || fullContent;
+            }
+          }
+
+          const assistantMessage = {
+            id: createId("msg"),
+            role: "assistant",
+            content: fullContent,
+            created_at: new Date().toISOString(),
+          };
+
+          await updateDb((current) => {
+            const list = current.tutorConversations[auth.user.id] || [];
+            return {
+              ...current,
+              tutorConversations: {
+                ...current.tutorConversations,
+                [auth.user.id]: list.map((conversation) =>
+                  conversation.id !== conversationId
+                    ? conversation
+                    : {
+                        ...conversation,
+                        messages: [...(conversation.messages || []), assistantMessage],
+                        updatedAt: new Date().toISOString(),
+                      },
+                ),
+              },
+            };
+          });
+
+          const nextDb = await readDb();
+          sendEvent("done", {
+            message: assistantMessage,
+            entitlements: buildUserAccessState(nextDb, auth.user).entitlements,
+          });
+        } catch (error) {
+          console.error("[tutor stream netlify] error:", error.message);
+          sendEvent("error", { message: error.message || "Stream failed" });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }
+
   const tutorMatch = apiPath.match(/^\/ai-tutor\/conversations\/([^/]+)\/messages$/);
   if (tutorMatch && request.method === "POST") {
     const auth = await requireUser(request);
@@ -1390,7 +1662,7 @@ export default async (request) => {
     }
 
     const db = await readDb();
-    const { entitlements } = buildUserAccessState(db, auth.user);
+    const { entitlements, progress } = buildUserAccessState(db, auth.user);
     if (
       entitlements.ai_tutor_daily_limit !== null &&
       entitlements.usage.tutor_messages_remaining <= 0
@@ -1412,8 +1684,9 @@ export default async (request) => {
     const currentConversation = (db.tutorConversations[auth.user.id] || []).find(
       (conversation) => conversation.id === conversationId,
     );
-    const tutorReply = createTutorReply(content, {
+    const tutorReply = await createTutorReply(content, {
       history: currentConversation?.messages || [],
+      progress,
     });
     const assistantMessage = {
       id: createId("msg"),

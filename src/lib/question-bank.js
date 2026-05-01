@@ -1,4 +1,9 @@
 import { additionalOfficialQuestionConcepts } from "./question-bank-official-expansion.js";
+import {
+  getTaskListCode,
+  getTaskListSection,
+  validateConceptCoverage,
+} from "./concept-task-list-map.js";
 
 export const topicLabels = {
   measurement: "Measurement",
@@ -2085,10 +2090,15 @@ function buildQuestionSeedSet(concept) {
   const answerChoices = [concept.answer, ...getTopicAlternatives(concept, "answer")];
   const purposeChoices = [concept.purpose, ...getTopicAlternatives(concept, "purpose")];
 
-  const conceptMatch = buildOptionsFromTexts(
+  const definitionMatch = buildOptionsFromTexts(
     answerChoices,
     concept.answer,
-    `${concept.id}:concept`,
+    `${concept.id}:definition`,
+  );
+  const scenarioMatch = buildOptionsFromTexts(
+    answerChoices,
+    concept.answer,
+    `${concept.id}:scenario`,
   );
   const purposeMatch = buildOptionsFromTexts(
     purposeChoices,
@@ -2096,32 +2106,44 @@ function buildQuestionSeedSet(concept) {
     `${concept.id}:purpose`,
   );
 
+  // Pre-compute the official Task List code once per concept; null when the
+  // concept isn't RBT-eligible (those questions get filtered out downstream
+  // anyway, so the null is harmless).
+  const taskListCode = getTaskListCode(concept.id);
+  const taskListSection = getTaskListSection(concept.id);
+
   return [
     {
       id: `${concept.id}_definition`,
       concept_id: concept.id,
       text: `Which concept is being described as ${concept.definition}`,
       topic: concept.topic,
+      task_list_code: taskListCode,
+      task_list_section: taskListSection,
       difficulty: concept.difficulty,
       explanation: concept.explanation,
-      options: conceptMatch.options,
-      correct_answer: conceptMatch.correct_answer,
+      options: definitionMatch.options,
+      correct_answer: definitionMatch.correct_answer,
     },
     {
       id: `${concept.id}_scenario`,
       concept_id: concept.id,
       text: `${concept.scenario} Which concept is the best match?`,
       topic: concept.topic,
+      task_list_code: taskListCode,
+      task_list_section: taskListSection,
       difficulty: concept.difficulty,
       explanation: concept.explanation,
-      options: conceptMatch.options,
-      correct_answer: conceptMatch.correct_answer,
+      options: scenarioMatch.options,
+      correct_answer: scenarioMatch.correct_answer,
     },
     {
       id: `${concept.id}_purpose`,
       concept_id: concept.id,
       text: `What is the main goal of ${concept.answer}?`,
       topic: concept.topic,
+      task_list_code: taskListCode,
+      task_list_section: taskListSection,
       difficulty: concept.difficulty,
       explanation: `${concept.explanation} The main goal is ${concept.purpose.toLowerCase()}`,
       options: purposeMatch.options,
@@ -2135,6 +2157,12 @@ export const rbtQuestions = baseQuestions.filter((question) =>
   isRbtEligibleConcept(questionConceptLookup[question.concept_id]),
 );
 export const TOTAL_PRACTICE_QUESTIONS = rbtQuestions.length;
+
+// Boot-time invariant: every concept that ends up in the practice bank must
+// have a Task List mapping. If someone adds a new concept without a code,
+// this throws on import so the bug surfaces immediately instead of silently
+// dropping that concept from per-section analytics.
+validateConceptCoverage([...new Set(rbtQuestions.map((q) => q.concept_id))]);
 export const OFFICIAL_CONCEPT_COUNT = questionConcepts.filter((concept) =>
   isRbtEligibleConcept(concept),
 ).length;

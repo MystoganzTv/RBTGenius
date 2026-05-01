@@ -197,13 +197,20 @@ export function AuthProvider({
         return null;
       }
 
-      const currentUser = await requestJson(
+      const meResponse = await requestJson(
         resolvedEndpoints.me,
         { token },
         fetchImpl,
       );
 
-      writeToken(token);
+      // The /auth/me endpoint returns the user fields directly. If the server
+      // performed a sliding rotation, it also includes `token` and `expires_at`
+      // alongside the user fields — strip them out before storing the user.
+      const { token: rotatedToken, expires_at: _expiresAt, ...currentUser } =
+        meResponse || {};
+      const effectiveToken = rotatedToken || token;
+
+      writeToken(effectiveToken);
       setUser(currentUser);
       setIsAuthenticated(true);
       setAuthError(null);

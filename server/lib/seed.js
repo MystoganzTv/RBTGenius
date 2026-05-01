@@ -1,5 +1,4 @@
 import { defaultUser, DEMO_USER_ID } from "../../src/lib/backend-core.js";
-import { createSessionToken } from "./auth.js";
 
 const LEGACY_DEMO_EMAIL = "alex.carter@example.com";
 const LEGACY_DEMO_EMAILS = [LEGACY_DEMO_EMAIL, "demo@rbtgenius.app"];
@@ -21,6 +20,7 @@ export function buildSeedDb() {
     oauthStates: {},
     tutorConversations: {},
     customQuestions: [],
+    rateLimits: {},
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -47,18 +47,29 @@ export function normalizeDb(db) {
 
               return !isLegacyDemoUser;
             })
-            .map((user) => ({
-              ...user,
-              token: user.token || createSessionToken(),
-              created_at: user.created_at || seedDb.createdAt,
-              role: resolveUserRole(user.email, user.role || defaultUser.role),
-              plan: user.plan || defaultUser.plan,
-              auth_provider: user.auth_provider || "password",
-              oauth_accounts:
-                user.oauth_accounts && typeof user.oauth_accounts === "object"
-                  ? user.oauth_accounts
-                  : {},
-            }))
+            .map((user) => {
+              const hasToken = Boolean(user.token);
+              // Legacy sessions without expiry: keep the token but mark it expired
+              // so the next request forces a re-login (no surprise lockout, just a
+              // standard 401 → login flow).
+              const tokenIssuedAt = user.token_issued_at || (hasToken ? user.created_at || seedDb.createdAt : null);
+              const tokenExpiresAt = user.token_expires_at || (hasToken ? new Date(0).toISOString() : null);
+
+              return {
+                ...user,
+                token: user.token || null,
+                token_issued_at: tokenIssuedAt,
+                token_expires_at: tokenExpiresAt,
+                created_at: user.created_at || seedDb.createdAt,
+                role: resolveUserRole(user.email, user.role || defaultUser.role),
+                plan: user.plan || defaultUser.plan,
+                auth_provider: user.auth_provider || "password",
+                oauth_accounts:
+                  user.oauth_accounts && typeof user.oauth_accounts === "object"
+                    ? user.oauth_accounts
+                    : {},
+              };
+            })
         : seedDb.users,
     attempts: Array.isArray(db.attempts) ? db.attempts : [],
     mockExams: Array.isArray(db.mockExams) ? db.mockExams : [],
@@ -80,5 +91,7 @@ export function normalizeDb(db) {
         ? db.tutorConversations
         : {},
     customQuestions: Array.isArray(db.customQuestions) ? db.customQuestions : [],
+    rateLimits:
+      db.rateLimits && typeof db.rateLimits === "object" ? db.rateLimits : {},
   };
 }

@@ -181,27 +181,97 @@ export default function AITutor() {
     setInput("");
     setLoading(true);
 
+    // Optimistic insertion: show the user message immediately and a placeholder
+    // assistant message that we mutate as deltas arrive from the SSE stream.
+    const optimisticUserId = `tmp_user_${Date.now()}`;
+    const optimisticAssistantId = `tmp_assistant_${Date.now()}`;
+    const nowIso = new Date().toISOString();
+
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id !== conversationId
+          ? conversation
+          : {
+              ...conversation,
+              messages: [
+                ...(conversation.messages || []),
+                { id: optimisticUserId, role: "user", content: text, created_at: nowIso },
+                { id: optimisticAssistantId, role: "assistant", content: "", created_at: nowIso, streaming: true },
+              ],
+              updatedAt: nowIso,
+            },
+      ),
+    );
+
+    let streamedContent = "";
+    const appendDelta = (delta) => {
+      streamedContent += delta;
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id !== conversationId
+            ? conversation
+            : {
+                ...conversation,
+                messages: conversation.messages.map((message) =>
+                  message.id === optimisticAssistantId
+                    ? { ...message, content: streamedContent }
+                    : message,
+                ),
+              },
+        ),
+      );
+    };
+
     try {
-      const payload = await api.sendTutorMessage(conversationId, {
-        content: text,
-      });
-      const updatedConversation = payload?.conversation;
-      setEntitlements(payload?.entitlements || entitlements);
-
-      setConversations((current) => {
-        const exists = current.some((conversation) => conversation.id === updatedConversation.id);
-
-        if (!exists) {
-          return [updatedConversation, ...current];
-        }
-
-        return current.map((conversation) =>
-          conversation.id === updatedConversation.id ? updatedConversation : conversation,
-        );
-      });
-      queryClient.invalidateQueries({ queryKey: ["profile-data"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+      await api.streamTutorMessage(
+        conversationId,
+        { content: text },
+        {
+          onDelta: appendDelta,
+          onDone: ({ message, entitlements: nextEntitlements }) => {
+            if (nextEntitlements) setEntitlements(nextEntitlements);
+            // Replace the placeholder with the persisted assistant message so
+            // the id matches what the server saved.
+            setConversations((current) =>
+              current.map((conversation) =>
+                conversation.id !== conversationId
+                  ? conversation
+                  : {
+                      ...conversation,
+                      messages: conversation.messages.map((existing) =>
+                        existing.id === optimisticAssistantId
+                          ? { ...message, streaming: false }
+                          : existing,
+                      ),
+                    },
+              ),
+            );
+            queryClient.invalidateQueries({ queryKey: ["profile-data"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
+          },
+          onError: (errorMessage) => {
+            toast({
+              title: "Tutor stream interrupted",
+              description: errorMessage,
+            });
+          },
+        },
+      );
     } catch (error) {
+      // Roll back the optimistic placeholders on hard failure.
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id !== conversationId
+            ? conversation
+            : {
+                ...conversation,
+                messages: conversation.messages.filter(
+                  (message) =>
+                    message.id !== optimisticUserId && message.id !== optimisticAssistantId,
+                ),
+              },
+        ),
+      );
       toast({
         title:
           error?.data?.code === "plan_limit_reached"

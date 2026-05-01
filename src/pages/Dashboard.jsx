@@ -20,6 +20,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
+import { TASK_LIST_SECTIONS } from "@/lib/task-list";
 
 const emptyProgress = {
   total_questions_completed: 0,
@@ -227,6 +228,45 @@ export default function Dashboard() {
             mastery={progress?.domain_mastery || {}}
             attemptCounts={progress?.domain_attempt_counts || {}}
           />
+
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                {t("RBT 2.0 Task List")}
+              </h3>
+              <Link
+                to={createPageUrl("Analytics")}
+                className="text-xs text-[#1E5EFF] hover:underline dark:text-[#8EB0FF]"
+              >
+                {t("See full breakdown")}
+              </Link>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {TASK_LIST_SECTIONS.map((section) => {
+                const mastery = progress?.task_list_section_mastery?.[section.code] || 0;
+                const attempts = progress?.task_list_section_attempts?.[section.code] || 0;
+                const sectionTitle = language === "es" ? section.title_es : section.title;
+                const hasData = attempts > 0;
+                return (
+                  <div
+                    key={section.code}
+                    className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50 p-2.5 text-center dark:border-slate-800 dark:bg-slate-900"
+                    title={sectionTitle}
+                  >
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {section.code}
+                    </span>
+                    <span className="mt-0.5 text-base font-black text-slate-900 dark:text-white">
+                      {hasData ? `${mastery}%` : "—"}
+                    </span>
+                    <span className="mt-0.5 text-[9px] text-slate-400">
+                      {attempts}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <h3 className="mb-4 text-sm font-semibold text-slate-700 dark:text-slate-200">

@@ -1,3 +1,9 @@
+import {
+  createTutorReplyOpenAI,
+  isOpenAIConfigured,
+  streamTutorReplyOpenAI,
+} from "./tutor-openai.js";
+
 function hasAny(text, patterns) {
   return patterns.some((pattern) => text.includes(pattern));
 }
@@ -736,7 +742,7 @@ function performFollowUpAction(followUp, activeTopic, seed) {
   };
 }
 
-export function createTutorReply(text, options = {}) {
+export function createRuleBasedTutorReply(text, options = {}) {
   const normalized = String(text || "").trim().toLowerCase();
   const history = Array.isArray(options.history) ? options.history : [];
   const seed = hashText(`${normalized}:${history.length}`);
@@ -919,3 +925,34 @@ export function createTutorReply(text, options = {}) {
 
   return { content: formatGeneralHelp(activeTopic) };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LLM integration
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// createTutorReply (the public entrypoint used by the API endpoints) now
+// delegates to OpenAI when OPENAI_API_KEY is set, and falls back to the
+// rule-based engine above when it isn't. This keeps local dev cheap and means
+// production never breaks if the env var is missing — it just degrades to the
+// old behavior with an error logged.
+
+export async function createTutorReply(text, options = {}) {
+  if (isOpenAIConfigured()) {
+    try {
+      const llmReply = await createTutorReplyOpenAI({
+        content: text,
+        history: options.history,
+        progress: options.progress,
+        recentMissedTopic: options.recentMissedTopic,
+      });
+      return { content: llmReply.content };
+    } catch (error) {
+      console.error("[tutor] OpenAI failed, falling back to rule-based:", error.message);
+      // fall through to rule-based
+    }
+  }
+
+  return createRuleBasedTutorReply(text, options);
+}
+
+export { streamTutorReplyOpenAI, isOpenAIConfigured };

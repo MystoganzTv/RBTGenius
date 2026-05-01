@@ -10,6 +10,9 @@ export const PLAN_IDS = {
 export const FREE_DAILY_PRACTICE_LIMIT = 15;
 export const FREE_DAILY_TUTOR_LIMIT = 5;
 export const FREE_FLASHCARD_LIMIT = 15;
+// Premium gets a "soft cap" — high enough no real student notices, low enough
+// to protect against scripted abuse running up the OpenAI bill.
+export const PREMIUM_DAILY_TUTOR_LIMIT = 150;
 
 export const PREMIUM_PLAN_IDS = [
   PLAN_IDS.PREMIUM_MONTHLY,
@@ -177,7 +180,7 @@ export function getEntitlements(plan, usage = {}) {
     normalizedPlan === PLAN_IDS.GUEST
       ? 0
       : premium
-        ? null
+        ? PREMIUM_DAILY_TUTOR_LIMIT
         : FREE_DAILY_TUTOR_LIMIT;
 
   return {
