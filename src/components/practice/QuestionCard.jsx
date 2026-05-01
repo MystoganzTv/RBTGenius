@@ -316,88 +316,86 @@ export default function QuestionCard({
           </Button>
         ) : (
           <div className="space-y-4">
-            {(explanation || aiReply || aiLoading || aiError) ? (
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
-                <div className="flex flex-wrap gap-2">
-                  {explanation ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full"
-                      onClick={() => setExplanationVisible((current) => !current)}
-                    >
-                      {explanationVisible ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                      {explanationVisible
-                        ? translateUi("Hide Explanation", language)
-                        : translateUi("Show Explanation", language)}
-                    </Button>
-                  ) : null}
-
+            <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+              <div className="flex flex-wrap gap-2">
+                {explanation ? (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-full border-[#1E5EFF]/20 bg-[#1E5EFF]/5 text-[#1E5EFF] hover:bg-[#1E5EFF]/10"
-                    onClick={handleAskAi}
-                    disabled={aiLoading}
+                    className="rounded-full"
+                    onClick={() => setExplanationVisible((current) => !current)}
                   >
-                    {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
-                    {aiLoading
-                      ? translateUi("Preparing AI help...", language)
-                      : aiReply
-                        ? aiReplyVisible
-                          ? translateUi("Hide AI Reply", language)
-                          : translateUi("Show AI Reply", language)
-                        : translateUi("Ask AI", language)}
-                  </Button>
-                </div>
-
-                {explanationVisible && explanation ? (
-                  <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-                    <div className="mb-1 flex items-center gap-2">
-                      <Lightbulb className="h-4 w-4 text-[#FFB800]" />
-                      <span className="text-xs font-semibold text-[#1E5EFF]">
-                        {translateUi("Explanation", language)}
-                      </span>
-                    </div>
-                    <BilingualText
-                      content={localizedExplanation}
-                      primaryClassName="text-sm leading-relaxed text-slate-700 dark:text-slate-200"
-                      secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
-                    />
-                  </div>
-                ) : null}
-
-                {(aiReplyVisible || aiLoading || aiError) ? (
-                  <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
-                    <div className="flex items-center gap-2">
-                      <Bot className="h-4 w-4 text-[#1E5EFF]" />
-                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
-                        {translateUi("AI Coach", language)}
-                      </span>
-                    </div>
-
-                    {aiLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                        <Loader2 className="h-4 w-4 animate-spin text-[#1E5EFF]" />
-                        <span>{translateUi("Preparing AI help...", language)}</span>
-                      </div>
-                    ) : aiError ? (
-                      <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                        {aiError}
-                      </p>
+                    {explanationVisible ? (
+                      <ChevronUp className="h-4 w-4" />
                     ) : (
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-                        {aiReply}
-                      </p>
+                      <ChevronDown className="h-4 w-4" />
                     )}
-                  </div>
+                    {explanationVisible
+                      ? translateUi("Hide Explanation", language)
+                      : translateUi("Show Explanation", language)}
+                  </Button>
                 ) : null}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full border-[#1E5EFF]/20 bg-[#1E5EFF]/5 text-[#1E5EFF] hover:bg-[#1E5EFF]/10"
+                  onClick={handleAskAi}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
+                  {aiLoading
+                    ? translateUi("Preparing AI help...", language)
+                    : aiReply
+                      ? aiReplyVisible
+                        ? translateUi("Hide AI Reply", language)
+                        : translateUi("Show AI Reply", language)
+                      : translateUi("Ask AI", language)}
+                </Button>
               </div>
-            ) : null}
+
+              {explanationVisible && explanation ? (
+                <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                  <div className="mb-1 flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-[#FFB800]" />
+                    <span className="text-xs font-semibold text-[#1E5EFF]">
+                      {translateUi("Explanation", language)}
+                    </span>
+                  </div>
+                  <BilingualText
+                    content={localizedExplanation}
+                    primaryClassName="text-sm leading-relaxed text-slate-700 dark:text-slate-200"
+                    secondaryClassName="leading-relaxed text-slate-500 dark:text-slate-400"
+                  />
+                </div>
+              ) : null}
+
+              {(aiReplyVisible || aiLoading || aiError) ? (
+                <div className="space-y-3 rounded-xl border border-[#1E5EFF]/10 bg-[#1E5EFF]/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-[#1E5EFF]" />
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1E5EFF]">
+                      {translateUi("AI Coach", language)}
+                    </span>
+                  </div>
+
+                  {aiLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                      <Loader2 className="h-4 w-4 animate-spin text-[#1E5EFF]" />
+                      <span>{translateUi("Preparing AI help...", language)}</span>
+                    </div>
+                  ) : aiError ? (
+                    <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                      {aiError}
+                    </p>
+                  ) : (
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                      {aiReply}
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
 
             <Button
               onClick={handleNext}
