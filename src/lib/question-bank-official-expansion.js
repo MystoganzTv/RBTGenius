@@ -3554,4 +3554,60 @@ export const additionalOfficialQuestionConcepts = [
     "To balance cultural sensitivity with professional ethics when navigating gift-related situations.",
     "Cultural awareness is part of professional competence. The RBT can be respectful and culturally sensitive while still upholding professional boundaries. Consulting the supervisor allows for guidance that respects both ethics and culture.",
   ),
+
+  // ─── TCO 3rd ed. — F-4: Extra coverage (supervision practices) ───────────
+  concept(
+    "professional_conduct",
+    "professional_rbt_prepares_for_supervision",
+    "beginner",
+    "Preparing for supervision meetings",
+    "The RBT prepares for supervision by bringing current session data, noting questions about implementation, and being ready to demonstrate procedures so the contact is productive and focused.",
+    "Before a scheduled supervision session, the RBT reviews the last three weeks of graphs, writes down two questions about a new prompting procedure, and rehearses how to run a DTT program so the supervisor can observe it live.",
+    "To make supervision contacts as informative and efficient as possible so the supervisor can give targeted, useful feedback.",
+    "Supervision is most effective when the RBT arrives prepared. Bringing data, questions, and a willingness to practice makes the session meaningful for both the RBT and the supervisor.",
+  ),
+  concept(
+    "professional_conduct",
+    "professional_supervision_documentation",
+    "beginner",
+    "Documenting supervision contacts",
+    "Every supervision contact must be documented with the date, duration, activities observed, and feedback given, as required by the BACB and the employing organization.",
+    "After a supervision meeting, the supervisor completes the required contact log while the RBT reviews the written feedback and signs the form confirming the meeting took place.",
+    "To create an accurate record of the required supervision activities and protect both the RBT and the supervisor in the event of a compliance review.",
+    "Supervision documentation is a professional and regulatory requirement. The RBT should understand that signing the form confirms attendance and that accurate records protect everyone involved.",
+  ),
+  concept(
+    "professional_conduct",
+    "professional_applying_supervisory_feedback",
+    "intermediate",
+    "Applying supervisory feedback between sessions",
+    "After receiving feedback during supervision, the RBT applies the corrected technique during the very next client session rather than waiting for the following supervision contact.",
+    "The supervisor corrects how the RBT delivers the intertrial interval. In the next session, the RBT consciously applies the correct timing and notes whether it changes the learner's performance to share at the next contact.",
+    "To translate supervision feedback into improved implementation as quickly as possible, benefiting the learner and demonstrating professional responsiveness.",
+    "The purpose of feedback is behavioral change. If the RBT does not apply feedback between sessions, the learner continues to receive suboptimal service. Prompt application is both a clinical and professional responsibility.",
+  ),
+
+  // ─── TCO 3rd ed. — F-6: Extra coverage (public communication) ────────────
+  concept(
+    "professional_conduct",
+    "professional_rbt_credential_accuracy",
+    "beginner",
+    "Accurately representing RBT credentials",
+    "The RBT may only describe themselves using the RBT credential and must not imply they hold BCBA, BCaBA, or other advanced credentials they do not possess.",
+    "A parent asks the RBT if they are the 'behavior analyst' who designed the program. The RBT clarifies they are a Registered Behavior Technician who implements the plan, and that the supervising BCBA designed it.",
+    "To protect the public from being misled about who is responsible for clinical decisions and what level of training the RBT has.",
+    "Misrepresenting credentials harms public trust in ABA services and may lead caregivers to make uninformed decisions about their child's care. The RBT must always accurately identify their role and scope.",
+  ),
+
+  // ─── TCO 3rd ed. — F-8: Extra coverage (gift-giving guidelines) ──────────
+  concept(
+    "professional_conduct",
+    "professional_gift_policy_consultation",
+    "beginner",
+    "Consulting policy before giving or accepting gifts",
+    "Before giving any gift to a client or accepting a gift from a caregiver, the RBT should first consult the employer's written policy and ask the supervisor for guidance if the policy is unclear.",
+    "The holiday season arrives and a learner's family gives the RBT a small wrapped gift. Instead of accepting or refusing immediately, the RBT says they need to check with the supervisor and organization policy before deciding.",
+    "To ensure that decisions about gifts are guided by professional policy rather than personal judgment, which protects both the RBT and the therapeutic relationship.",
+    "Policies about gifts vary across organizations. Checking policy first protects the RBT from unintentionally violating professional ethics standards and shows caregivers that boundaries are maintained consistently and fairly.",
+  ),
 ];

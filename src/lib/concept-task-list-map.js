@@ -511,14 +511,18 @@ const LEGACY_CONCEPT_TO_TASK_LIST = {
 
   // F-4 (supervision practices) — "F-4" remaps to F-7 in legacy map,
   // so TCO_2026_CODE_OVERRIDES entries below force the correct code
-  professional_supervision_feedback_role:     "F-4",
-  professional_supervision_contact_frequency: "F-4",
-  professional_effective_supervision_components: "F-4",
+  professional_supervision_feedback_role:         "F-4",
+  professional_supervision_contact_frequency:     "F-4",
+  professional_effective_supervision_components:  "F-4",
+  professional_rbt_prepares_for_supervision:      "F-4",
+  professional_supervision_documentation:         "F-4",
+  professional_applying_supervisory_feedback:     "F-4",
 
   // F-6 (public communication) — "F-6" not in legacy remap map, safe
   professional_social_media_client_identity:  "F-6",
   professional_accurate_public_statements:    "F-6",
   professional_no_public_client_disclosure:   "F-6",
+  professional_rbt_credential_accuracy:       "F-6",
 
   // F-7 (multiple relationships) — "F-7" not in legacy remap map, safe
   professional_dual_relationship_definition:  "F-7",
@@ -528,6 +532,7 @@ const LEGACY_CONCEPT_TO_TASK_LIST = {
   professional_gift_receiving_policy:         "F-8",
   professional_gift_giving_to_clients:        "F-8",
   professional_gift_cultural_context:         "F-8",
+  professional_gift_policy_consultation:      "F-8",
 
   // ─── Base bank concepts not previously in map ──────────────────────────────
   // These existed in question-bank.js but were silently excluded after
@@ -706,6 +711,9 @@ const TCO_2026_CODE_OVERRIDES = {
   professional_supervision_feedback_role:         "F-4",
   professional_supervision_contact_frequency:     "F-4",
   professional_effective_supervision_components:  "F-4",
+  professional_rbt_prepares_for_supervision:      "F-4",
+  professional_supervision_documentation:         "F-4",
+  professional_applying_supervisory_feedback:     "F-4",
 
   // Base bank re-activations — codes that would be remapped incorrectly
   documentation_graphing:                     "A-4",  // "A-4" → "A-3" without override

@@ -124,6 +124,18 @@ const OFFICIAL_CONCEPT_IDS = new Set([
   "professional_nonjudgmental_language",
   "professional_consistency",
   "professional_documentation_timeliness",
+  // Base bank re-activations — newly mapped to TCO 3rd Edition codes
+  "documentation_graphing",
+  "measurement_accuracy",
+  "measurement_opportunity_based",
+  "assessment_descriptive",
+  "assessment_target_behavior_selection",
+  "assessment_task_analysis_probe",
+  "documentation_behavior_frequency_summary",
+  "assessment_hypothesis_statement",
+  "skill_choral_responding",
+  "behavior_contingency_review",
+  "measurement_magnitude",
 ]);
 
 const allQuestionConcepts = [
@@ -2256,21 +2268,69 @@ export function buildFlashcardBank(
     .map((question) => cloneQuestion(question));
 }
 
+/**
+ * BACB RBT Test Content Outline 3rd Edition (eff. Jan 2026) — section weights.
+ * 75 scored questions + 10 unscored pilot = 85 total.
+ * Weights: A 18%, B 12%, C 24%, D 20%, E 14%, F 12%.
+ * Counts below sum to exactly 85 and match those percentages as closely as
+ * possible while keeping whole numbers.
+ */
+const MOCK_EXAM_SECTION_COUNTS = {
+  A: 15, // 17.6%  (target 18%)
+  B: 10, // 11.8%  (target 12%)
+  C: 21, // 24.7%  (target 24%)
+  D: 17, // 20.0%  (target 20%)
+  E: 12, // 14.1%  (target 14%)
+  F: 10, // 11.8%  (target 12%)
+};
+
 export function buildMockExamQuestionSet(
   size = 85,
   sourceQuestions = null,
   seed = `mock-${Date.now()}`,
   options = {},
 ) {
-  const pool =
-    Array.isArray(sourceQuestions) && sourceQuestions.length > 0
-      ? uniqueQuestions(sourceQuestions)
-      : buildQuestionPool({
-          seedValue: `mock:${seed}:${size}`,
-          excludeIds: options.excludeIds,
-        });
+  // When a custom source pool is given (e.g. retry from weak areas) fall back
+  // to a simple shuffle so callers can override the weighted sampling.
+  if (Array.isArray(sourceQuestions) && sourceQuestions.length > 0) {
+    return uniqueQuestions(sourceQuestions)
+      .slice(0, Math.min(size, sourceQuestions.length))
+      .map((question, index) => withPracticeMetadata(question, index));
+  }
 
-  return pool
-    .slice(0, Math.min(size, pool.length))
+  const blockedIds = new Set(options.excludeIds || []);
+  const eligible = rbtQuestions.filter((q) => !blockedIds.has(q.id));
+
+  // Group by section letter (from task_list_section field set at build time)
+  const bySection = {};
+  eligible.forEach((q) => {
+    const section = q.task_list_section || "?";
+    if (!bySection[section]) bySection[section] = [];
+    bySection[section].push(q);
+  });
+
+  // Shuffle each section's questions with a deterministic seed
+  const selected = [];
+  Object.entries(MOCK_EXAM_SECTION_COUNTS).forEach(([section, target]) => {
+    const sectionPool = bySection[section] || [];
+    const shuffled = shuffleStable(sectionPool, `mock:${seed}:section:${section}`);
+    // Take up to `target` questions; if section is small, take what's available
+    selected.push(...shuffled.slice(0, Math.min(target, shuffled.length)));
+  });
+
+  // Handle any shortfall by pulling from whatever section has extras
+  if (selected.length < size) {
+    const usedIds = new Set(selected.map((q) => q.id));
+    const overflow = shuffleStable(eligible, `mock:${seed}:overflow`).filter(
+      (q) => !usedIds.has(q.id),
+    );
+    selected.push(...overflow.slice(0, size - selected.length));
+  }
+
+  // Final shuffle so section blocks are interleaved randomly
+  const finalPool = shuffleStable(selected, `mock:${seed}:final`);
+
+  return finalPool
+    .slice(0, Math.min(size, finalPool.length))
     .map((question, index) => withPracticeMetadata(question, index));
 }
