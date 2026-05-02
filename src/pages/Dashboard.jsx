@@ -19,6 +19,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { translateUi } from "@/lib/i18n";
+import { OFFICIAL_CONCEPT_COUNT } from "@/lib/question-bank";
 import { createPageUrl } from "@/utils";
 import { TASK_LIST_SECTIONS } from "@/lib/task-list";
 
@@ -184,7 +185,7 @@ export default function Dashboard() {
         <StatCard
           title="Questions Answered"
           value={`${totalQuestions}/${totalQuestionsAvailable}`}
-          subtitle="Across the full question bank"
+          subtitle={`${totalQuestionsAvailable} live questions across ${OFFICIAL_CONCEPT_COUNT} concepts`}
           icon={HelpCircle}
           color="blue"
         />
@@ -202,7 +203,7 @@ export default function Dashboard() {
         <StatCard
           title="Bank Coverage"
           value={`${bankCoverage}%`}
-          subtitle={`${totalQuestions} answered so far`}
+          subtitle={`${totalQuestions} answered across ${OFFICIAL_CONCEPT_COUNT} tracked concepts`}
           icon={BookOpenCheck}
           color="purple"
         />

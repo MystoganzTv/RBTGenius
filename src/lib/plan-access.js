@@ -1,4 +1,4 @@
-import { TOTAL_PRACTICE_QUESTIONS } from "./question-bank.js";
+import { OFFICIAL_CONCEPT_COUNT, TOTAL_PRACTICE_QUESTIONS } from "./question-bank.js";
 
 export const PLAN_IDS = {
   GUEST: "guest",
@@ -72,7 +72,7 @@ export const ACCESS_COMPARISON = [
     label: "Practice questions",
     guest: "Preview only",
     free: `${FREE_DAILY_PRACTICE_LIMIT} answered per day`,
-    premium: `Unlimited across ${TOTAL_PRACTICE_QUESTIONS} questions`,
+    premium: `Unlimited across ${TOTAL_PRACTICE_QUESTIONS} questions and ${OFFICIAL_CONCEPT_COUNT} concepts`,
   },
   {
     id: "flashcards",

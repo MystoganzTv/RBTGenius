@@ -20,14 +20,14 @@ import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
 import { ACCESS_COMPARISON } from "@/lib/plan-access";
 import { translateUi } from "@/lib/i18n";
-import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
+import { OFFICIAL_CONCEPT_COUNT, TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 
 const featureCards = [
   {
-    title: "Practice With a Curated Bank",
-    description: `Work through ${TOTAL_PRACTICE_QUESTIONS} practice questions organized for steady progress.`,
+    title: "Practice With the Full Bank",
+    description: `Work through ${TOTAL_PRACTICE_QUESTIONS} active practice questions organized across ${OFFICIAL_CONCEPT_COUNT} core concepts.`,
     Icon: Target,
   },
   {
@@ -46,7 +46,7 @@ const premiumPreviewPanels = [
   {
     label: "Study Preview",
     title: "Smarter exam prep",
-    subtitle: `Practice, flashcards, mock exams, and AI support built on the same ${TOTAL_PRACTICE_QUESTIONS}-question bank.`,
+    subtitle: `Practice, flashcards, mock exams, and AI support built on the same ${TOTAL_PRACTICE_QUESTIONS}-question bank across ${OFFICIAL_CONCEPT_COUNT} concepts.`,
     accentClassName:
       "bg-emerald-500/14 text-emerald-300",
     Icon: Brain,
@@ -62,7 +62,7 @@ const premiumPreviewPanels = [
               Question bank
             </p>
             <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{TOTAL_PRACTICE_QUESTIONS}</p>
-            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
+            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>active questions</p>
           </div>
           <div
             className={`rounded-[1.15rem] p-3 ${
@@ -70,10 +70,10 @@ const premiumPreviewPanels = [
             }`}
           >
             <p className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Mock exams
+              Concepts
             </p>
-            <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>85</p>
-            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>questions each</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{OFFICIAL_CONCEPT_COUNT}</p>
+            <p className={`mt-1 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>tracked concepts</p>
           </div>
         </div>
         <div className={`mt-4 h-px ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
@@ -98,7 +98,7 @@ const premiumPreviewPanels = [
               Question Bank
             </p>
             <p className={`mt-3 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{TOTAL_PRACTICE_QUESTIONS}</p>
-            <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>practice questions</p>
+            <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>active questions</p>
           </div>
           <div
             className={`rounded-[1.4rem] border p-4 backdrop-blur-sm ${
@@ -108,10 +108,10 @@ const premiumPreviewPanels = [
             }`}
           >
             <p className={`text-[11px] font-semibold uppercase tracking-[0.22em] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Mock Exams
+              Concepts
             </p>
-            <p className={`mt-3 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>85</p>
-            <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>questions per exam</p>
+            <p className={`mt-3 text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{OFFICIAL_CONCEPT_COUNT}</p>
+            <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>tracked concepts</p>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">

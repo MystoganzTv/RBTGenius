@@ -23,7 +23,7 @@ import {
   PREMIUM_DAILY_TUTOR_LIMIT,
   isPremiumPlan,
 } from "@/lib/plan-access";
-import { TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
+import { OFFICIAL_CONCEPT_COUNT, TOTAL_PRACTICE_QUESTIONS } from "@/lib/question-bank";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { useLanguage } from "@/hooks/use-language";
@@ -41,7 +41,7 @@ const planFeatureMap = {
     "No analytics",
   ],
   [PLAN_IDS.PREMIUM_MONTHLY]: [
-    `Unlimited practice across ${TOTAL_PRACTICE_QUESTIONS} questions`,
+    `Unlimited practice across ${TOTAL_PRACTICE_QUESTIONS} questions and ${OFFICIAL_CONCEPT_COUNT} concepts`,
     `${PREMIUM_DAILY_TUTOR_LIMIT} AI tutor messages each day`,
     "Full mock exams",
     "Full analytics and readiness tracking",

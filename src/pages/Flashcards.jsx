@@ -33,6 +33,7 @@ import BilingualText from "@/components/i18n/BilingualText";
 import { useLanguage } from "@/hooks/use-language";
 import { localizeQuestion, translateDifficulty, translateTopic, translateUi } from "@/lib/i18n";
 import { FREE_FLASHCARD_LIMIT, isPremiumPlan } from "@/lib/plan-access";
+import { OFFICIAL_CONCEPT_COUNT } from "@/lib/question-bank";
 import { createPageUrl } from "@/utils";
 
 async function loadQuestions() {
@@ -258,7 +259,7 @@ export default function Flashcards() {
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {translateUi(
-              "Review the same question bank in memorization mode with quick answer explanations.",
+              `Review ${allQuestions.length} active questions across ${OFFICIAL_CONCEPT_COUNT} concepts in memorization mode with quick answer explanations.`,
               language,
             )}
           </p>
@@ -313,6 +314,7 @@ export default function Flashcards() {
                       <SelectItem value="all">{translateUi("All", language)}</SelectItem>
                       <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
                       <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
+                      <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

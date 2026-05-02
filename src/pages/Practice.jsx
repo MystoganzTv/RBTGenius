@@ -44,6 +44,7 @@ import {
 } from "@/lib/plan-access";
 import {
   isRbtQuestion,
+  OFFICIAL_CONCEPT_COUNT,
   PRACTICE_BATCH_SIZE,
   RBT_ALLOWED_DIFFICULTIES,
   topicLabels,
@@ -561,6 +562,7 @@ export default function Practice() {
                   <SelectItem value="all">{translateUi("All Levels", language)}</SelectItem>
                   <SelectItem value="beginner">{translateDifficulty("beginner", language)}</SelectItem>
                   <SelectItem value="intermediate">{translateDifficulty("intermediate", language)}</SelectItem>
+                  <SelectItem value="advanced">{translateDifficulty("advanced", language)}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -569,7 +571,7 @@ export default function Practice() {
           <div className="rounded-2xl border border-[#1E5EFF]/12 bg-[linear-gradient(135deg,rgba(30,94,255,0.08),rgba(30,94,255,0.03))] p-4 text-sm text-slate-700 dark:text-slate-200">
             {isPremiumPlan(entitlements?.plan)
               ? translateUi(
-                  `Premium unlocks unlimited answers across ${TOTAL_PRACTICE_QUESTIONS} practice questions.`,
+                  `Premium unlocks unlimited answers across ${TOTAL_PRACTICE_QUESTIONS} practice questions and ${OFFICIAL_CONCEPT_COUNT} concepts.`,
                   language,
                 )
               : translateUi(
