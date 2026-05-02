@@ -1,5 +1,20 @@
 import { questionConceptLookup } from "./question-bank.js";
 
+const allQuestionConceptValues = Object.values(questionConceptLookup || {});
+const conceptAnswerLookup = allQuestionConceptValues.reduce((result, concept) => {
+  if (concept?.answer) {
+    result[concept.answer.trim()] = concept;
+  }
+  return result;
+}, {});
+
+const conceptPurposeLookup = allQuestionConceptValues.reduce((result, concept) => {
+  if (concept?.purpose) {
+    result[concept.purpose.trim()] = concept;
+  }
+  return result;
+}, {});
+
 const UI_TRANSLATIONS = {
   "Dashboard": "Panel",
   "Practice": "Práctica",
@@ -1069,6 +1084,30 @@ const EXACT_SPANISH_TEXT = {
   "items or activities are systematically tested to identify likely reinforcers.": "se prueban de forma sistemática elementos o actividades para identificar reforzadores probables.",
   "An RBT rotates toys and snacks to see what items the learner chooses most often.": "Un RBT rota juguetes y snacks para ver qué elementos el aprendiz elige con más frecuencia.",
   "An RBT rotates toys and snacks to see which items the learner chooses most often.": "Un RBT rota juguetes y snacks para ver qué elementos el aprendiz elige con más frecuencia.",
+  "What is the main goal of Preference assessment?": "¿Cuál es el objetivo principal de Evaluación de preferencias?",
+  "What is the main goal of Frequency recording?": "¿Cuál es el objetivo principal de Registro de frecuencia?",
+  "What is the main goal of Duration recording?": "¿Cuál es el objetivo principal de Registro de duración?",
+  "What is the main goal of Permanent product recording?": "¿Cuál es el objetivo principal de Registro de producto permanente?",
+  "What is the main goal of Least-to-most prompting?": "¿Cuál es el objetivo principal de Ayuda de menos a más?",
+  "What is the main goal of Prompt fading?": "¿Cuál es el objetivo principal de Desvanecimiento de ayudas?",
+  "What is the main goal of Shaping?": "¿Cuál es el objetivo principal de Moldeamiento?",
+  "What is the main goal of Task analysis?": "¿Cuál es el objetivo principal de Análisis de tareas?",
+  "Which concept is being described as data are collected before a new intervention starts.": "¿Qué concepto corresponde a esta definición: los datos se recogen antes de que comience una nueva intervención?",
+  "Before introducing a new prompting plan, the BCBA asks the RBT to measure current performance for several sessions.": "Antes de introducir un nuevo plan de ayudas, el BCBA le pide al RBT que mida el desempeño actual durante varias sesiones.",
+  "During handwashing training, the RBT begins with a verbal cue and only adds modeling or physical guidance if needed.": "Durante el entrenamiento de lavado de manos, el RBT comienza con una señal verbal y solo añade modelado o guía física si es necesario.",
+  "Which concept is being described as prompts are gradually reduced so control transfers to the natural cue.": "¿Qué concepto corresponde a esta definición: las ayudas se reducen gradualmente para que el control pase a la señal natural?",
+  "During a table session, the RBT marks correct, incorrect, or prompted for every individual trial.": "Durante una sesión en mesa, el RBT marca correcto, incorrecto o con ayuda en cada ensayo individual.",
+  "Trial-by-trial data are useful during structured teaching because each opportunity is scored individually.": "Los datos ensayo por ensayo son útiles durante la enseñanza estructurada porque cada oportunidad se puntúa de forma individual.",
+  "Which concept is being described as reinforcement is delivered for a response that cannot occur at the same time as the problem behavior.": "¿Qué concepto corresponde a esta definición: el reforzamiento se entrega para una respuesta que no puede ocurrir al mismo tiempo que la conducta problema?",
+  "A learner is reinforced for keeping hands in pockets while walking, which cannot happen at the same time as hitting.": "Se refuerza al aprendiz por mantener las manos en los bolsillos mientras camina, algo que no puede ocurrir al mismo tiempo que golpear.",
+  "Which concept is being described as several easy requests are presented before a difficult one to build momentum.": "¿Qué concepto corresponde a esta definición: se presentan varias peticiones fáciles antes de una difícil para construir impulso?",
+  "Before asking a learner to start handwriting, the RBT presents three easy motor responses the learner almost always follows.": "Antes de pedirle a un aprendiz que empiece a escribir a mano, el RBT presenta tres respuestas motoras fáciles que el aprendiz casi siempre sigue.",
+  "Which concept is being described as the RBT avoids posting client-related information or interacting online in ways that blur professional boundaries.": "¿Qué concepto corresponde a esta definición: el RBT evita publicar información relacionada con clientes o interactuar en línea de maneras que difuminan los límites profesionales?",
+  "A caregiver's social media friend request is declined, and no client photos or stories are posted online.": "Se rechaza una solicitud de amistad en redes sociales de un cuidador y no se publican fotos ni historias del cliente en línea.",
+  "Professional conduct extends to social media, where confidentiality and boundaries still apply.": "La conducta profesional se extiende a las redes sociales, donde la confidencialidad y los límites siguen aplicándose.",
+  "Which concept is being described as prompts are organized from less intrusive to more intrusive or vice versa for consistent teaching.": "¿Qué concepto corresponde a esta definición: las ayudas se organizan de menos intrusivas a más intrusivas, o viceversa, para una enseñanza consistente?",
+  "A program specifies gesture, model, then partial physical prompts so each staff member teaches the same way.": "Un programa especifica ayuda gestual, luego modelado y después ayudas físicas parciales para que cada miembro del personal enseñe de la misma manera.",
+  "A prompt hierarchy creates a predictable sequence of assistance levels during teaching.": "Una jerarquía de ayudas crea una secuencia predecible de niveles de ayuda durante la enseñanza.",
   "prompts are gradually reduced so control transfers to the natural cue.": "las ayudas se reducen gradualmente para que el control pase a la señal natural.",
   "successive approximations of the target behavior are reinforced.": "se refuerzan aproximaciones sucesivas de la conducta objetivo.",
   "the learner is taught a communication response that serves the same function as the problem behavior.": "se enseña al aprendiz una respuesta de comunicación que cumple la misma función que la conducta problema.",
@@ -2082,7 +2121,10 @@ const PURPOSE_TEXT_TRANSLATIONS = {
 
 function translatePurposeText(text) {
   const trimmed = String(text || "").trim();
-  const directMap = PURPOSE_TEXT_TRANSLATIONS[trimmed] || UI_TRANSLATIONS[trimmed];
+  const directMap =
+    PURPOSE_TEXT_TRANSLATIONS[trimmed] ||
+    EXACT_SPANISH_TEXT[trimmed] ||
+    UI_TRANSLATIONS[trimmed];
   if (directMap) {
     return directMap;
   }
@@ -2098,8 +2140,28 @@ function translatePurposeText(text) {
   return fullTranslation;
 }
 
+function translateConceptAnswerText(text) {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const directMap = EXACT_SPANISH_TEXT[trimmed] || UI_TRANSLATIONS[trimmed];
+  if (directMap) {
+    return directMap;
+  }
+
+  return applyQuestionSentenceReplacements(translateToSpanish(trimmed));
+}
+
 function translateQuestionSentence(text) {
-  return applyQuestionSentenceReplacements(translateToSpanish(text));
+  const trimmed = String(text || "").trim();
+  const directMap = EXACT_SPANISH_TEXT[trimmed] || UI_TRANSLATIONS[trimmed];
+  if (directMap) {
+    return directMap;
+  }
+
+  return applyQuestionSentenceReplacements(translateToSpanish(trimmed));
 }
 
 function translateQuestionText(text) {
@@ -2143,6 +2205,16 @@ function translateExplanationText(text) {
 function translateOptionText(optionText, question) {
   if (!optionText) {
     return "";
+  }
+
+  const trimmed = String(optionText).trim();
+
+  if (conceptAnswerLookup[trimmed]) {
+    return translateConceptAnswerText(trimmed);
+  }
+
+  if (conceptPurposeLookup[trimmed]) {
+    return translatePurposeText(trimmed);
   }
 
   if (question?.id?.endsWith("_purpose")) {
@@ -2428,7 +2500,8 @@ export function localizeQuestion(question, language) {
       : [];
 
   const totalLeakCount = leakCounts.reduce((sum, count) => sum + count, 0);
-  const shouldFallbackToEnglish = language === "es" && totalLeakCount > 0;
+  const shouldFallbackToEnglish =
+    language === "es" && (totalLeakCount >= 8 || leakCounts.some((count) => count >= 4));
 
   if (shouldFallbackToEnglish) {
     return {

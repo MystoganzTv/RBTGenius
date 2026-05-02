@@ -473,6 +473,95 @@ const LEGACY_CONCEPT_TO_TASK_LIST = {
   // ─── Wave 2 — F-5 ──────────────────────────────────────────────────────────
   professional_person_first_language:     "F-5",
   professional_client_autonomy:           "F-5",
+
+  // ─── Wave 3 — New TCO 3rd Edition concepts ─────────────────────────────────
+  // A-7 (identify trends in graphed data)
+  measurement_increasing_trend:           "A-7",
+  measurement_decreasing_trend:           "A-7",
+  measurement_variable_trend:             "A-7",
+  measurement_stable_trend:               "A-7",
+  measurement_trend_direction:            "A-7",
+
+  // C-2 (conditioned reinforcers) — "C-2" not in legacy remap map, safe
+  skill_conditioned_reinforcer_pairing_procedure: "C-2",
+  skill_praise_as_conditioned_reinforcer: "C-2",
+  skill_conditioned_vs_unconditioned_reinforcer:  "C-2",
+
+  // C-9 (maintenance vs acquisition) — "C-9" remaps to C-7 in legacy map,
+  // so TCO_2026_CODE_OVERRIDES entries below force the correct code
+  skill_acquisition_phase_definition:     "C-9",
+  skill_maintenance_phase_definition:     "C-9",
+  skill_acquisition_vs_maintenance_selection: "C-9",
+
+  // D-5 (punishment procedures) — "D-5" remaps to D-4 in legacy map,
+  // so TCO_2026_CODE_OVERRIDES entries below force the correct code
+  behavior_punishment_definition:         "D-5",
+  behavior_positive_punishment:           "D-5",
+  behavior_negative_punishment:           "D-5",
+  behavior_time_out_procedure:            "D-5",
+  behavior_response_cost_procedure:       "D-5",
+  behavior_rbt_punishment_role:           "D-5",
+
+  // D-6 (side effects of extinction/punishment) — "D-6" remaps to D-7 in
+  // legacy map, so TCO_2026_CODE_OVERRIDES entries below force the correct code
+  behavior_extinction_burst_definition:   "D-6",
+  behavior_spontaneous_recovery_definition: "D-6",
+  behavior_punishment_side_effects:       "D-6",
+  behavior_aggression_during_extinction:  "D-6",
+
+  // F-4 (supervision practices) — "F-4" remaps to F-7 in legacy map,
+  // so TCO_2026_CODE_OVERRIDES entries below force the correct code
+  professional_supervision_feedback_role:     "F-4",
+  professional_supervision_contact_frequency: "F-4",
+  professional_effective_supervision_components: "F-4",
+
+  // F-6 (public communication) — "F-6" not in legacy remap map, safe
+  professional_social_media_client_identity:  "F-6",
+  professional_accurate_public_statements:    "F-6",
+  professional_no_public_client_disclosure:   "F-6",
+
+  // F-7 (multiple relationships) — "F-7" not in legacy remap map, safe
+  professional_dual_relationship_definition:  "F-7",
+  professional_managing_dual_relationships:   "F-7",
+
+  // F-8 (gift-giving) — "F-8" not in legacy remap map, safe
+  professional_gift_receiving_policy:         "F-8",
+  professional_gift_giving_to_clients:        "F-8",
+  professional_gift_cultural_context:         "F-8",
+
+  // ─── Base bank concepts not previously in map ──────────────────────────────
+  // These existed in question-bank.js but were silently excluded after
+  // STRICT_RBT_ALLOWED_CONCEPT_IDS was simplified to Object.keys(CONCEPT_TO_TASK_LIST).
+  // All are beginner/intermediate difficulty and belong in the question pool.
+
+  // A-1 (continuous measurement)
+  measurement_magnitude:                      "A-1",
+  measurement_opportunity_based:              "A-1",
+
+  // A-4 (enter data and update graphs) — "A-4" remaps to A-3 in legacy map;
+  // override entry below forces correct code
+  documentation_graphing:                     "A-4",
+
+  // A-6 (calculate and summarize data) — "A-6" remaps to A-5 in legacy map;
+  // override entries below force correct code
+  documentation_data_summary:                 "A-6",
+  documentation_behavior_frequency_summary:   "A-6",
+  measurement_accuracy:                       "A-6",
+
+  // B-2 (individualized skill assessment) — "B-2" is identity in legacy map, safe
+  assessment_target_behavior_selection:       "B-2",
+  assessment_task_analysis_probe:             "B-2",
+
+  // B-3 (functional assessment components) — "B-3" is identity in legacy map, safe
+  assessment_descriptive:                     "B-3",
+  assessment_hypothesis_statement:            "B-3",
+
+  // C-3 (DTT) — "C-3" remaps to C-1 in legacy map; override entry below forces correct code
+  skill_choral_responding:                    "C-3",
+
+  // D-2 (antecedent interventions) — "D-2" remaps to D-1 in legacy map;
+  // override entry below forces correct code
+  behavior_contingency_review:                "D-2",
 };
 
 const OMITTED_CONCEPT_IDS = new Set([
@@ -593,6 +682,38 @@ const TCO_2026_CODE_OVERRIDES = {
   skill_maintenance: "C-9",
   skill_maintenance_probe: "C-9",
   skill_reinforcer_pairing: "C-2",
+
+  // Wave 3 — C-9 concepts (legacy "C-9" remaps to C-7; force correct code)
+  skill_acquisition_phase_definition:         "C-9",
+  skill_maintenance_phase_definition:         "C-9",
+  skill_acquisition_vs_maintenance_selection: "C-9",
+
+  // Wave 3 — D-5 concepts (legacy "D-5" remaps to D-4; force correct code)
+  behavior_punishment_definition:         "D-5",
+  behavior_positive_punishment:           "D-5",
+  behavior_negative_punishment:           "D-5",
+  behavior_time_out_procedure:            "D-5",
+  behavior_response_cost_procedure:       "D-5",
+  behavior_rbt_punishment_role:           "D-5",
+
+  // Wave 3 — D-6 concepts (legacy "D-6" remaps to D-7; force correct code)
+  behavior_extinction_burst_definition:       "D-6",
+  behavior_spontaneous_recovery_definition:   "D-6",
+  behavior_punishment_side_effects:           "D-6",
+  behavior_aggression_during_extinction:      "D-6",
+
+  // Wave 3 — F-4 concepts (legacy "F-4" remaps to F-7; force correct code)
+  professional_supervision_feedback_role:         "F-4",
+  professional_supervision_contact_frequency:     "F-4",
+  professional_effective_supervision_components:  "F-4",
+
+  // Base bank re-activations — codes that would be remapped incorrectly
+  documentation_graphing:                     "A-4",  // "A-4" → "A-3" without override
+  documentation_data_summary:                 "A-6",  // "A-6" → "A-5" without override
+  documentation_behavior_frequency_summary:   "A-6",
+  measurement_accuracy:                       "A-6",
+  skill_choral_responding:                    "C-3",  // "C-3" → "C-1" without override
+  behavior_contingency_review:                "D-2",  // "D-2" → "D-1" without override
 };
 
 export const CONCEPT_TO_TASK_LIST = Object.fromEntries(
