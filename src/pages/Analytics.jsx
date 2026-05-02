@@ -303,10 +303,10 @@ export default function Analytics() {
         <div className="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {t("RBT 2.0 Task List — Section Mastery")}
+              {t("RBT Exam Outline — Section Mastery")}
             </h3>
             <span className="text-xs text-slate-400">
-              {t("Aligned to BACB official structure")}
+              {t("Aligned to the current exam outline")}
             </span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">

@@ -232,7 +232,7 @@ export default function Dashboard() {
           <div className="rounded-2xl border border-slate-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                {t("RBT 2.0 Task List")}
+                {t("RBT Exam Outline")}
               </h3>
               <Link
                 to={createPageUrl("Analytics")}

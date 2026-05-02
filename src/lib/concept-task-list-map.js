@@ -1,19 +1,18 @@
 /**
- * Maps every RBT-eligible concept ID to its primary RBT 2.0 Task List item code.
+ * Maps every RBT-eligible concept ID to its primary BACB RBT Test Content
+ * Outline (3rd ed.) item code.
  *
- * Some concepts plausibly span multiple items (e.g. token economy could fit
- * under C-3 reinforcement contingencies OR C-12 token economy). When that
- * happens we pick the *most specific* item — that's how the BACB exam tends
- * to classify questions.
- *
- * Coverage is enforced at startup by validateConceptCoverage(): if a concept
- * exists in the question bank but is missing from this map, the assertion
- * throws so we don't silently drop attempts from the section-mastery counts.
+ * The large object below is the historical source map built around the old
+ * Task List 2.0 structure. We keep it as a durable concept catalogue, then
+ * remap it into the 2026 outline at import time so we can:
+ *   - keep stable concept IDs and historical data
+ *   - retire concepts that no longer fit the current exam model
+ *   - avoid silently keeping old 2.0-only items alive
  */
 
 import { TASK_LIST_ITEM_BY_CODE } from "./task-list.js";
 
-export const CONCEPT_TO_TASK_LIST = {
+const LEGACY_CONCEPT_TO_TASK_LIST = {
   // ─── A. Measurement ────────────────────────────────────────────────────────
   measurement_data_collection_preparation: "A-1",
   measurement_timing_accuracy:            "A-1",
@@ -476,8 +475,146 @@ export const CONCEPT_TO_TASK_LIST = {
   professional_client_autonomy:           "F-5",
 };
 
+const OMITTED_CONCEPT_IDS = new Set([
+  "measurement_data_collection_preparation",
+  "measurement_behavior_plan_review",
+  "measurement_data_sheet_setup",
+  "measurement_materials_prep",
+  "measurement_ioa_preparation",
+  "measurement_reinforcer_check_prep",
+  "skill_written_plan_components",
+  "skill_session_preparation",
+  "skill_sap_behavioral_objective",
+  "skill_sap_reinforcement_plan",
+  "skill_sap_data_system",
+  "skill_sap_mastery_criteria",
+  "skill_sap_generalization_plan",
+  "skill_sap_teaching_procedure",
+  "skill_sap_target_behavior",
+  "skill_material_gathering",
+  "skill_environment_arrangement",
+  "skill_reinforcer_preparation",
+  "skill_stimulus_preparation",
+  "skill_presession_data_review",
+  "skill_presession_program_review",
+  "skill_presession_supervisor_contact",
+  "behavior_written_plan_components",
+  "behavior_brp_operational_definition",
+  "behavior_brp_function_statement",
+  "behavior_brp_antecedent_section",
+  "behavior_brp_reinforcement_section",
+  "behavior_brp_crisis_section",
+  "behavior_brp_replacement_section",
+  "behavior_rbt_follows_brp",
+  "professional_mandated_reporting",
+  "professional_safety",
+]);
+
+const LEGACY_CODE_TO_TCO_2026 = {
+  "A-2": "A-1",
+  "A-3": "A-2",
+  "A-4": "A-3",
+  "A-5": "A-4",
+  "A-6": "A-5",
+  "B-1": "B-1",
+  "B-2": "B-2",
+  "B-3": "B-3",
+  "C-3": "C-1",
+  "C-4": "C-3",
+  "C-5": "C-4",
+  "C-6": "C-5",
+  "C-7": "C-6",
+  "C-8": "C-7",
+  "C-9": "C-7",
+  "C-10": "C-8",
+  "C-11": "C-10",
+  "C-12": "C-11",
+  "D-2": "D-1",
+  "D-3": "D-2",
+  "D-4": "D-3",
+  "D-5": "D-4",
+  "D-6": "D-7",
+  "E-1": "E-1",
+  "E-2": "E-2",
+  "E-3": "E-3",
+  "E-4": "E-4",
+  "E-5": "E-4",
+  "F-1": "F-2",
+  "F-2": "F-9",
+  "F-3": "F-9",
+  "F-4": "F-7",
+  "F-5": "F-10",
+};
+
+const TCO_2026_CODE_OVERRIDES = {
+  assessment_operational_definition: "A-5",
+  behavior_extinction_burst_management: "D-6",
+  behavior_extinction_safety: "D-6",
+  behavior_physical_management_authorization: "D-7",
+  behavior_response_cost: "D-5",
+  behavior_spontaneous_recovery: "D-6",
+  measurement_data_summarization: "A-6",
+  measurement_discontinuous_limitation: "A-8",
+  measurement_frequency_vs_rate: "A-6",
+  measurement_graph_trend: "A-7",
+  measurement_ioa_duration_method: "A-8",
+  measurement_ioa_total_count: "A-8",
+  measurement_mean_duration: "A-6",
+  measurement_missing_data_impact: "A-8",
+  measurement_operational_def_review: "A-8",
+  measurement_percentage: "A-6",
+  measurement_percentage_correct: "A-6",
+  measurement_percentage_opportunities: "A-6",
+  measurement_rate: "A-6",
+  measurement_timing_accuracy: "A-8",
+  professional_chain_of_command: "F-3",
+  professional_client_preference_respect: "F-10",
+  professional_client_rights_protection: "F-1",
+  professional_confidentiality: "F-5",
+  professional_demeanor: "F-1",
+  professional_dignity: "F-1",
+  professional_gift_boundary: "F-8",
+  professional_guardian_consent: "F-5",
+  professional_minimum_necessary_disclosure: "F-5",
+  professional_private_information_security: "F-5",
+  professional_public_privacy_protection: "F-5",
+  professional_record_honesty: "F-1",
+  professional_required_supervision_participation: "F-3",
+  professional_respectful_language: "F-1",
+  professional_role_appropriate_communication: "F-9",
+  professional_secure_record_storage: "F-5",
+  professional_social_media: "F-6",
+  professional_social_media_confidentiality: "F-5",
+  professional_supervision: "F-3",
+  professional_supervision_frequency: "F-3",
+  professional_supervision_preparation: "F-4",
+  professional_supervisor_notification: "F-3",
+  skill_conditioned_reinforcer: "C-2",
+  skill_maintenance: "C-9",
+  skill_maintenance_probe: "C-9",
+  skill_reinforcer_pairing: "C-2",
+};
+
+export const CONCEPT_TO_TASK_LIST = Object.fromEntries(
+  [
+    ...Object.entries(LEGACY_CONCEPT_TO_TASK_LIST),
+    ["behavior_response_cost", "D-5"],
+  ].flatMap(([conceptId, legacyCode]) => {
+    if (OMITTED_CONCEPT_IDS.has(conceptId)) {
+      return [];
+    }
+
+    const remappedCode =
+      TCO_2026_CODE_OVERRIDES[conceptId] ||
+      LEGACY_CODE_TO_TCO_2026[legacyCode] ||
+      legacyCode;
+
+    return [[conceptId, remappedCode]];
+  }),
+);
+
 /**
- * O(1) lookup. Returns the Task List code for a given concept ID, or null
+ * O(1) lookup. Returns the exam-outline code for a given concept ID, or null
  * if the concept isn't mapped.
  */
 export function getTaskListCode(conceptId) {

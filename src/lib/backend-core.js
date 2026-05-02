@@ -1,7 +1,7 @@
 import { TOTAL_PRACTICE_QUESTIONS, topicLabels } from "./question-bank.js";
 import { TASK_LIST_SECTIONS } from "./task-list.js";
 
-// Topic buckets in question-bank.js map 1:1 to RBT 2.0 Task List sections.
+// Topic buckets in question-bank.js map 1:1 to the current RBT exam domains.
 // Keep this in sync with question-bank.js -> topicLabels.
 const TOPIC_TO_SECTION = {
   measurement: "A",
@@ -14,7 +14,7 @@ const TOPIC_TO_SECTION = {
 
 /**
  * Computes mastery (smoothed accuracy) and raw attempt counts for each of the
- * 6 RBT 2.0 Task List sections, derived from the existing attempts data via
+ * 6 RBT exam domains, derived from the existing attempts data via
  * their `topic` field. No schema changes required — works retroactively.
  */
 function computeTaskListSectionMastery(attempts) {
@@ -276,7 +276,7 @@ export function computeProgress(db, userId) {
     readinessScore,
   });
 
-  // RBT 2.0 Task List section breakdown — maps from the existing topic
+  // RBT exam-domain breakdown — maps from the existing topic
   // buckets (measurement/assessment/...) to official sections (A..F).
   const taskListBreakdown = computeTaskListSectionMastery(attempts);
 
