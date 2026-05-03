@@ -1,14 +1,27 @@
 import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
+import MobileLayout from "@/components/layout/MobileLayout";
 import { useAuth } from "@/lib/AuthContext";
+import useIsMobile from "@/hooks/use-mobile";
 
 export default function Layout({ children, currentPageName }) {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
   const plan = user?.plan || "free";
   const isAdmin = user?.role === "admin";
 
+  // Mobile layout: bottom tab bar, safe areas, native feel
+  if (isMobile) {
+    return (
+      <MobileLayout currentPageName={currentPageName}>
+        {children}
+      </MobileLayout>
+    );
+  }
+
+  // Desktop layout: sidebar + topbar
   if (currentPageName === "Pricing") {
     return (
       <div className="dark-dashboard-grid min-h-screen bg-[#F8FAFC] text-foreground transition-colors dark:bg-background">

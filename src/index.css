@@ -261,3 +261,162 @@
     opacity: 0.98;
   }
 }
+
+/* ─── Mobile / Capacitor iOS Layout ─────────────────────────────────────── */
+
+/* Full-screen shell */
+.mobile-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh; /* dynamic viewport height — works inside WKWebView */
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Safe area top (status bar on notched iPhones) */
+.mobile-status-bar {
+  height: env(safe-area-inset-top, 0px);
+  background: var(--background);
+  flex-shrink: 0;
+}
+
+/* Top bar */
+.mobile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 20px;
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+  background: var(--background);
+  flex-shrink: 0;
+}
+
+/* Scrollable content area — pushes up against the tab bar */
+.mobile-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* Content padding so cards don't sit under the tab bar */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
+}
+
+/* Bottom tab bar */
+.mobile-tabbar {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: calc(env(safe-area-inset-bottom, 0px) + 62px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  background: var(--background);
+  flex-shrink: 0;
+  z-index: 30;
+}
+
+.mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px 4px;
+  flex: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 80ms;
+}
+
+.mobile-tab:active {
+  opacity: 0.6;
+}
+
+.mobile-tab-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 28px;
+  border-radius: 14px;
+  transition: background 200ms;
+}
+
+.mobile-tab-icon-wrap--active {
+  background: hsl(217 100% 60% / 0.12);
+}
+
+.mobile-tab-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  line-height: 1;
+  transition: color 200ms;
+}
+
+/* "More" drawer — slides up from bottom */
+.mobile-more-drawer {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
+  z-index: 50;
+  border-radius: 24px;
+  border: 1px solid hsl(var(--border) / 0.6);
+  background: var(--background);
+  box-shadow:
+    0 -4px 60px -8px rgba(0,0,0,0.18),
+    0 -1px 12px rgba(0,0,0,0.06);
+  animation: drawer-up 220ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes drawer-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.more-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border-radius: 16px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 150ms;
+}
+
+.more-grid-item:active {
+  background: hsl(var(--muted) / 0.5);
+}
+
+/* Disable hover states on touch devices (prevents sticky hover on iOS) */
+@media (hover: none) {
+  a:hover,
+  button:hover {
+    background: initial !important;
+    color: initial !important;
+  }
+}
+
+/* Faster tap — remove 300ms delay */
+* {
+  touch-action: manipulation;
+}
+
+/* Prevent text selection on interactive elements */
+.mobile-tabbar *,
+.mobile-topbar *,
+.mobile-more-drawer * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Ensure Capacitor WebView uses safe area variables */
+@supports (padding: env(safe-area-inset-top)) {
+  :root {
+    --sat: env(safe-area-inset-top);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+    --sar: env(safe-area-inset-right);
+  }
+}

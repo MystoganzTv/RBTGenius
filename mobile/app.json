@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "RBT Genius",
+    "slug": "rbt-genius",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.rbtgenius.app"
+    },
+    "android": {
+      "package": "com.rbtgenius.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1E5EFF",
+        "foregroundImage": "./assets/icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}
