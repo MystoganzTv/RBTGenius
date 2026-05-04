@@ -757,6 +757,109 @@ export default function Landing() {
           ))}
         </section>
 
+
+        {/* ── Mobile App Section ── */}
+        <section className="mt-14 sm:mt-16">
+          <div className={`rounded-[2rem] border p-5 sm:p-8 ${isDark ? "border-slate-800 bg-slate-950" : "border-slate-200/80 bg-white shadow-[0_24px_60px_-40px_rgba(15,23,42,0.22)]"}`}>
+            <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
+
+              {/* Left copy */}
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                  Native iOS &amp; Android App
+                </div>
+                <h2 className={`mt-5 text-2xl font-black tracking-tight sm:text-3xl ${isDark ? "text-slate-50" : "text-slate-900"}`}>
+                  Study anywhere — even offline.
+                </h2>
+                <p className={`mt-3 text-base leading-7 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                  The RBT Genius native app gives you the full experience on your iPhone or Android device. Practice questions, flashcards, mock exams, and AI tutor — all in your pocket with the same account you use on the web.
+                </p>
+
+                <ul className="mt-6 space-y-3">
+                  {[
+                    "1,100+ practice questions available offline",
+                    "85-question timed mock exams with pass/fail scoring",
+                    "Tap-to-flip flashcards with topic filters",
+                    "AI Tutor powered by the same backend",
+                    "Haptic feedback and native iOS feel",
+                  ].map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" /></svg>
+                      </span>
+                      <span className={`text-sm leading-5 ${isDark ? "text-slate-300" : "text-slate-600"}`}>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href="https://apps.apple.com/app/rbt-genius/id0000000000"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-3 rounded-2xl border px-5 py-3 transition-opacity hover:opacity-80 ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-slate-50 shadow-sm"}`}
+                  >
+                    <svg className={`h-7 w-7 ${isDark ? "text-white" : "text-slate-900"}`} viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    <div>
+                      <p className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>Download on the</p>
+                      <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>App Store</p>
+                    </div>
+                  </a>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.rbtgenius.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-3 rounded-2xl border px-5 py-3 transition-opacity hover:opacity-80 ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-slate-50 shadow-sm"}`}
+                  >
+                    <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none"><path d="M3.18 23.76a2 2 0 01-.68-.62V.86a2 2 0 01.68-.62l.1-.05L13.37 12l-10.09 11.8-.1-.04z" fill="#EA4335"/><path d="M17.31 15.93L13.73 12.3l3.58-3.63 4.24 2.43a1.42 1.42 0 010 2.4l-4.24 2.43z" fill="#FBBC04"/><path d="M3.18.24l10.55 10.56-3.58 3.63L3.18.86V.24z" fill="#4285F4"/><path d="M3.18 23.76V23.14l7.01-7.01 3.54 3.55L3.18 23.76z" fill="#34A853"/></svg>
+                    <div>
+                      <p className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>Get it on</p>
+                      <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Google Play</p>
+                    </div>
+                  </a>
+                </div>
+              </div>
+
+              {/* Right phone mockup */}
+              <div className="flex justify-center lg:justify-end">
+                <div className={`relative w-[220px] rounded-[2.8rem] border-[6px] p-2 shadow-2xl sm:w-[260px] ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-300 bg-white"}`}>
+                  {/* Notch */}
+                  <div className={`mx-auto mb-2 h-5 w-20 rounded-full ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                  {/* Screen */}
+                  <div className={`rounded-[2rem] p-4 ${isDark ? "bg-[#020617]" : "bg-[#EEF4FB]"}`} style={{minHeight: 380}}>
+                    {/* Top bar */}
+                    <div className="mb-4">
+                      <p className={`text-[10px] font-semibold uppercase tracking-widest ${isDark ? "text-slate-500" : "text-slate-400"}`}>Practice</p>
+                      <p className={`text-sm font-black ${isDark ? "text-white" : "text-slate-900"}`}>ABA Principles</p>
+                    </div>
+                    {/* Question card */}
+                    <div className={`rounded-2xl p-4 mb-3 ${isDark ? "bg-[#0f172a]" : "bg-white"}`}>
+                      <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${isDark ? "text-[#4F8CFF]" : "text-[#1E5EFF]"}`}>Question 1 / 24</p>
+                      <p className={`text-xs font-semibold leading-4 ${isDark ? "text-white" : "text-slate-900"}`}>Which schedule of reinforcement is most resistant to extinction?</p>
+                    </div>
+                    {/* Answer options */}
+                    {[
+                      { label: "A", text: "Fixed Ratio", correct: false },
+                      { label: "B", text: "Variable Ratio", correct: true },
+                      { label: "C", text: "Fixed Interval", correct: false },
+                    ].map((opt) => (
+                      <div key={opt.label} className={`mb-2 flex items-center gap-2 rounded-xl px-3 py-2 ${opt.correct ? "bg-emerald-500/15 border border-emerald-500/30" : isDark ? "bg-white/5" : "bg-white/70"}`}>
+                        <span className={`flex h-5 w-5 items-center justify-center rounded-md text-[9px] font-black ${opt.correct ? "bg-emerald-500 text-white" : isDark ? "bg-white/10 text-slate-400" : "bg-slate-100 text-slate-500"}`}>{opt.label}</span>
+                        <span className={`text-[10px] font-semibold ${opt.correct ? "text-emerald-400" : isDark ? "text-slate-300" : "text-slate-600"}`}>{opt.text}</span>
+                        {opt.correct && <span className="ml-auto text-emerald-400 text-xs">✓</span>}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Home bar */}
+                  <div className={`mx-auto mt-2 h-1 w-16 rounded-full ${isDark ? "bg-slate-700" : "bg-slate-300"}`} />
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
         <section className="mt-14 rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.22)] dark:border-slate-800 dark:bg-slate-950 sm:mt-16 sm:p-8">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#1E5EFF]/15 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-medium text-[#1E5EFF] dark:border-[#1E5EFF]/20 dark:bg-[#1E5EFF]/10 dark:text-[#8EB0FF]">

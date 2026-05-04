@@ -13,18 +13,22 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.rbtgenius.app"
+      "bundleIdentifier": "com.rbtgenius.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.rbtgenius.app",
       "adaptiveIcon": {
         "backgroundColor": "#1E5EFF",
         "foregroundImage": "./assets/icon.png"
-      },
-      "predictiveBackGestureEnabled": false
+      }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "extra": {
+      "eas": {
+        "projectId": "caacd2e4-8b30-4ace-b81d-1e5da78e62ed"
+      }
     },
     "plugins": [
       "expo-font"
