@@ -28,7 +28,7 @@ const LANG_KEY = 'rbt_language';
 export default function ProfileScreen() {
   const scheme = useColorScheme();
   const theme = getTheme(scheme === 'dark' ? 'dark' : 'light');
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const s = styles(theme);
 
   // ── Server data ────────────────────────────────────────────────
@@ -44,7 +44,7 @@ export default function ProfileScreen() {
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [language, setLanguage] = useState('en');
 
-  const authHeaders = { Authorization: `Bearer ${user?.token}` };
+  const authHeaders = { Authorization: `Bearer ${token}` };
 
   // Load profile + settings from server + AsyncStorage
   useEffect(() => {

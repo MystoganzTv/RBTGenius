@@ -56,14 +56,14 @@ const PRO_FEATURES = [
 export default function UpgradeScreen({ navigation }) {
   const scheme = useColorScheme();
   const theme = getTheme(scheme === 'dark' ? 'dark' : 'light');
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const s = styles(theme);
 
   const [selectedPlan, setSelectedPlan] = useState('premium_yearly');
   const [loading, setLoading] = useState(false);
 
   const handleUpgrade = async () => {
-    if (!user?.token) {
+    if (!token) {
       Alert.alert('Not signed in', 'Please sign in to upgrade.');
       return;
     }
@@ -76,7 +76,7 @@ export default function UpgradeScreen({ navigation }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ plan: selectedPlan }),
       });

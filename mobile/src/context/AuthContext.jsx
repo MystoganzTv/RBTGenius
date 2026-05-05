@@ -17,37 +17,46 @@ async function fetchDashboard(token) {
   }
 }
 
-function buildUser(rawUser, token, dashboard = {}) {
-  const progress = dashboard.progress || {};
+function buildUser(rawUser, dashboard = {}) {
+  const progress    = dashboard.progress     || {};
+  const entitlements = dashboard.entitlements || {};
   return {
-    id: rawUser.id,
-    name: rawUser.full_name ?? rawUser.name ?? 'Student',
-    email: rawUser.email,
-    plan: rawUser.plan ?? 'free',
-    role: rawUser.role ?? 'student',
-    token,
-    readiness: Math.round(progress.readiness_score ?? 0),
-    streak: progress.study_streak_days ?? 0,
-    completedQuestions: progress.total_questions_completed ?? 0,
+    id:                 rawUser.id,
+    name:               rawUser.full_name ?? rawUser.name ?? 'Student',
+    email:              rawUser.email,
+    plan:               rawUser.plan ?? 'free',
+    role:               rawUser.role ?? 'student',
+    // Readiness / progress
+    readiness:          Math.round(progress.readiness_score      ?? 0),
+    streak:             progress.study_streak_days               ?? 0,
+    completedQuestions: progress.total_questions_completed       ?? 0,
+    accuracyRate:       Math.round(progress.accuracy_rate        ?? 0),
+    questionsToday:     progress.questions_today                 ?? 0,
+    // Entitlements
+    isPremium:          entitlements.is_premium                  ?? false,
+    dailyLimit:         entitlements.practice_daily_limit        ?? 15,
+    flashcardLimit:     entitlements.flashcard_daily_limit       ?? 15,
+    aiLimit:            entitlements.ai_tutor_daily_limit        ?? 5,
   };
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user,    setUser]    = useState(null);
+  const [token,   setToken]   = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Restore session on mount
   useEffect(() => {
     (async () => {
       try {
-        const token = await AsyncStorage.getItem(TOKEN_KEY);
-        if (!token) { setLoading(false); return; }
+        const saved = await AsyncStorage.getItem(TOKEN_KEY);
+        if (!saved) { setLoading(false); return; }
 
         const [meRes, dashboard] = await Promise.all([
           fetch(`${API_BASE}/api/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${saved}` },
           }),
-          fetchDashboard(token),
+          fetchDashboard(saved),
         ]);
 
         if (!meRes.ok) {
@@ -57,9 +66,10 @@ export function AuthProvider({ children }) {
         }
 
         const rawUser = await meRes.json();
-        setUser(buildUser(rawUser, token, dashboard));
+        setToken(saved);
+        setUser(buildUser(rawUser, dashboard));
       } catch {
-        // Network error — keep user logged out
+        // Network error — stay logged out
       } finally {
         setLoading(false);
       }
@@ -67,42 +77,39 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
+    const res  = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Login failed');
 
-    const { token, user: rawUser } = data;
-    await AsyncStorage.setItem(TOKEN_KEY, token);
-
-    const dashboard = await fetchDashboard(token);
-    setUser(buildUser(rawUser, token, dashboard));
+    const { token: t, user: rawUser } = data;
+    await AsyncStorage.setItem(TOKEN_KEY, t);
+    const dashboard = await fetchDashboard(t);
+    setToken(t);
+    setUser(buildUser(rawUser, dashboard));
   };
 
   const register = async (fullName, email, password) => {
-    const res = await fetch(`${API_BASE}/api/auth/register`, {
+    const res  = await fetch(`${API_BASE}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ full_name: fullName, email, password }),
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-    const { token, user: rawUser } = data;
-    await AsyncStorage.setItem(TOKEN_KEY, token);
-
-    const dashboard = await fetchDashboard(token);
-    setUser(buildUser(rawUser, token, dashboard));
+    const { token: t, user: rawUser } = data;
+    await AsyncStorage.setItem(TOKEN_KEY, t);
+    const dashboard = await fetchDashboard(t);
+    setToken(t);
+    setUser(buildUser(rawUser, dashboard));
   };
 
   const logout = async () => {
     try {
-      const token = await AsyncStorage.getItem(TOKEN_KEY);
       if (token) {
         fetch(`${API_BASE}/api/auth/logout`, {
           method: 'POST',
@@ -111,12 +118,30 @@ export function AuthProvider({ children }) {
       }
     } finally {
       await AsyncStorage.removeItem(TOKEN_KEY);
+      setToken(null);
       setUser(null);
     }
   };
 
+  // Refresh dashboard data (call after completing practice to update stats)
+  const refreshDashboard = async () => {
+    if (!token) return;
+    const dashboard = await fetchDashboard(token);
+    if (!dashboard.progress) return;
+    setUser(prev => prev ? {
+      ...prev,
+      readiness:          Math.round(dashboard.progress.readiness_score   ?? prev.readiness),
+      streak:             dashboard.progress.study_streak_days            ?? prev.streak,
+      completedQuestions: dashboard.progress.total_questions_completed    ?? prev.completedQuestions,
+      accuracyRate:       Math.round(dashboard.progress.accuracy_rate     ?? prev.accuracyRate),
+      questionsToday:     dashboard.progress.questions_today              ?? prev.questionsToday,
+      isPremium:          dashboard.entitlements?.is_premium              ?? prev.isPremium,
+      dailyLimit:         dashboard.entitlements?.practice_daily_limit    ?? prev.dailyLimit,
+    } : prev);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshDashboard }}>
       {children}
     </AuthContext.Provider>
   );

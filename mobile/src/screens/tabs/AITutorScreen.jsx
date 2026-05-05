@@ -30,7 +30,7 @@ const QUICK_PROMPTS = [
 export default function AITutorScreen() {
   const scheme = useColorScheme();
   const theme = getTheme(scheme === 'dark' ? 'dark' : 'light');
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const s = styles(theme);
 
   const [messages, setMessages] = useState([
@@ -47,7 +47,7 @@ export default function AITutorScreen() {
 
   const authHeaders = () => ({
     'Content-Type': 'application/json',
-    ...(user?.token ? { Authorization: `Bearer ${user.token}` } : {}),
+    Authorization: `Bearer ${token}`,
   });
 
   // Creates a new conversation and returns its id
