@@ -108,6 +108,21 @@ export function AuthProvider({ children }) {
     setUser(buildUser(rawUser, dashboard));
   };
 
+  const loginWithGoogle = async (code, codeVerifier, redirectUri) => {
+    const res = await fetch(`${API_BASE}/api/auth/oauth/google/mobile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, code_verifier: codeVerifier, redirect_uri: redirectUri }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Google sign-in failed');
+    const { token: t, user: rawUser } = data;
+    await AsyncStorage.setItem(TOKEN_KEY, t);
+    const dashboard = await fetchDashboard(t);
+    setToken(t);
+    setUser(buildUser(rawUser, dashboard));
+  };
+
   const logout = async () => {
     try {
       if (token) {
@@ -141,7 +156,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshDashboard }}>
+    <AuthContext.Provider value={{ user, token, loading, login, loginWithGoogle, register, logout, refreshDashboard }}>
       {children}
     </AuthContext.Provider>
   );

@@ -307,6 +307,8 @@ export async function exchangeOAuthCodeForProfile({
   providerId,
   code,
   backendOrigin,
+  redirectUri: customRedirectUri,
+  codeVerifier,
   callbackParams = {},
   env = process.env,
 }) {
@@ -326,15 +328,17 @@ export async function exchangeOAuthCodeForProfile({
     throw new Error(`${provider.label} sign-in is not configured yet`);
   }
 
-  const redirectUri = `${backendOrigin}/api/auth/oauth/${providerId}/callback`;
+  const redirectUri = customRedirectUri || `${backendOrigin}/api/auth/oauth/${providerId}/callback`;
   const tokenUrl = provider.tokenUrl || provider.getTokenUrl(env);
-  const tokenParams = new URLSearchParams({
+  const tokenParamsObj = {
     code,
     client_id: clientId,
     client_secret: clientSecret,
     redirect_uri: redirectUri,
     grant_type: "authorization_code",
-  });
+  };
+  if (codeVerifier) tokenParamsObj.code_verifier = codeVerifier;
+  const tokenParams = new URLSearchParams(tokenParamsObj);
 
   const tokenResponse = await fetch(tokenUrl, {
     method: "POST",

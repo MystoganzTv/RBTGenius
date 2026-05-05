@@ -1,16 +1,52 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useColorScheme } from 'react-native';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../../context/AuthContext';
 import { alpha, getTheme } from '../../theme';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID = '37632251231-4l1t8mg15isp9ck5uvcpelrv5uvj2o66.apps.googleusercontent.com';
+
+const googleDiscovery = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+};
 
 export default function LoginScreen({ navigation }) {
   const scheme = useColorScheme();
   const theme = getTheme(scheme === 'dark' ? 'dark' : 'light');
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'rbtgenius' });
+
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      redirectUri,
+      scopes: ['openid', 'profile', 'email'],
+      usePKCE: true,
+    },
+    googleDiscovery,
+  );
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { code } = response.params;
+      setGoogleLoading(true);
+      loginWithGoogle(code, request.codeVerifier, redirectUri)
+        .catch((err) => Alert.alert('Google Sign-In failed', err.message ?? 'Try again.'))
+        .finally(() => setGoogleLoading(false));
+    } else if (response?.type === 'error') {
+      Alert.alert('Google Sign-In failed', response.error?.message ?? 'Try again.');
+    }
+  }, [response]);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) { Alert.alert('Missing fields', 'Please enter your email and password.'); return; }
@@ -43,6 +79,27 @@ export default function LoginScreen({ navigation }) {
             <Pressable style={[s.btn, loading && {opacity:0.7}]} onPress={handleLogin} disabled={loading}>
               {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.btnText}>Sign In</Text>}
             </Pressable>
+
+            <View style={s.dividerRow}>
+              <View style={s.dividerLine} />
+              <Text style={s.dividerText}>or</Text>
+              <View style={s.dividerLine} />
+            </View>
+
+            <Pressable
+              style={[s.googleBtn, (!request || googleLoading) && {opacity:0.6}]}
+              onPress={() => promptAsync()}
+              disabled={!request || googleLoading}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color={theme.text} />
+              ) : (
+                <>
+                  <Text style={s.googleIcon}>G</Text>
+                  <Text style={s.googleBtnText}>Continue with Google</Text>
+                </>
+              )}
+            </Pressable>
           </View>
           <View style={s.footer}>
             <Text style={s.footerText}>Don't have an account? </Text>
@@ -70,6 +127,12 @@ const styles = (theme) => StyleSheet.create({
   input:{backgroundColor:theme.surface,borderColor:theme.border,borderWidth:1,borderRadius:16,padding:16,color:theme.text,fontSize:16},
   btn:{backgroundColor:theme.primary,borderRadius:18,paddingVertical:18,alignItems:'center',marginTop:8,shadowColor:theme.primary,shadowOffset:{width:0,height:8},shadowOpacity:0.3,shadowRadius:16},
   btnText:{color:'#fff',fontSize:16,fontWeight:'800'},
+  dividerRow:{flexDirection:'row',alignItems:'center',gap:12,marginVertical:4},
+  dividerLine:{flex:1,height:1,backgroundColor:theme.border},
+  dividerText:{color:theme.muted,fontSize:14},
+  googleBtn:{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:10,backgroundColor:theme.surface,borderColor:theme.border,borderWidth:1,borderRadius:18,paddingVertical:16},
+  googleIcon:{fontSize:18,fontWeight:'800',color:'#4285F4'},
+  googleBtnText:{color:theme.text,fontSize:16,fontWeight:'700'},
   footer:{flexDirection:'row',justifyContent:'center',marginTop:32},
   footerText:{color:theme.muted,fontSize:15},
 });

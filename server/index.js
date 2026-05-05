@@ -574,6 +574,33 @@ async function handleOAuthCallback(req, res) {
 app.get("/api/auth/oauth/:providerId/callback", handleOAuthCallback);
 app.post("/api/auth/oauth/:providerId/callback", handleOAuthCallback);
 
+app.post("/api/auth/oauth/:providerId/mobile", async (req, res) => {
+  const { providerId } = req.params;
+  const { code, code_verifier, redirect_uri } = req.body || {};
+
+  if (!code || !redirect_uri) {
+    res.status(400).json({ message: "code and redirect_uri are required" });
+    return;
+  }
+
+  try {
+    const profile = await exchangeOAuthCodeForProfile({
+      providerId,
+      code,
+      backendOrigin: getBackendOrigin(req),
+      redirectUri: redirect_uri,
+      codeVerifier: code_verifier,
+    });
+    const authData = upsertOAuthUser(profile, providerId);
+    if (authData.created) {
+      void notifyNewMember(authData.user, { source: "oauth", authProvider: providerId });
+    }
+    res.json({ token: authData.token, user: authData.user });
+  } catch (err) {
+    res.status(400).json({ message: err.message || "Unable to complete sign-in" });
+  }
+});
+
 app.post("/api/auth/register", (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();
   const password = String(req.body?.password || "");
