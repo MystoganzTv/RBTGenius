@@ -4,12 +4,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { ActivityIndicator, View, useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState, useEffect } from 'react';
 
 import { useAuth } from '../context/AuthContext';
 import { getTheme } from '../theme';
 
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import OnboardingScreen, { ONBOARDING_KEY } from '../screens/auth/OnboardingScreen';
 import DashboardScreen from '../screens/tabs/DashboardScreen';
 import PracticeScreen from '../screens/tabs/PracticeScreen';
 import MockExamScreen from '../screens/tabs/MockExamScreen';
@@ -92,12 +95,29 @@ export default function RootNavigator() {
   const { user, loading } = useAuth();
   const scheme = useColorScheme();
   const theme = getTheme(scheme === 'dark' ? 'dark' : 'light');
+  const [onboardingDone, setOnboardingDone] = useState(null); // null = checking
 
-  if (loading) {
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDING_KEY).then(val => {
+      setOnboardingDone(val === 'true');
+    });
+  }, []);
+
+  // Waiting for auth + onboarding check
+  if (loading || onboardingDone === null) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.background }}>
         <ActivityIndicator color={theme.primary} size="large" />
       </View>
+    );
+  }
+
+  // Show onboarding only once (first install)
+  if (!onboardingDone) {
+    return (
+      <NavigationContainer>
+        <OnboardingScreen onDone={() => setOnboardingDone(true)} />
+      </NavigationContainer>
     );
   }
 
