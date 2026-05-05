@@ -30,6 +30,15 @@
         "projectId": "caacd2e4-8b30-4ace-b81d-1e5da78e62ed"
       }
     },
-    "plugins": []
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1E5EFF",
+          "sounds": []
+        }
+      ]
+    ]
   }
 }

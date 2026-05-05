@@ -5,7 +5,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { ActivityIndicator, View, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { setupNotifications, addNotificationResponseListener } from '../services/NotificationService';
 
 import { useAuth } from '../context/AuthContext';
 import { getTheme } from '../theme';
@@ -92,15 +93,31 @@ function MainTabs() {
 }
 
 export default function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, token, loading } = useAuth();
   const scheme = useColorScheme();
   const theme = getTheme(scheme === 'dark' ? 'dark' : 'light');
-  const [onboardingDone, setOnboardingDone] = useState(null); // null = checking
+  const [onboardingDone, setOnboardingDone] = useState(null);
+  const navigationRef = useRef(null);
 
   useEffect(() => {
     AsyncStorage.getItem(ONBOARDING_KEY).then(val => {
       setOnboardingDone(val === 'true');
     });
+  }, []);
+
+  // Pedir permisos y activar notificaciones cuando el usuario está autenticado
+  useEffect(() => {
+    if (!user || !token) return;
+    AsyncStorage.getItem('rbt_notifications_enabled').then(val => {
+      const enabled = val === null ? true : val === 'true'; // default ON
+      if (enabled) setupNotifications(true, token);
+    });
+  }, [user, token]);
+
+  // Listener para cuando el usuario toca una notificación → navegar a la pantalla
+  useEffect(() => {
+    const sub = addNotificationResponseListener(navigationRef);
+    return () => sub.remove();
   }, []);
 
   // Waiting for auth + onboarding check
@@ -122,7 +139,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       {user ? (
         <MainTabs />
       ) : (

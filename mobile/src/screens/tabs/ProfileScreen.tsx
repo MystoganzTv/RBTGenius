@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 import { useAuth } from '../../context/AuthContext';
 import { alpha, getTheme } from '../../theme';
 import { MetricCard } from '../../components/ui';
+import { setupNotifications } from '../../services/NotificationService';
 
 const API_BASE = 'https://rbtgenius.com';
 const NOTIF_KEY = 'rbt_notifications_enabled';
@@ -109,10 +110,19 @@ export default function ProfileScreen() {
   };
 
   // ── Notifications toggle ───────────────────────────────────────
-  const toggleNotifications = (val) => {
-    setNotificationsOn(val);
-    AsyncStorage.setItem(NOTIF_KEY, String(val));
+  const toggleNotifications = async (val) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const granted = await setupNotifications(val, token);
+    // If enabling but permission denied, keep off
+    const effective = val ? granted : false;
+    setNotificationsOn(effective);
+    AsyncStorage.setItem(NOTIF_KEY, String(effective));
+    if (val && !granted) {
+      Alert.alert(
+        'Permisos requeridos',
+        'Activa las notificaciones en Configuración → RBT Genius → Notificaciones.',
+      );
+    }
   };
 
   // ── Language toggle ───────────────────────────────────────────
