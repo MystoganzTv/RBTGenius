@@ -3,6 +3,7 @@ import { useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from './src/context/AuthContext';
+import { LanguageProvider } from './src/context/LanguageContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import { getTheme } from './src/theme';
 
@@ -11,8 +12,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <RootNavigator />
+        <LanguageProvider>
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+          <RootNavigator />
+        </LanguageProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

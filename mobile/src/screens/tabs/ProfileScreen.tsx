@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Alert,
   ActivityIndicator,
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -18,18 +17,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { alpha, getTheme } from '../../theme';
 import { MetricCard } from '../../components/ui';
 import { setupNotifications } from '../../services/NotificationService';
 
 const API_BASE = 'https://rbtgenius.com';
 const NOTIF_KEY = 'rbt_notifications_enabled';
-const LANG_KEY = 'rbt_language';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const scheme = useColorScheme();
   const theme = getTheme(scheme === 'dark' ? 'dark' : 'light');
   const { user, token, logout } = useAuth();
+  const { language, toggleLanguage } = useLanguage();
   const s = styles(theme);
 
   // ── Server data ────────────────────────────────────────────────
@@ -41,17 +41,14 @@ export default function ProfileScreen() {
   const [editName, setEditName] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // ── Settings toggles ──────────────────────────────────────────
+  // ── Notifications toggle ──────────────────────────────────────
   const [notificationsOn, setNotificationsOn] = useState(true);
-  const [language, setLanguage] = useState('en');
 
   const authHeaders = { Authorization: `Bearer ${token}` };
 
-  // Load profile + settings from server + AsyncStorage
   useEffect(() => {
     fetchProfile();
     AsyncStorage.getItem(NOTIF_KEY).then((v) => { if (v !== null) setNotificationsOn(v === 'true'); });
-    AsyncStorage.getItem(LANG_KEY).then((v) => { if (v) setLanguage(v); });
   }, []);
 
   const fetchProfile = async () => {
@@ -110,38 +107,39 @@ export default function ProfileScreen() {
   };
 
   // ── Notifications toggle ───────────────────────────────────────
-  const toggleNotifications = async (val) => {
+  const handleNotifications = async (val) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const granted = await setupNotifications(val, token);
-    // If enabling but permission denied, keep off
     const effective = val ? granted : false;
     setNotificationsOn(effective);
     AsyncStorage.setItem(NOTIF_KEY, String(effective));
     if (val && !granted) {
       Alert.alert(
-        'Permisos requeridos',
-        'Activa las notificaciones en Configuración → RBT Genius → Notificaciones.',
+        language === 'es' ? 'Permisos requeridos' : 'Permission required',
+        language === 'es'
+          ? 'Activa las notificaciones en Configuración → RBT Genius → Notificaciones.'
+          : 'Enable notifications in Settings → RBT Genius → Notifications.',
       );
     }
   };
 
   // ── Language toggle ───────────────────────────────────────────
-  const toggleLanguage = () => {
-    const next = language === 'en' ? 'es' : 'en';
-    setLanguage(next);
-    AsyncStorage.setItem(LANG_KEY, next);
-    Alert.alert(next === 'es' ? 'Idioma cambiado' : 'Language changed', next === 'es' ? 'La app se mostrará en español.' : 'The app will display in English.');
+  const handleLanguage = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleLanguage();
   };
 
   // ── Reset progress ────────────────────────────────────────────
   const handleReset = () => {
     Alert.alert(
-      'Reset all progress?',
-      'This will permanently delete your question attempts, mock exam results, and readiness score. This cannot be undone.',
+      language === 'es' ? '¿Reiniciar progreso?' : 'Reset all progress?',
+      language === 'es'
+        ? 'Esto eliminará permanentemente tus intentos, exámenes y puntaje. No se puede deshacer.'
+        : 'This will permanently delete your question attempts, mock exam results, and readiness score. This cannot be undone.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: language === 'es' ? 'Cancelar' : 'Cancel', style: 'cancel' },
         {
-          text: 'Reset',
+          text: language === 'es' ? 'Reiniciar' : 'Reset',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -153,10 +151,10 @@ export default function ProfileScreen() {
                 const data = await res.json();
                 setProfile(data);
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                Alert.alert('Done', 'Your progress has been reset.');
+                Alert.alert(language === 'es' ? 'Listo' : 'Done', language === 'es' ? 'Tu progreso ha sido reiniciado.' : 'Your progress has been reset.');
               }
             } catch {
-              Alert.alert('Error', 'Could not reset progress. Try again.');
+              Alert.alert('Error', language === 'es' ? 'No se pudo reiniciar. Intenta de nuevo.' : 'Could not reset progress. Try again.');
             }
           },
         },
@@ -166,17 +164,23 @@ export default function ProfileScreen() {
 
   // ── Sign out ──────────────────────────────────────────────────
   const handleLogout = () => {
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: logout },
-    ]);
+    Alert.alert(
+      language === 'es' ? 'Cerrar sesión' : 'Sign out',
+      language === 'es' ? '¿Seguro que quieres cerrar sesión?' : 'Are you sure you want to sign out?',
+      [
+        { text: language === 'es' ? 'Cancelar' : 'Cancel', style: 'cancel' },
+        { text: language === 'es' ? 'Cerrar sesión' : 'Sign Out', style: 'destructive', onPress: logout },
+      ]
+    );
   };
+
+  const isPro = displayPlan === 'premium' || displayPlan === 'premium_monthly' || displayPlan === 'premium_yearly';
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.topBar}>
-        <Text style={s.screenTitle}>Profile</Text>
-        <Text style={s.screenSub}>Account and preferences</Text>
+        <Text style={s.screenTitle}>{language === 'es' ? 'Perfil' : 'Profile'}</Text>
+        <Text style={s.screenSub}>{language === 'es' ? 'Cuenta y preferencias' : 'Account and preferences'}</Text>
       </View>
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -189,14 +193,14 @@ export default function ProfileScreen() {
           <View style={s.profileInfo}>
             <Text style={s.profileName}>{displayName}</Text>
             <Text style={s.profileEmail}>{displayEmail}</Text>
-            <View style={[s.planBadge, { backgroundColor: alpha(theme.gold, 0.15) }]}>
-              <Text style={[s.planBadgeText, { color: theme.gold }]}>
-                {displayPlan === 'premium' ? 'Pro' : 'Free Plan'}
+            <View style={[s.planBadge, { backgroundColor: alpha(isPro ? theme.gold : theme.primary, 0.15) }]}>
+              <Text style={[s.planBadgeText, { color: isPro ? theme.gold : theme.primary }]}>
+                {isPro ? 'Pro' : language === 'es' ? 'Plan Gratis' : 'Free Plan'}
               </Text>
             </View>
           </View>
           <Pressable style={s.editBtn} onPress={openEdit}>
-            <Text style={s.editBtnText}>Edit</Text>
+            <Text style={s.editBtnText}>{language === 'es' ? 'Editar' : 'Edit'}</Text>
           </Pressable>
         </View>
 
@@ -207,26 +211,28 @@ export default function ProfileScreen() {
           </View>
         ) : (
           <View style={s.metricGrid}>
-            <MetricCard accent="primary" label="Readiness" value={`${readiness}%`} theme={theme} />
-            <MetricCard accent="gold" label="Streak" value={`${streak} days`} theme={theme} />
-            <MetricCard accent="success" label="Questions" value={completed.toLocaleString()} theme={theme} />
-            <MetricCard accent="primary" label="Plan" value={displayPlan === 'premium' ? 'Pro' : 'Free'} theme={theme} />
+            <MetricCard accent="primary" label={language === 'es' ? 'Preparación' : 'Readiness'} value={`${readiness}%`} theme={theme} />
+            <MetricCard accent="gold" label={language === 'es' ? 'Racha' : 'Streak'} value={`${streak} ${language === 'es' ? 'días' : 'days'}`} theme={theme} />
+            <MetricCard accent="success" label={language === 'es' ? 'Preguntas' : 'Questions'} value={completed.toLocaleString()} theme={theme} />
+            <MetricCard accent="primary" label="Plan" value={isPro ? 'Pro' : language === 'es' ? 'Gratis' : 'Free'} theme={theme} />
           </View>
         )}
 
         {/* ── Settings card ── */}
-        <View style={s.sectionLabel}><Text style={s.sectionLabelText}>Settings</Text></View>
+        <View style={s.sectionLabel}>
+          <Text style={s.sectionLabelText}>{language === 'es' ? 'Configuración' : 'Settings'}</Text>
+        </View>
         <View style={s.settingsCard}>
 
           {/* Notifications */}
           <View style={s.settingRow}>
             <View style={s.settingCopy}>
-              <Text style={s.settingLabel}>Notifications</Text>
-              <Text style={s.settingSub}>Daily study reminders</Text>
+              <Text style={s.settingLabel}>{language === 'es' ? 'Notificaciones' : 'Notifications'}</Text>
+              <Text style={s.settingSub}>{language === 'es' ? 'Recordatorios de estudio diarios' : 'Daily study reminders'}</Text>
             </View>
             <Switch
               value={notificationsOn}
-              onValueChange={toggleNotifications}
+              onValueChange={handleNotifications}
               trackColor={{ false: alpha(theme.border, 0.8), true: alpha(theme.primary, 0.4) }}
               thumbColor={notificationsOn ? theme.primary : theme.muted}
             />
@@ -235,32 +241,47 @@ export default function ProfileScreen() {
           <View style={s.divider} />
 
           {/* Language */}
-          <Pressable style={s.settingRow} onPress={toggleLanguage}>
+          <Pressable style={s.settingRow} onPress={handleLanguage}>
             <View style={s.settingCopy}>
-              <Text style={s.settingLabel}>Language</Text>
-              <Text style={s.settingSub}>{language === 'en' ? 'English — tap to switch to Spanish' : 'Español — tap para cambiar a inglés'}</Text>
+              <Text style={s.settingLabel}>{language === 'es' ? 'Idioma' : 'Language'}</Text>
+              <Text style={s.settingSub}>
+                {language === 'en' ? 'English — tap to switch to Spanish' : 'Español — toca para cambiar a inglés'}
+              </Text>
             </View>
-            <Text style={s.chevron}>›</Text>
+            <View style={s.langBadge}>
+              <Text style={s.langBadgeText}>{language === 'en' ? 'EN' : 'ES'}</Text>
+            </View>
           </Pressable>
 
           <View style={s.divider} />
 
           {/* Privacy Policy */}
-          <Pressable style={s.settingRow} onPress={() => Linking.openURL('https://rbtgenius.com/privacy-policy')}>
+          <Pressable style={s.settingRow} onPress={() => navigation.navigate('Legal', { type: 'privacy' })}>
             <View style={s.settingCopy}>
-              <Text style={s.settingLabel}>Privacy Policy</Text>
-              <Text style={s.settingSub}>How we handle your data</Text>
+              <Text style={s.settingLabel}>{language === 'es' ? 'Política de Privacidad' : 'Privacy Policy'}</Text>
+              <Text style={s.settingSub}>{language === 'es' ? 'Cómo manejamos tus datos' : 'How we handle your data'}</Text>
             </View>
             <Text style={s.chevron}>›</Text>
           </Pressable>
 
           <View style={s.divider} />
 
-          {/* Terms */}
-          <Pressable style={s.settingRow} onPress={() => Linking.openURL('https://rbtgenius.com/terms-of-service')}>
+          {/* Terms of Service */}
+          <Pressable style={s.settingRow} onPress={() => navigation.navigate('Legal', { type: 'terms' })}>
             <View style={s.settingCopy}>
-              <Text style={s.settingLabel}>Terms of Service</Text>
-              <Text style={s.settingSub}>Usage and legal info</Text>
+              <Text style={s.settingLabel}>{language === 'es' ? 'Términos de Servicio' : 'Terms of Service'}</Text>
+              <Text style={s.settingSub}>{language === 'es' ? 'Uso y términos legales' : 'Usage and legal info'}</Text>
+            </View>
+            <Text style={s.chevron}>›</Text>
+          </Pressable>
+
+          <View style={s.divider} />
+
+          {/* Refund Policy */}
+          <Pressable style={s.settingRow} onPress={() => navigation.navigate('Legal', { type: 'refund' })}>
+            <View style={s.settingCopy}>
+              <Text style={s.settingLabel}>{language === 'es' ? 'Política de Reembolso' : 'Refund Policy'}</Text>
+              <Text style={s.settingSub}>{language === 'es' ? 'Facturación y reembolsos' : 'Billing and refunds'}</Text>
             </View>
             <Text style={s.chevron}>›</Text>
           </Pressable>
@@ -268,16 +289,18 @@ export default function ProfileScreen() {
         </View>
 
         {/* ── Danger zone ── */}
-        <View style={s.sectionLabel}><Text style={s.sectionLabelText}>Danger Zone</Text></View>
+        <View style={s.sectionLabel}>
+          <Text style={s.sectionLabelText}>{language === 'es' ? 'Zona de peligro' : 'Danger Zone'}</Text>
+        </View>
         <Pressable style={s.dangerBtn} onPress={handleReset}>
-          <Text style={s.dangerBtnText}>Reset All Progress</Text>
+          <Text style={s.dangerBtnText}>{language === 'es' ? 'Reiniciar Todo el Progreso' : 'Reset All Progress'}</Text>
         </Pressable>
 
         <Pressable style={s.logoutBtn} onPress={handleLogout}>
-          <Text style={s.logoutText}>Sign Out</Text>
+          <Text style={s.logoutText}>{language === 'es' ? 'Cerrar Sesión' : 'Sign Out'}</Text>
         </Pressable>
 
-        <Text style={s.version}>RBT Genius v1.0.0 · {displayPlan === 'premium' ? 'Pro' : 'Free'}</Text>
+        <Text style={s.version}>RBT Genius v1.1.0 · {isPro ? 'Pro' : language === 'es' ? 'Gratis' : 'Free'}</Text>
       </ScrollView>
 
       {/* ── Edit name modal ── */}
@@ -285,19 +308,19 @@ export default function ProfileScreen() {
         <View style={s.modalOverlay}>
           <View style={s.modalSheet}>
             <View style={s.modalHeader}>
-              <Text style={s.modalTitle}>Edit Profile</Text>
+              <Text style={s.modalTitle}>{language === 'es' ? 'Editar Perfil' : 'Edit Profile'}</Text>
               <Pressable onPress={() => setEditVisible(false)}>
-                <Text style={s.modalClose}>Cancel</Text>
+                <Text style={s.modalClose}>{language === 'es' ? 'Cancelar' : 'Cancel'}</Text>
               </Pressable>
             </View>
 
             <View style={s.modalBody}>
-              <Text style={s.fieldLabel}>Full name</Text>
+              <Text style={s.fieldLabel}>{language === 'es' ? 'Nombre completo' : 'Full name'}</Text>
               <TextInput
                 style={s.fieldInput}
                 value={editName}
                 onChangeText={setEditName}
-                placeholder="Your full name"
+                placeholder={language === 'es' ? 'Tu nombre completo' : 'Your full name'}
                 placeholderTextColor={theme.muted}
                 autoCapitalize="words"
                 autoFocus
@@ -311,7 +334,7 @@ export default function ProfileScreen() {
             >
               {saving
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={s.saveBtnText}>Save Changes</Text>
+                : <Text style={s.saveBtnText}>{language === 'es' ? 'Guardar cambios' : 'Save Changes'}</Text>
               }
             </Pressable>
           </View>
@@ -369,6 +392,11 @@ const styles = (theme) =>
     settingLabel: { color: theme.text, fontSize: 15, fontWeight: '700' },
     settingSub: { color: theme.muted, fontSize: 12 },
     chevron: { color: theme.muted, fontSize: 20 },
+    langBadge: {
+      backgroundColor: alpha(theme.primary, 0.1), borderRadius: 8,
+      paddingHorizontal: 10, paddingVertical: 5,
+    },
+    langBadgeText: { color: theme.primary, fontSize: 13, fontWeight: '800' },
     divider: { height: 1, backgroundColor: alpha(theme.border, 0.6), marginHorizontal: 18 },
     dangerBtn: {
       borderColor: alpha('#EF4444', 0.5), borderWidth: 1, borderRadius: 16,
@@ -381,7 +409,6 @@ const styles = (theme) =>
     },
     logoutText: { color: '#EF4444', fontSize: 15, fontWeight: '700' },
     version: { color: theme.muted, fontSize: 12, textAlign: 'center', marginTop: 4 },
-    // Modal
     modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
     modalSheet: {
       backgroundColor: theme.background, borderTopLeftRadius: 28, borderTopRightRadius: 28,

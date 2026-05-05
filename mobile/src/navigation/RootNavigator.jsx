@@ -23,6 +23,7 @@ import FlashcardsScreen from '../screens/tabs/FlashcardsScreen';
 import AnalyticsScreen from '../screens/tabs/AnalyticsScreen';
 import ProfileScreen from '../screens/tabs/ProfileScreen';
 import UpgradeScreen from '../screens/tabs/UpgradeScreen';
+import LegalScreen from '../screens/legal/LegalScreen';
 
 const AuthStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -38,6 +39,7 @@ function MoreNavigator() {
       <MoreStack.Screen name="Analytics" component={AnalyticsScreen} />
       <MoreStack.Screen name="Profile" component={ProfileScreen} />
       <MoreStack.Screen name="Upgrade" component={UpgradeScreen} />
+      <MoreStack.Screen name="Legal" component={LegalScreen} />
     </MoreStack.Navigator>
   );
 }
