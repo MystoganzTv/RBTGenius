@@ -70,9 +70,10 @@ function getApiPath(url) {
 }
 
 async function buildUserAccessState(user) {
+  // Use meta version (no answers column) to avoid massive egress on every request
   const [attempts, mockExams] = await Promise.all([
     db.getAttemptsByUser(user.id),
-    db.getMockExamsByUser(user.id),
+    db.getMockExamsMetaByUser(user.id),
   ]);
   const progress = computeProgress({ attempts, mockExams, users: [user] }, user.id);
   const tutorMsgsToday = await db.countTutorMessagesToday(user.id);
@@ -554,7 +555,7 @@ async function webApiHandler(req) {
     if (mode === 'mock' && !isPremiumPlan(auth.user.plan)) return sendPremiumRequired('mock_exams');
     const size = Number(url.searchParams.get('limit') || 0) || (mode === 'mock' ? 85 : TOTAL_PRACTICE_QUESTIONS);
     const excludeIds = mode === 'mock'
-      ? await db.getMockAttemptIdsByUser(auth.user.id)
+      ? await db.getMockAttemptIdsByUserDirect(auth.user.id)
       : await db.getPracticeAttemptIdsByUser(auth.user.id);
     const qs = getQuestionBank(mode, { seed: url.searchParams.get('seed'), size, excludeIds });
     return json(applyQuestionFilters(sanitizeQuestions(qs, mode), url.searchParams));
@@ -763,7 +764,7 @@ async function webApiHandler(req) {
       const members = await Promise.all(allUsers.map(async user => {
         const [attempts, exams, payments] = await Promise.all([
           db.getAttemptsByUser(user.id).catch(() => []),
-          db.getMockExamsByUser(user.id).catch(() => []),
+          db.getMockExamsMetaByUser(user.id).catch(() => []),
           db.getPaymentsByUser(user.id).catch(() => []),
         ]);
         const progress = computeProgress({ attempts, mockExams: exams, users: [user] }, user.id);
