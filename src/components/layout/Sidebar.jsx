@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   Shield,
   BarChart3,
-  Bot,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
@@ -17,6 +16,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { translateUi } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { createPageUrl } from "@/utils";
+import { WhatsNewModal, useWhatsNew, VERSION } from "@/components/WhatsNewModal";
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, page: "Dashboard" },
@@ -34,6 +34,7 @@ const adminItems = [
 export default function Sidebar({ currentPage, isAdmin = false, plan = "free" }) {
   const [collapsed, setCollapsed] = useState(false);
   const { language } = useLanguage();
+  const { open: whatsNewOpen, setOpen: setWhatsNewOpen } = useWhatsNew();
 
   return (
     <aside
