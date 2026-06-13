@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Application from 'expo-application';
 import * as Haptics from 'expo-haptics';
 import { isAvailableAsync, requestReview } from 'expo-store-review';
 import { useTranslation } from 'react-i18next';
@@ -552,7 +553,7 @@ export default function ProfileScreen({ navigation }: { navigation?: Navigation 
           <Text style={s.logoutText}>{t('profile.sign_out')}</Text>
         </Pressable>
 
-        <Text style={s.version}>{t('profile.version')} · {isPro ? t('common.pro') : t('common.free')}</Text>
+        <Text style={s.version}>RBT Genius v{Application.nativeApplicationVersion} ({Application.nativeBuildVersion}) · {isPro ? t('common.pro') : t('common.free')}</Text>
       </ScrollView>
 
       <Modal visible={editVisible} animationType="slide" transparent presentationStyle="pageSheet">

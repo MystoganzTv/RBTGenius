@@ -281,10 +281,6 @@ export default function UpgradeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={s.safe} edges={['top','bottom']}>
-      <Pressable onPress={closeScreen} style={s.closeBtn}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-        <Text style={s.closeTxt}>✕</Text>
-      </Pressable>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} bounces={false}>
 
         {/* Hero */}
@@ -383,6 +379,13 @@ export default function UpgradeScreen({ navigation }) {
           {useRC ? t('upgrade.legal_rc') : t('upgrade.legal_stripe')}
         </Text>
       </ScrollView>
+
+      {/* Botón cerrar — renderizado DESPUÉS del ScrollView para que reciba los toques
+          (si va antes, el ScrollView intercepta el tap y el ✕ queda muerto) */}
+      <Pressable onPress={closeScreen} style={s.closeBtn}
+        hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}>
+        <Text style={s.closeTxt}>✕</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
