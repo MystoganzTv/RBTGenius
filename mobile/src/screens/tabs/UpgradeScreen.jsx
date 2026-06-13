@@ -256,9 +256,18 @@ export default function UpgradeScreen({ navigation }) {
     else Alert.alert(t('upgrade.nothing_found'), t('upgrade.no_subscription'));
   };
 
+  const closeScreen = () => {
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('MoreHome');
+  };
+
   const isPro = user?.isPremium ?? false;
   if (isPro) return (
     <SafeAreaView style={s.safe} edges={['top']}>
+      <Pressable onPress={closeScreen} style={s.closeBtn}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+        <Text style={s.closeTxt}>✕</Text>
+      </Pressable>
       <View style={s.proWrap}>
         <Text style={s.proEmoji}>🎉</Text>
         <Text style={s.proTitle}>{t('upgrade.pro_you_are')}</Text>
@@ -272,12 +281,10 @@ export default function UpgradeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={s.safe} edges={['top','bottom']}>
-      {navigation.canGoBack() && (
-        <Pressable onPress={() => navigation.goBack()} style={s.closeBtn}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <Text style={s.closeTxt}>✕</Text>
-        </Pressable>
-      )}
+      <Pressable onPress={closeScreen} style={s.closeBtn}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+        <Text style={s.closeTxt}>✕</Text>
+      </Pressable>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false} bounces={false}>
 
         {/* Hero */}
