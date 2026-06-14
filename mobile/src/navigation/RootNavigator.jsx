@@ -86,7 +86,7 @@ function MainTabs() {
       <Tab.Screen
         name="More"
         component={MoreNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <Feather name="grid" color={color} size={size} /> }}
+        options={{ popToTopOnBlur: true, tabBarIcon: ({ color, size }) => <Feather name="grid" color={color} size={size} /> }}
       />
     </Tab.Navigator>
   );

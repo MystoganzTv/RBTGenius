@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
+import { CommonActions } from '@react-navigation/native';
 import { alpha, getTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 
@@ -223,7 +224,7 @@ export default function UpgradeScreen({ navigation }) {
         const pkg = plans.find(p => p.id === planId)?._pkg;
         if (!pkg) { Alert.alert(t('common.error'), t('upgrade.error')); return; }
         const r = await purchasePackage(pkg);
-        if (r.cancelled) return;
+        if (r.cancelled) { closeScreen(); return; }
         if (r.success) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           Alert.alert(t('upgrade.welcome_pro'), t('upgrade.features_unlocked'));
@@ -256,10 +257,13 @@ export default function UpgradeScreen({ navigation }) {
     else Alert.alert(t('upgrade.nothing_found'), t('upgrade.no_subscription'));
   };
 
-  const closeScreen = () => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else navigation.navigate('MoreHome');
-  };
+  // Resetea el stack del tab More a MoreHome y elimina Upgrade de la pila.
+  // Evita que al volver al tab More reaparezca el paywall.
+  const closeScreen = useCallback(() => {
+    navigation.dispatch(
+      CommonActions.reset({ index: 0, routes: [{ name: 'MoreHome' }] }),
+    );
+  }, [navigation]);
 
   const isPro = user?.isPremium ?? false;
   if (isPro) return (
@@ -363,6 +367,11 @@ export default function UpgradeScreen({ navigation }) {
           <Text style={s.restoreTxt}>{t('upgrade.restore')}</Text>
         </Pressable>
 
+        {/* Escape hatch — vuelve a MoreHome sin comprar */}
+        <Pressable onPress={closeScreen} style={s.maybeLater}>
+          <Text style={s.maybeLaterTxt}>{t('upgrade.maybe_later')}</Text>
+        </Pressable>
+
         {/* Legal links — required by Apple 3.1.2 */}
         <View style={s.legalLinks}>
           <Text style={s.legalLinksTxt}>{t('upgrade.legal_links')} </Text>
@@ -438,6 +447,8 @@ const styles = (theme) => StyleSheet.create({
   trustDot:    { color: theme.muted, fontSize: 12 },
   restore:     { alignItems: 'center', paddingVertical: 2 },
   restoreTxt:  { color: theme.primary, fontSize: 13, fontWeight: '600' },
+  maybeLater:  { alignItems: 'center', paddingVertical: 8 },
+  maybeLaterTxt: { color: theme.muted, fontSize: 14, fontWeight: '700' },
   legalLinks:  { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20 },
   legalLinksTxt: { color: theme.muted, fontSize: 11 },
   legalLink:   { color: theme.primary, fontSize: 11, fontWeight: '600', textDecorationLine: 'underline' },
