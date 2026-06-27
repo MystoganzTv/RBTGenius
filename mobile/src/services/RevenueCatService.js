@@ -47,6 +47,15 @@ export async function purchasePackage(pkg) {
     return { success: customerInfo.entitlements.active['pro'] !== undefined, customerInfo };
   } catch (e) {
     if (e.userCancelled) return { success: false, cancelled: true };
+    // The user may already own the subscription (e.g. sandbox "You're currently
+    // subscribed", or PRODUCT_ALREADY_PURCHASED). That's not a failure — check
+    // the current entitlement and treat an active 'pro' as success.
+    try {
+      const ci = await Purchases.getCustomerInfo();
+      if (ci.entitlements.active['pro'] !== undefined) {
+        return { success: true, customerInfo: ci, alreadyActive: true };
+      }
+    } catch { /* fall through */ }
     return { success: false, error: e.message };
   }
 }

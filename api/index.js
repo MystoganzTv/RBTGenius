@@ -24,6 +24,13 @@ import { notifyNewMember, notifyNewSubscription, sendVerificationEmail } from '.
 import crypto from 'node:crypto';
 import appleSignin from 'apple-signin-auth';
 import { getEntitlements, isPremiumPlan } from '../shared/plan-access.js';
+import {
+  derivePlanFromSubscriber,
+  fetchRevenueCatSubscriber,
+  interpretWebhookEvent,
+  isRevenueCatConfigured,
+  verifyWebhookAuth,
+} from '../server/lib/revenuecat.js';
 import { createTutorReply, isOpenAIConfigured, streamTutorReplyOpenAI } from '../server/lib/tutor.js';
 import * as db from './lib/db.js';
 
@@ -547,6 +554,46 @@ async function webApiHandler(req) {
     }
   }
 
+  // ── RevenueCat webhook (iOS subscriptions) ─────────────────────────────────
+  // Configure URL + Authorization header in RevenueCat → Project settings →
+  // Integrations → Webhooks. Handles renewals, cancellations and expirations.
+  if (apiPath === '/billing/revenuecat-webhook' && req.method === 'POST') {
+    if (!verifyWebhookAuth(req.headers.get('authorization'))) {
+      return json({ message: 'Unauthorized' }, { status: 401 });
+    }
+    try {
+      const body = await req.json().catch(() => ({}));
+      const event = body?.event || {};
+      const { action, plan, appUserIds = [] } = interpretWebhookEvent(event);
+
+      if (action !== 'ignore') {
+        let user = null;
+        for (const id of appUserIds) {
+          user = await db.getUserById(id);
+          if (user) break;
+        }
+        if (user) {
+          if (action === 'upgrade' && plan && plan !== 'free' && user.plan !== plan) {
+            await db.updateUser(user.id, { plan });
+            console.log(`[rc/webhook] ${event.type} → ${user.email} = ${plan}`);
+          }
+          // Only downgrade RevenueCat-driven users; never clobber a Stripe sub.
+          if (action === 'downgrade' && !user.stripe_subscription_id && isPremiumPlan(user.plan)) {
+            await db.updateUser(user.id, { plan: 'free' });
+            console.log(`[rc/webhook] ${event.type} → ${user.email} downgraded to free`);
+          }
+        } else {
+          console.warn(`[rc/webhook] ${event.type} — no user for app_user_id(s) ${appUserIds.join(', ')}`);
+        }
+      }
+      return json({ received: true });
+    } catch (err) {
+      console.error('[rc/webhook] error:', err.message);
+      // Return 200 so RevenueCat does not retry indefinitely on a parse error.
+      return json({ received: true, error: err.message });
+    }
+  }
+
   // ── Public routes ───────────────────────────────────────────────────────────
   if (apiPath === '/health' && req.method === 'GET') return json({ ok: true });
   if (apiPath === '/public-settings' && req.method === 'GET') return json({ auth_required: true, app_name: 'RBT Genius', billing: getBillingConfig() });
@@ -1032,6 +1079,35 @@ async function webApiHandler(req) {
       });
       return json(session);
     } catch (err) { return json({ message: err.message || 'Unable to open billing portal' }, { status: 400 }); }
+  }
+
+  // App-driven RevenueCat sync — the mobile app calls this right after a
+  // successful purchase/restore so the plan is updated synchronously (no need to
+  // wait for the async webhook). app_user_id in RevenueCat == our user id.
+  if (apiPath === '/billing/revenuecat-sync' && req.method === 'POST') {
+    const auth = await requireUser(req);
+    if (auth.error) return auth.error;
+    if (!isRevenueCatConfigured()) {
+      return json({ message: 'RevenueCat is not configured on the server' }, { status: 503 });
+    }
+    try {
+      const subscriber = await fetchRevenueCatSubscriber(auth.user.id);
+      const rcPlan = derivePlanFromSubscriber(subscriber);
+      let user = auth.user;
+
+      if (rcPlan && user.plan !== rcPlan) {
+        user = await db.updateUser(user.id, { plan: rcPlan });
+      } else if (!rcPlan && isPremiumPlan(user.plan) && !user.stripe_subscription_id) {
+        // RevenueCat shows no active entitlement and there's no Stripe sub → free.
+        user = await db.updateUser(user.id, { plan: 'free' });
+      }
+
+      const { progress, entitlements, billing } = await buildUserAccessState(user);
+      return json({ is_premium: entitlements.is_premium, plan: user.plan, progress, entitlements, billing });
+    } catch (err) {
+      console.error('[rc/sync] error:', err.message);
+      return json({ message: err.message || 'Unable to sync subscription' }, { status: 502 });
+    }
   }
 
   if (apiPath === '/store/checkout' && req.method === 'POST') {

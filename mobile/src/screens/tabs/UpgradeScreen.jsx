@@ -215,6 +215,29 @@ export default function UpgradeScreen({ navigation }) {
     }
   };
 
+  // Tell the backend to re-check RevenueCat and flip the plan to premium
+  // synchronously (the webhook is async and may lag). Then refresh the session
+  // so gated features unlock immediately.
+  const syncRevenueCatPlan = useCallback(async () => {
+    if (!token) return;
+    try {
+      await fetch(`${API_BASE}/api/billing/revenuecat-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+    } catch { /* non-fatal: webhook will still sync */ }
+    await refreshSession?.().catch(() => null);
+  }, [token, refreshSession]);
+
+  // On open, if the user already has an active RevenueCat entitlement but the
+  // backend doesn't know yet (e.g. purchased on another device / before sync),
+  // reconcile so the paywall flips to the "You're Pro" state automatically.
+  useEffect(() => {
+    if (!rcAvailable || !token || user?.isPremium) return;
+    syncRevenueCatPlan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleUpgrade = async () => {
     if (!token) { Alert.alert(t('upgrade.not_signed_in'), t('upgrade.sign_in_first')); return; }
     setLoading(true);
@@ -226,6 +249,7 @@ export default function UpgradeScreen({ navigation }) {
         const r = await purchasePackage(pkg);
         if (r.cancelled) { closeScreen(); return; }
         if (r.success) {
+          await syncRevenueCatPlan();
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           Alert.alert(t('upgrade.welcome_pro'), t('upgrade.features_unlocked'));
           navigation.goBack?.();
@@ -252,6 +276,7 @@ export default function UpgradeScreen({ navigation }) {
     if (!useRC) { Linking.openURL(`${API_BASE}/pricing`); return; }
     setLoading(true);
     const ok = await restorePurchases().catch(() => false);
+    if (ok) await syncRevenueCatPlan();
     setLoading(false);
     if (ok) { Alert.alert(t('upgrade.restored'), t('upgrade.pro_restored')); navigation.goBack?.(); }
     else Alert.alert(t('upgrade.nothing_found'), t('upgrade.no_subscription'));
