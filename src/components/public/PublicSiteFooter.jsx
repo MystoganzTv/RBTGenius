@@ -3,7 +3,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { translateUi } from "@/lib/i18n";
 import { createPageUrl } from "@/utils";
 
-const CONTACT_EMAIL = "support@rbtgenius.app";
+const CONTACT_EMAIL = "info@rbtgenius.com";
 
 export default function PublicSiteFooter() {
   const { language } = useLanguage();

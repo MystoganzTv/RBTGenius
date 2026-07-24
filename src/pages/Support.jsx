@@ -3,7 +3,7 @@ import BilingualText from "@/components/i18n/BilingualText";
 import { useLanguage } from "@/hooks/use-language";
 import { localizeText, translateUi } from "@/lib/i18n";
 
-const SUPPORT_EMAIL = "support@rbtgenius.app";
+const SUPPORT_EMAIL = "info@rbtgenius.com";
 
 export default function Support() {
   const { language } = useLanguage();

@@ -32,8 +32,8 @@ export default function RefundPolicy() {
         <p className="mt-3">
           {localized("For billing support or refund review, email").primary}
           {" "}
-          <a className="font-medium text-[#1E5EFF]" href="mailto:support@rbtgenius.app">
-            support@rbtgenius.app
+          <a className="font-medium text-[#1E5EFF]" href="mailto:info@rbtgenius.com">
+            info@rbtgenius.com
           </a>
           {" "}
           {localized("and include the email used on your account, the plan involved, and the date of the charge.").primary}

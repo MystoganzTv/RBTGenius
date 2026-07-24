@@ -32,7 +32,7 @@ const NOTIF_KEY = 'rbt_notifications_enabled';
 const LANG_KEY = 'rbt_language';
 const EXAM_DATE_KEY = 'rbt_exam_date';
 const STUDY_GOAL_KEY = 'rbt_study_goal';
-const SUPPORT_EMAIL = 'support@rbtgenius.com';
+const SUPPORT_EMAIL = 'info@rbtgenius.com';
 const GOAL_OPTIONS = [5, 10, 15, 20, 30, 50];
 
 type Theme = any;

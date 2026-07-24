@@ -219,8 +219,8 @@ export default function EULA() {
         <p className="mt-3">If you have any questions regarding this EULA, please contact:</p>
         <p className="mt-3">
           Email:{" "}
-          <a className="font-medium text-[#1E5EFF]" href="mailto:support@rbtgenius.com">
-            support@rbtgenius.com
+          <a className="font-medium text-[#1E5EFF]" href="mailto:info@rbtgenius.com">
+            info@rbtgenius.com
           </a>
           <br />
           Website:{" "}

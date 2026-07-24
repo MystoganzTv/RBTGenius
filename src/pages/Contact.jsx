@@ -18,8 +18,8 @@ export default function Contact() {
         <p className="mt-3">
           {localizeText("The main contact for RBT Genius is", language).primary}
           {" "}
-          <a className="font-medium text-[#1E5EFF]" href="mailto:support@rbtgenius.app">
-            support@rbtgenius.app
+          <a className="font-medium text-[#1E5EFF]" href="mailto:info@rbtgenius.com">
+            info@rbtgenius.com
           </a>
           .
         </p>

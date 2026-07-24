@@ -47,8 +47,8 @@ export default function TermsOfService() {
         <p className="mt-3">
           {localized("For account or legal questions related to these terms, contact").primary}
           {" "}
-          <a className="font-medium text-[#1E5EFF]" href="mailto:support@rbtgenius.app">
-            support@rbtgenius.app
+          <a className="font-medium text-[#1E5EFF]" href="mailto:info@rbtgenius.com">
+            info@rbtgenius.com
           </a>
           .
         </p>
