@@ -20,7 +20,7 @@ import {
   resolvePlanFromPriceId,
 } from '../server/lib/billing.js';
 import { findUserForBilling, syncConfirmedCheckout, applyStripeWebhookEvent } from '../server/lib/stripe-sync.js';
-import { notifyNewMember, notifyNewSubscription, sendVerificationEmail } from '../server/lib/admin-notify.js';
+import { notifyNewMember, notifyNewSubscription, notifySubscriptionEvent, sendVerificationEmail } from '../server/lib/admin-notify.js';
 import crypto from 'node:crypto';
 import appleSignin from 'apple-signin-auth';
 import { getEntitlements, isPremiumPlan } from '../shared/plan-access.js';
@@ -177,6 +177,18 @@ async function requireAdmin(req) {
   if (auth.error) return auth;
   if (auth.user.role !== 'admin') return { error: json({ message: 'Admin access required' }, { status: 403 }) };
   return auth;
+}
+
+// Wrapper around notifySubscriptionEvent that resolves the admins' push tokens
+// first. Never throws — a notification failure must not break a billing webhook
+// (that would make the provider retry and double-apply the plan change).
+async function notifyBilling(kind, { user, plan, source, details }) {
+  try {
+    const pushTokens = await db.getAdminPushTokens(ADMIN_EMAILS);
+    await notifySubscriptionEvent({ kind, user, plan, source, details, pushTokens });
+  } catch (err) {
+    console.error(`[notify-billing] ${kind} failed:`, err.message);
+  }
 }
 
 async function getOptionalUser(req) {
@@ -469,7 +481,21 @@ async function webApiHandler(req) {
             customerId: typeof checkout.customer === 'string' ? checkout.customer : checkout.customer?.id,
             email: checkout.customer_details?.email || checkout.customer_email,
           });
-          if (user) await notifyNewSubscription({ user, plan: checkout.metadata?.plan || user.plan, checkout });
+          if (user) {
+            const plan = checkout.metadata?.plan || user.plan;
+            await notifyNewSubscription({ user, plan, checkout });
+            await notifyBilling('started', {
+              user,
+              plan,
+              source: 'stripe',
+              details: {
+                Amount: checkout.amount_total
+                  ? `${Number(checkout.amount_total) / 100} ${String(checkout.currency || 'usd').toUpperCase()}`
+                  : '',
+                'Stripe session': checkout.id,
+              },
+            });
+          }
         }
       }
 
@@ -484,6 +510,12 @@ async function webApiHandler(req) {
             stripe_subscription_id: null,
           });
           console.log(`[webhook] Subscription cancelled — downgraded ${user.email} to free`);
+          await notifyBilling('cancelled', {
+            user,
+            plan: user.plan,
+            source: 'stripe',
+            details: { Reason: 'subscription deleted', 'Stripe subscription': sub.id },
+          });
         }
       }
 
@@ -510,6 +542,12 @@ async function webApiHandler(req) {
             stripe_subscription_id: sub.id || user.stripe_subscription_id || null,
           });
           console.log(`[webhook] Subscription ${sub.status} — downgraded ${user.email} to free`);
+          await notifyBilling('cancelled', {
+            user,
+            plan: user.plan,
+            source: 'stripe',
+            details: { Reason: `subscription ${sub.status}`, 'Stripe subscription': sub.id },
+          });
         }
       }
 
@@ -535,6 +573,15 @@ async function webApiHandler(req) {
             metadata: { invoice_id: invoice.id, reason: 'subscription_renewal' },
           });
           console.log(`[webhook] Renewal payment recorded for ${user.email}`);
+          await notifyBilling('renewed', {
+            user,
+            plan: plan || user.plan,
+            source: 'stripe',
+            details: {
+              Amount: `${(invoice.amount_paid || 0) / 100} ${String(invoice.currency || 'usd').toUpperCase()}`,
+              Invoice: invoice.id,
+            },
+          });
         }
       }
 
@@ -545,6 +592,16 @@ async function webApiHandler(req) {
         if (user) {
           console.warn(`[webhook] Payment failed for ${user.email} — invoice ${invoice.id}`);
           // Stripe will retry — we don't downgrade immediately
+          await notifyBilling('payment_failed', {
+            user,
+            plan: user.plan,
+            source: 'stripe',
+            details: {
+              Amount: `${(invoice.amount_due || 0) / 100} ${String(invoice.currency || 'usd').toUpperCase()}`,
+              Invoice: invoice.id,
+              Attempt: invoice.attempt_count,
+            },
+          });
         }
       }
 
@@ -566,6 +623,30 @@ async function webApiHandler(req) {
       const event = body?.event || {};
       const { action, plan, appUserIds = [] } = interpretWebhookEvent(event);
 
+      // BILLING_ISSUE is deliberately 'ignore' for plan purposes (grace period —
+      // we don't revoke access on a transient failure), but the admins still
+      // want to know a renewal is failing before it turns into a lost customer.
+      if (event.type === 'BILLING_ISSUE') {
+        let issueUser = null;
+        for (const id of appUserIds) {
+          issueUser = await db.getUserById(id);
+          if (issueUser) break;
+        }
+        if (issueUser) {
+          await notifyBilling('payment_failed', {
+            user: issueUser,
+            plan: issueUser.plan,
+            source: 'revenuecat',
+            details: {
+              'RevenueCat event': event.type,
+              Product: event.product_id,
+              Environment: event.environment,
+              Note: 'Access kept during grace period',
+            },
+          });
+        }
+      }
+
       if (action !== 'ignore') {
         let user = null;
         for (const id of appUserIds) {
@@ -576,11 +657,32 @@ async function webApiHandler(req) {
           if (action === 'upgrade' && plan && plan !== 'free' && user.plan !== plan) {
             await db.updateUser(user.id, { plan });
             console.log(`[rc/webhook] ${event.type} → ${user.email} = ${plan}`);
+            await notifyBilling(event.type === 'RENEWAL' ? 'renewed' : 'started', {
+              user,
+              plan,
+              source: 'revenuecat',
+              details: {
+                'RevenueCat event': event.type,
+                Product: event.product_id,
+                Store: event.store,
+                Environment: event.environment,
+              },
+            });
           }
           // Only downgrade RevenueCat-driven users; never clobber a Stripe sub.
           if (action === 'downgrade' && !user.stripe_subscription_id && isPremiumPlan(user.plan)) {
             await db.updateUser(user.id, { plan: 'free' });
             console.log(`[rc/webhook] ${event.type} → ${user.email} downgraded to free`);
+            await notifyBilling('cancelled', {
+              user,
+              plan: user.plan,
+              source: 'revenuecat',
+              details: {
+                'RevenueCat event': event.type,
+                Product: event.product_id,
+                Environment: event.environment,
+              },
+            });
           }
         } else {
           console.warn(`[rc/webhook] ${event.type} — no user for app_user_id(s) ${appUserIds.join(', ')}`);
@@ -595,7 +697,19 @@ async function webApiHandler(req) {
   }
 
   // ── Public routes ───────────────────────────────────────────────────────────
-  if (apiPath === '/health' && req.method === 'GET') return json({ ok: true });
+  if (apiPath === '/health' && req.method === 'GET') {
+    const started = Date.now();
+    try {
+      await db.pingDb();
+      return json({ ok: true, db: 'up', latency_ms: Date.now() - started });
+    } catch (err) {
+      // 503 (not 200) so external monitors alert on database outages.
+      return json(
+        { ok: false, db: 'down', error: err.message, latency_ms: Date.now() - started },
+        { status: 503 },
+      );
+    }
+  }
   if (apiPath === '/public-settings' && req.method === 'GET') return json({ auth_required: true, app_name: 'RBT Genius', billing: getBillingConfig() });
   if (apiPath === '/auth/providers' && req.method === 'GET') return json({ providers: listOAuthProviders() });
   if (apiPath === '/store/products' && req.method === 'GET') {
@@ -1264,7 +1378,14 @@ async function webApiHandler(req) {
     if (auth.user.id === memberId) return json({ message: 'You cannot delete your own admin account.' }, { status: 400 });
     const member = await db.getUserById(memberId);
     if (!member) return json({ message: 'Member not found' }, { status: 404 });
-    await db.deleteUser(memberId);
+    try {
+      await db.deleteUser(memberId);
+    } catch (err) {
+      // Surface the real reason instead of a blank 500 — a leftover foreign key
+      // on a table we don't clean up would otherwise fail silently in the UI.
+      console.error(`[admin/members] delete ${memberId} failed:`, err.message);
+      return json({ message: `Unable to delete member: ${err.message}` }, { status: 500 });
+    }
     return new Response(null, { status: 204 });
   }
 

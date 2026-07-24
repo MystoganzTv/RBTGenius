@@ -23,6 +23,11 @@ node_modules
 dist
 dist-ssr
 
+# Vite writes a temp copy of the config on each build and usually cleans it up;
+# it leaves them behind if the process is interrupted or lacks delete perms.
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

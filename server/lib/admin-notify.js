@@ -152,6 +152,111 @@ export async function notifyNewMember(user, details = {}) {
   });
 }
 
+// ── Subscription lifecycle notifications ─────────────────────────────────────
+// One entry point for every billing event, on every channel (Stripe/web and
+// RevenueCat/iOS). Previously only Stripe checkouts notified anyone, so iOS
+// subscriptions — the main revenue channel — were completely silent.
+
+const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+
+const SUBSCRIPTION_EVENTS = {
+  started: {
+    subject: "New paid subscription",
+    preview: "A member just started a paid subscription.",
+    push: (name, plan) => ({ title: "New subscription", body: `${name} subscribed to ${plan}.` }),
+  },
+  renewed: {
+    subject: "Subscription renewed",
+    preview: "A recurring subscription payment went through.",
+    push: (name, plan) => ({ title: "Subscription renewed", body: `${name} renewed ${plan}.` }),
+  },
+  cancelled: {
+    subject: "Subscription ended",
+    preview: "A member's subscription was cancelled or expired.",
+    push: (name) => ({ title: "Subscription ended", body: `${name} is no longer premium.` }),
+  },
+  payment_failed: {
+    subject: "Subscription payment failed",
+    preview: "A renewal payment failed. The provider will usually retry.",
+    push: (name) => ({ title: "Payment failed", body: `Renewal failed for ${name}.` }),
+  },
+};
+
+// Fire-and-forget Expo push to the admins' phones. Never throws — a push
+// failure must not break a billing webhook.
+async function sendAdminPush(pushTokens, { title, body, data = {} }) {
+  const tokens = (pushTokens || []).filter(Boolean);
+  if (!tokens.length) return { sent: false, reason: "no_tokens" };
+  try {
+    const response = await fetch(EXPO_PUSH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(
+        tokens.map((to) => ({ to, title, body, sound: "default", priority: "high", data })),
+      ),
+    });
+    if (!response.ok) {
+      console.error(`[admin-notify] push failed: ${response.status}`);
+      return { sent: false, reason: "provider_error" };
+    }
+    return { sent: true, count: tokens.length };
+  } catch (error) {
+    console.error("[admin-notify] push error:", error);
+    return { sent: false, reason: "request_failed" };
+  }
+}
+
+/**
+ * Notify the admins about a billing event by email and (optionally) push.
+ *
+ * @param {'started'|'renewed'|'cancelled'|'payment_failed'} kind
+ * @param {object} user      The affected member.
+ * @param {string} plan      Plan id at the time of the event.
+ * @param {'stripe'|'revenuecat'} source  Which billing channel fired this.
+ * @param {object} details   Extra rows to show in the email body.
+ * @param {string[]} pushTokens  Admin device tokens (see db.getAdminPushTokens).
+ */
+export async function notifySubscriptionEvent({
+  kind,
+  user,
+  plan,
+  source,
+  details = {},
+  pushTokens = [],
+}) {
+  const config = SUBSCRIPTION_EVENTS[kind];
+  if (!config) {
+    console.warn(`[admin-notify] unknown subscription event kind "${kind}"`);
+    return { sent: false, reason: "unknown_kind" };
+  }
+
+  const name = user?.full_name || user?.email || "A member";
+  const planLabel = plan || user?.plan || "unknown";
+
+  const emailResult = await sendAdminEmail({
+    subject: config.subject,
+    preview: config.preview,
+    fields: [
+      { label: "Full name", value: user?.full_name },
+      { label: "Email", value: user?.email },
+      { label: "Plan", value: planLabel },
+      { label: "Channel", value: source === "revenuecat" ? "iOS (RevenueCat)" : "Web (Stripe)" },
+      { label: "Event", value: kind },
+      ...Object.entries(details).map(([label, value]) => ({ label, value })),
+      { label: "User ID", value: user?.id },
+      { label: "Occurred at", value: new Date().toISOString() },
+    ],
+  });
+
+  const pushCopy = config.push(name, planLabel);
+  const pushResult = await sendAdminPush(pushTokens, {
+    ...pushCopy,
+    data: { type: "admin_subscription", kind, user_id: user?.id ?? null },
+  });
+
+  return { email: emailResult, push: pushResult };
+}
+
 export async function notifyNewSubscription({ user, plan, checkout }) {
   return sendAdminEmail({
     subject: "New premium subscription",

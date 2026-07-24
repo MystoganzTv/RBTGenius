@@ -3,7 +3,14 @@ import { hashPassword } from "./auth.js";
 
 const LEGACY_DEMO_EMAIL = "alex.carter@example.com";
 const LEGACY_DEMO_EMAILS = [LEGACY_DEMO_EMAIL, "demo@rbtgenius.app"];
-export const ADMIN_EMAILS = [];
+// Admin allowlist. Configured via the ADMIN_EMAILS env var (comma-separated) so
+// no personal addresses live in the repo. Empty means nobody can be promoted to
+// admin automatically — which silently locked the admin panel between
+// 2026-05-21 and this change, so keep this env var set in production.
+export const ADMIN_EMAILS = String(process.env.ADMIN_EMAILS || "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
 
 // App Store review/demo account. Configured via env vars so no credentials
 // live in the repo. If TEST_ACCOUNT_EMAIL / TEST_ACCOUNT_PASSWORD are unset,

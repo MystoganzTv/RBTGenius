@@ -1,12 +1,33 @@
 import postgres from 'postgres';
 
 let _sql = null;
-export function sql(strings, ...values) {
+function getSql() {
   if (!_sql) {
     if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
     _sql = postgres(process.env.DATABASE_URL, { ssl: 'require', max: 1, prepare: false });
   }
-  return _sql(strings, ...values);
+  return _sql;
+}
+export function sql(strings, ...values) {
+  return getSql()(strings, ...values);
+}
+
+// ── Health ────────────────────────────────────────────────────────────────────
+
+// Cheapest possible round-trip to Postgres. Used by /api/health so an external
+// monitor (UptimeRobot et al.) actually sees database outages instead of just
+// confirming that the serverless function boots.
+export async function pingDb({ timeoutMs = 5000 } = {}) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`db ping timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+  try {
+    await Promise.race([sql`SELECT 1`, timeout]);
+    return true;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────────
@@ -106,8 +127,28 @@ export async function clearUserSession(id) {
   `;
 }
 
+// Delete a member and every row that references them.
+//
+// A plain `DELETE FROM users` fails: attempts, mock_exams, payments,
+// practice_sessions, tutor_conversations, tutor_messages and push_tokens all
+// hold a foreign key to users.id, so Postgres rejects the delete. Everything
+// runs in one transaction — a partial delete would leave orphaned study data
+// attached to an id that no longer exists.
+//
+// Child tables are removed before parents (tutor_messages before
+// tutor_conversations) so the FK between them is never violated mid-transaction.
 export async function deleteUser(id) {
-  await sql`DELETE FROM users WHERE id = ${id}`;
+  const db = getSql();
+  await db.begin(async (tx) => {
+    await tx`DELETE FROM tutor_messages WHERE user_id = ${id}`;
+    await tx`DELETE FROM tutor_conversations WHERE user_id = ${id}`;
+    await tx`DELETE FROM attempts WHERE user_id = ${id}`;
+    await tx`DELETE FROM mock_exams WHERE user_id = ${id}`;
+    await tx`DELETE FROM payments WHERE user_id = ${id}`;
+    await tx`DELETE FROM practice_sessions WHERE user_id = ${id}`;
+    await tx`DELETE FROM push_tokens WHERE user_id = ${id}`;
+    await tx`DELETE FROM users WHERE id = ${id}`;
+  });
 }
 
 // ── Attempts ──────────────────────────────────────────────────────────────────
@@ -365,6 +406,20 @@ export async function upsertPushToken(userId, token, platform) {
     VALUES (${userId}, ${token}, ${platform ?? 'ios'}, NOW())
     ON CONFLICT (user_id) DO UPDATE SET token = EXCLUDED.token, platform = EXCLUDED.platform, updated_at = NOW()
   `;
+}
+
+// Push tokens belonging to admin accounts (plus any explicitly allowlisted
+// emails). Used to ping the owners' phones on subscription events.
+export async function getAdminPushTokens(adminEmails = []) {
+  const emails = adminEmails.map((e) => String(e).trim().toLowerCase()).filter(Boolean);
+  const rows = await sql`
+    SELECT pt.token
+    FROM push_tokens pt
+    JOIN users u ON u.id = pt.user_id
+    WHERE u.role = 'admin'
+       OR LOWER(u.email) = ANY(${emails})
+  `;
+  return [...new Set(rows.map((r) => r.token).filter(Boolean))];
 }
 
 export async function deletePushToken(userId) {
