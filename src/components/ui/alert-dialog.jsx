@@ -17,19 +17,29 @@ const AlertDialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
 
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
-const AlertDialogContent = React.forwardRef(({ className, ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay />
-    <AlertDialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-lg",
-        className,
-      )}
-      {...props}
-    />
-  </AlertDialogPortal>
-));
+// Radix's AlertDialog intentionally ignores clicks outside the dialog — it
+// hardcodes `onInteractOutside`/`onPointerDownOutside` to preventDefault after
+// spreading props, so it cannot be overridden from the outside. Pass
+// `onOverlayClick` to opt a specific dialog into dismiss-on-outside-click.
+// Omitting it keeps the default (sticky) behaviour for every other dialog.
+const AlertDialogContent = React.forwardRef(
+  ({ className, onOverlayClick, ...props }, ref) => (
+    <AlertDialogPortal>
+      <AlertDialogOverlay
+        onClick={onOverlayClick}
+        className={onOverlayClick ? "cursor-pointer" : undefined}
+      />
+      <AlertDialogPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-lg",
+          className,
+        )}
+        {...props}
+      />
+    </AlertDialogPortal>
+  ),
+);
 
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 

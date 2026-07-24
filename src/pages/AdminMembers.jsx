@@ -1,8 +1,12 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowDown,
+  ArrowUp,
   Calendar,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Clock,
   CreditCard,
   Crown,
@@ -69,12 +73,6 @@ const darkBadgeClass =
 
 const summaryCardClass =
   "border-slate-200/80 bg-white/95 p-4 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:!border-slate-700/80 dark:!bg-slate-900/95 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
-
-const memberCardClass =
-  "overflow-hidden border-slate-200/80 bg-white/95 p-5 lg:px-6 lg:py-6 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:!border-slate-700/80 dark:!bg-slate-900/95 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]";
-
-const actionPanelClass =
-  "rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 lg:p-5 dark:!border-slate-700/80 dark:!bg-slate-800/70";
 
 const memberSelectClass =
   "border-slate-200 bg-white text-slate-800 dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100";
@@ -164,6 +162,38 @@ function ActivityDot({ lastLogin }) {
   return <span className="inline-block h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-600" title="Never logged in" />;
 }
 
+// Column definitions for the members table. `accessor` returns a sortable
+// primitive; `align` controls cell alignment for numeric columns.
+const SORT_ACCESSORS = {
+  name: (m) => String(m.full_name || m.email || "").toLowerCase(),
+  plan: (m) => String(m.plan || ""),
+  role: (m) => String(m.role || ""),
+  auth: (m) => String(m.auth_provider || ""),
+  joined: (m) => new Date(m.created_at || 0).getTime(),
+  active: (m) => (m.last_login ? new Date(m.last_login).getTime() : 0),
+  questions: (m) => Number(m.total_questions_completed || 0),
+  paid: (m) => Number(m.total_paid_amount || 0),
+};
+
+const TABLE_COLUMNS = [
+  { key: "name", label: "Member", align: "left" },
+  { key: "plan", label: "Plan", align: "left" },
+  { key: "role", label: "Role", align: "left" },
+  { key: "auth", label: "Source", align: "left" },
+  { key: "joined", label: "Joined", align: "left" },
+  { key: "active", label: "Last active", align: "left" },
+  { key: "questions", label: "Questions", align: "right" },
+  { key: "paid", label: "Paid", align: "right" },
+];
+
+function formatLastActive(member) {
+  if (!member.last_login) return "Never";
+  const days = getDaysAgo(member.last_login);
+  if (days === 0) return "Today";
+  if (days === 1) return "1d ago";
+  return `${days}d ago`;
+}
+
 function exportToCsv(members) {
   const headers = ["Name", "Email", "Plan", "Role", "Auth", "Joined", "Last Login", "Questions", "Readiness", "Total Paid"];
   const rows = members.map((m) => [
@@ -202,6 +232,9 @@ export default function AdminMembers() {
   const [memberPaymentsTarget, setMemberPaymentsTarget] = useState(null);
   const [emailTarget, setEmailTarget] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: "", message: "" });
+  // Table view: which row is expanded for editing, and the active sort.
+  const [expandedId, setExpandedId] = useState(null);
+  const [sort, setSort] = useState({ key: "joined", dir: "desc" });
 
   const isAdmin = user?.role === "admin";
   const t = (value) => translateUi(value, language);
@@ -254,14 +287,16 @@ export default function AdminMembers() {
         description: t("The account and related study data were removed."),
       });
     },
-    onError: (_error, _memberId, context) => {
+    onError: (error, _memberId, context) => {
       if (context?.previousMembers) {
         queryClient.setQueryData(["admin-members"], context.previousMembers);
       }
 
       toast({
         title: t("Unable to delete member"),
-        description: t("Please try again in a moment."),
+        // Show what the server actually said — a generic retry message hid a
+        // foreign-key failure that no amount of retrying would fix.
+        description: error?.message || t("Please try again in a moment."),
         variant: "destructive",
       });
     },
@@ -302,6 +337,26 @@ export default function AdminMembers() {
       return matchesPlan && matchesSearch;
     });
   }, [members, planFilter, search]);
+
+  const sortedMembers = useMemo(() => {
+    const accessor = SORT_ACCESSORS[sort.key] || SORT_ACCESSORS.joined;
+    const direction = sort.dir === "asc" ? 1 : -1;
+    return [...filteredMembers].sort((a, b) => {
+      const left = accessor(a);
+      const right = accessor(b);
+      if (left < right) return -1 * direction;
+      if (left > right) return 1 * direction;
+      return 0;
+    });
+  }, [filteredMembers, sort]);
+
+  const toggleSort = (key) => {
+    setSort((current) =>
+      current.key === key
+        ? { key, dir: current.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: key === "name" || key === "plan" || key === "role" || key === "auth" ? "asc" : "desc" },
+    );
+  };
 
   const premiumCount = members.filter((member) => member.plan !== "free").length;
   const adminCount = members.filter((member) => member.role === "admin").length;
@@ -520,175 +575,255 @@ export default function AdminMembers() {
           </div>
         </Card>
 
-        <div className="grid grid-cols-1 gap-4">
+        <Card className="overflow-hidden border-slate-200/80 bg-white/95 p-0 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:!border-slate-700/80 dark:!bg-slate-900/95 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]">
           {isLoading ? (
-            <Card className="border-slate-200/80 bg-white/95 p-8 text-center text-slate-500 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82 dark:text-slate-400">
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400">
               {t("Loading members...")}
-            </Card>
-          ) : filteredMembers.length === 0 ? (
-            <Card className="border-slate-200/80 bg-white/95 p-8 text-center text-slate-500 dark:border-[#2A3A70]/70 dark:bg-[#10182F]/82 dark:text-slate-400">
+            </div>
+          ) : sortedMembers.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400">
               {t("No members match the current filters.")}
-            </Card>
+            </div>
           ) : (
-            filteredMembers.map((member) => {
-              const draft = getDraft(member);
-              const hasChanges = draft.plan !== member.plan || draft.role !== member.role;
-              const isCurrentAdmin = member.id === user?.id;
-              const daysAgo = getDaysAgo(member.last_login);
-
-              return (
-                <Card
-                  key={member.id}
-                  className={memberCardClass}
-                >
-                  <div className="space-y-5">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <ActivityDot lastLogin={member.last_login} />
-                        <h2 className="min-w-0 break-words text-lg font-semibold text-slate-900 dark:text-slate-50">
-                          {member.full_name}
-                        </h2>
-                        <Badge variant="outline" className={darkBadgeClass}>
-                          {member.role === "admin" ? t("Admin") : t("User")}
-                        </Badge>
-                        <Badge variant="outline" className={darkBadgeClass}>
-                          {getProviderLabel(member.auth_provider)}
-                        </Badge>
-                        <Badge
-                          className={
-                            member.plan === "free"
-                              ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                              : "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
-                          }
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[880px] border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/80 dark:!border-slate-700 dark:!bg-slate-800/60">
+                    <th scope="col" className="w-9" />
+                    {TABLE_COLUMNS.map((column) => {
+                      const isActive = sort.key === column.key;
+                      return (
+                        <th
+                          key={column.key}
+                          scope="col"
+                          className={`px-3 py-2.5 text-xs font-semibold uppercase tracking-wide ${
+                            column.align === "right" ? "text-right" : "text-left"
+                          } ${isActive ? "text-slate-900 dark:text-slate-50" : "text-slate-500 dark:text-slate-400"}`}
                         >
-                          {PLAN_OPTIONS.find((option) => option.value === member.plan)?.label ||
-                            member.plan}
-                        </Badge>
-                      </div>
-                      <p className="mt-1 break-all text-sm text-slate-500 dark:text-slate-400">
-                        {member.email}
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-                        <span>{t(`Joined ${formatJoinedDate(member.created_at)}`)}</span>
-                        <span>
-                          {member.last_login
-                            ? daysAgo === 0
-                              ? t("Last active: today")
-                              : t(`Last active: ${daysAgo}d ago`)
-                            : t("Never logged in")}
-                        </span>
-                        <span>{t(`${member.total_questions_completed} questions completed`)}</span>
-                        {member.questions_today > 0 ? (
-                          <span className="font-medium text-[#1E5EFF] dark:text-[#7C97FF]">
-                            {t(`${member.questions_today} today`)}
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => toggleSort(column.key)}
+                            className={`inline-flex items-center gap-1 transition-colors hover:text-slate-900 dark:hover:text-slate-50 ${
+                              column.align === "right" ? "flex-row-reverse" : ""
+                            }`}
+                          >
+                            {t(column.label)}
+                            {isActive ? (
+                              sort.dir === "asc" ? (
+                                <ArrowUp className="h-3 w-3 shrink-0" />
+                              ) : (
+                                <ArrowDown className="h-3 w-3 shrink-0" />
+                              )
+                            ) : null}
+                          </button>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedMembers.map((member) => {
+                    const draft = getDraft(member);
+                    const hasChanges = draft.plan !== member.plan || draft.role !== member.role;
+                    const isCurrentAdmin = member.id === user?.id;
+                    const isExpanded = expandedId === member.id;
+                    const planLabel =
+                      PLAN_OPTIONS.find((option) => option.value === member.plan)?.label || member.plan;
+
+                    return (
+                      <Fragment key={member.id}>
+                        <tr
+                          onClick={() => setExpandedId(isExpanded ? null : member.id)}
+                          className={`cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 dark:!border-slate-800 dark:hover:!bg-slate-800/40 ${
+                            isExpanded ? "bg-slate-50 dark:!bg-slate-800/40" : ""
+                          }`}
+                        >
+                          <td className="pl-3 text-slate-400 dark:text-slate-500">
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                          </td>
+
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <ActivityDot lastLogin={member.last_login} />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="truncate font-medium text-slate-900 dark:text-slate-50">
+                                    {member.full_name || "—"}
+                                  </span>
+                                  {hasChanges ? (
+                                    <span
+                                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
+                                      title={t("Unsaved changes")}
+                                    />
+                                  ) : null}
+                                </div>
+                                <div className="truncate text-xs text-slate-500 dark:text-slate-400">
+                                  {member.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-3 py-2.5">
+                            <Badge
+                              className={
+                                member.plan === "free"
+                                  ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                  : "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
+                              }
+                            >
+                              {planLabel}
+                            </Badge>
+                          </td>
+
+                          <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                            {member.role === "admin" ? (
+                              <span className="inline-flex items-center gap-1 font-medium text-[#1E5EFF] dark:text-[#7C97FF]">
+                                <Shield className="h-3 w-3" />
+                                {t("Admin")}
+                              </span>
+                            ) : (
+                              t("User")
+                            )}
+                          </td>
+
+                          <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                            {getProviderLabel(member.auth_provider)}
+                          </td>
+
+                          <td className="whitespace-nowrap px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                            {formatJoinedDate(member.created_at)}
+                          </td>
+
+                          <td className="whitespace-nowrap px-3 py-2.5 text-slate-600 dark:text-slate-300">
+                            {t(formatLastActive(member))}
+                          </td>
+
+                          <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-slate-300">
+                            {member.total_questions_completed || 0}
+                          </td>
+
+                          <td className="px-3 py-2.5 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                            ${Number(member.total_paid_amount || 0).toFixed(2)}
+                          </td>
+                        </tr>
+
+                        {isExpanded ? (
+                          <tr className="border-b border-slate-100 bg-slate-50/60 dark:!border-slate-800 dark:!bg-slate-800/25">
+                            <td colSpan={TABLE_COLUMNS.length + 1} className="px-3 pb-4 pt-1">
+                              <div className="mb-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                <span>{t(`${member.readiness_score}% readiness`)}</span>
+                                <span>{t(`${member.study_streak_days} day streak`)}</span>
+                                <span>{t(`${member.exams_count} exams`)}</span>
+                                <span>{t(`${member.payments_count || 0} payments`)}</span>
+                                {member.questions_today > 0 ? (
+                                  <span className="font-medium text-[#1E5EFF] dark:text-[#7C97FF]">
+                                    {t(`${member.questions_today} today`)}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                                <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+                                  <Select
+                                    value={draft.plan}
+                                    onValueChange={(value) => updateDraft(member.id, { plan: value })}
+                                  >
+                                    <SelectTrigger className={memberSelectClass}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
+                                      {PLAN_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                          {option.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+
+                                  <Select
+                                    value={draft.role}
+                                    onValueChange={(value) => updateDraft(member.id, { role: value })}
+                                  >
+                                    <SelectTrigger className={memberSelectClass}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
+                                      {ROLE_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                          {option.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openPayments(member)}
+                                    disabled={deleteMemberMutation.isPending}
+                                    className={memberOutlineButtonClass + " w-auto"}
+                                  >
+                                    <CreditCard className="mr-2 h-4 w-4 shrink-0" />
+                                    {t("Payments")}
+                                  </Button>
+
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openEmail(member)}
+                                    disabled={deleteMemberMutation.isPending}
+                                    className={memberOutlineButtonClass + " w-auto"}
+                                  >
+                                    <Mail className="mr-2 h-4 w-4 shrink-0" />
+                                    {t("Email")}
+                                  </Button>
+
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleSave(member)}
+                                    disabled={
+                                      !hasChanges ||
+                                      updateMemberMutation.isPending ||
+                                      deleteMemberMutation.isPending
+                                    }
+                                    className="bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:bg-[#7C97FF] dark:text-slate-950 dark:hover:bg-[#96ACFF]"
+                                  >
+                                    {t("Save")}
+                                  </Button>
+
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setMemberPendingDelete(member)}
+                                    disabled={isCurrentAdmin || deleteMemberMutation.isPending}
+                                    className="border-red-200 bg-white text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-400/30 dark:bg-[#2C1C30] dark:text-red-200 dark:hover:bg-[#38233D]"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4 shrink-0" />
+                                    {t("Delete")}
+                                  </Button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
                         ) : null}
-                        <span>{t(`${member.readiness_score}% readiness`)}</span>
-                        <span>{t(`${member.study_streak_days} day streak`)}</span>
-                        <span>{t(`${member.exams_count} exams`)}</span>
-                        <span>{t(`${member.payments_count || 0} payments`)}</span>
-                        <span>{t(`$${Number(member.total_paid_amount || 0).toFixed(2)} paid`)}</span>
-                      </div>
-                    </div>
-
-                    <div className={actionPanelClass}>
-                      <div className="mb-3 flex items-center justify-end gap-3">
-                        {hasChanges ? (
-                          <Badge className="border-transparent bg-amber-100 text-amber-700 dark:bg-amber-400/15 dark:text-amber-300">
-                            {t("Unsaved changes")}
-                          </Badge>
-                        ) : null}
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <Select
-                            value={draft.plan}
-                            onValueChange={(value) => updateDraft(member.id, { plan: value })}
-                          >
-                            <SelectTrigger className={memberSelectClass}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
-                              {PLAN_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={draft.role}
-                            onValueChange={(value) => updateDraft(member.id, { role: value })}
-                          >
-                            <SelectTrigger className={memberSelectClass}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
-                              {ROLE_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openPayments(member)}
-                            disabled={deleteMemberMutation.isPending}
-                            className={memberOutlineButtonClass + " flex-1 min-w-[100px]"}
-                          >
-                            <CreditCard className="mr-2 h-4 w-4 shrink-0" />
-                            {t("Payments")}
-                          </Button>
-
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => openEmail(member)}
-                            disabled={deleteMemberMutation.isPending}
-                            className={memberOutlineButtonClass + " flex-1 min-w-[100px]"}
-                          >
-                            <Mail className="mr-2 h-4 w-4 shrink-0" />
-                            {t("Email")}
-                          </Button>
-
-                          <Button
-                            onClick={() => handleSave(member)}
-                            disabled={
-                              !hasChanges ||
-                              updateMemberMutation.isPending ||
-                              deleteMemberMutation.isPending
-                            }
-                            className="flex-1 min-w-[80px] bg-[#1E5EFF] hover:bg-[#1E5EFF]/90 dark:bg-[#7C97FF] dark:text-slate-950 dark:hover:bg-[#96ACFF]"
-                          >
-                            {t("Save")}
-                          </Button>
-
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setMemberPendingDelete(member)}
-                            disabled={isCurrentAdmin || deleteMemberMutation.isPending}
-                            className="flex-1 min-w-[80px] border-red-200 bg-white text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-red-400/30 dark:bg-[#2C1C30] dark:text-red-200 dark:hover:bg-[#38233D]"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4 shrink-0" />
-                            {t("Delete")}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
-        </div>
+        </Card>
       </div>
 
       <AlertDialog
@@ -699,7 +834,12 @@ export default function AdminMembers() {
           }
         }}
       >
-        <AlertDialogContent className="rounded-3xl border-slate-200 bg-white p-0 shadow-2xl dark:border-[#2A3A70]/70 dark:bg-[#10182F]">
+        <AlertDialogContent
+          onOverlayClick={() => {
+            if (!deleteMemberMutation.isPending) setMemberPendingDelete(null);
+          }}
+          className="rounded-3xl border-slate-200 bg-white p-0 shadow-2xl dark:border-[#2A3A70]/70 dark:bg-[#10182F]"
+        >
           <div className="border-b border-slate-200/80 bg-gradient-to-br from-red-50 via-white to-orange-50 px-6 py-5 dark:border-[#1E5EFF]/15 dark:from-red-950/30 dark:via-slate-950 dark:to-orange-950/20">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-300">
               <Trash2 className="h-5 w-5" />
