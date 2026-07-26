@@ -46,6 +46,7 @@ export async function purchasePackage(pkg) {
     const { customerInfo } = await Purchases.purchasePackage(pkg);
     return { success: customerInfo.entitlements.active['pro'] !== undefined, customerInfo };
   } catch (e) {
+    console.warn('[RC purchase]', e.code, e.message, 'userCancelled:', e.userCancelled);
     if (e.userCancelled) return { success: false, cancelled: true };
     // The user may already own the subscription (e.g. sandbox "You're currently
     // subscribed", or PRODUCT_ALREADY_PURCHASED). That's not a failure — check

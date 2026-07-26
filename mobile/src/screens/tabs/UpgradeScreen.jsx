@@ -48,8 +48,8 @@ export default function UpgradeScreen({ navigation }) {
   ];
 
   const FALLBACK = [
-    { id: 'premium_monthly', label: t('upgrade.monthly'), price: '$19.99', period: '/mo', badge: null,                    savings: null,              desc: t('upgrade.cancel_anytime') },
-    { id: 'premium_yearly',  label: t('upgrade.yearly'),  price: '$17.99', period: '/mo', badge: t('upgrade.best_value'), savings: t('upgrade.save_10'), desc: t('upgrade.billed_yearly_desc') },
+    { id: 'premium_monthly', label: t('upgrade.monthly'), price: '$19.99',  period: '/mo', badge: null,                    savings: null,              desc: t('upgrade.cancel_anytime') },
+    { id: 'premium_yearly',  label: t('upgrade.yearly'),  price: '$214.99', period: '/yr', badge: t('upgrade.best_value'), savings: t('upgrade.save_10'), desc: t('upgrade.equiv_monthly', { price: '$17.92' }) },
   ];
   const [planId,          setPlanId]          = useState('premium_yearly');
   const [loading,         setLoading]         = useState(false);
@@ -95,15 +95,22 @@ export default function UpgradeScreen({ navigation }) {
 
   const useRC = rcAvailable && !offeringsLoading && offering !== null;
   const plans = useRC
-    ? (offering?.availablePackages ?? []).map(pkg => ({
-        id: pkg.identifier,
-        label: pkg.packageType === 'MONTHLY' ? t('upgrade.monthly') : t('upgrade.yearly'),
-        price: pkg.product.priceString, period: '/mo',
-        badge: pkg.packageType !== 'MONTHLY' ? t('upgrade.best_value') : null,
-        savings: pkg.packageType !== 'MONTHLY' ? t('upgrade.save_10') : null,
-        desc: pkg.packageType === 'MONTHLY' ? t('upgrade.cancel_anytime') : `${t('upgrade.billed_yearly_desc').replace('$215.89', pkg.product.priceString)}`,
-        _pkg: pkg,
-      }))
+    ? (offering?.availablePackages ?? []).map(pkg => {
+        const monthly = pkg.packageType === 'MONTHLY';
+        // Precio REAL cobrado, con su período correcto (Apple 3.1.2(c)):
+        // mensual → "$19.99/mo", anual → "$214.99/yr" (nunca el total anual con "/mo").
+        const currency = pkg.product.priceString.replace(/[\d.,\s]/g, '') || '$';
+        const perMonth = `${currency}${(pkg.product.price / 12).toFixed(2)}`;
+        return {
+          id: pkg.identifier,
+          label: monthly ? t('upgrade.monthly') : t('upgrade.yearly'),
+          price: pkg.product.priceString, period: monthly ? '/mo' : '/yr',
+          badge: !monthly ? t('upgrade.best_value') : null,
+          savings: !monthly ? t('upgrade.save_10') : null,
+          desc: monthly ? t('upgrade.cancel_anytime') : t('upgrade.equiv_monthly', { price: perMonth }),
+          _pkg: pkg,
+        };
+      })
     : FALLBACK;
   const sel = plans.find(p => p.id === planId) ?? plans[plans.length - 1];
 
@@ -247,7 +254,10 @@ export default function UpgradeScreen({ navigation }) {
         const pkg = plans.find(p => p.id === planId)?._pkg;
         if (!pkg) { Alert.alert(t('common.error'), t('upgrade.error')); return; }
         const r = await purchasePackage(pkg);
-        if (r.cancelled) { closeScreen(); return; }
+        // No cerrar el paywall en cancelación: tras el modal de login de Apple,
+        // StoreKit suele reportar el primer intento como "userCancelled" aunque
+        // el usuario sí quería comprar. Nos quedamos para que pueda reintentar.
+        if (r.cancelled) { return; }
         if (r.success) {
           await syncRevenueCatPlan();
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

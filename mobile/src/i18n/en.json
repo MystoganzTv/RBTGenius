@@ -362,7 +362,7 @@
     "pro_you_are": "You're Pro!",
     "pro_sub": "All premium study features unlocked. Go study!",
     "manage_subscription": "Manage Subscription",
-    "billed_yearly_desc": "Billed $215.89/year",
+    "billed_yearly_desc": "Billed $214.99/year",
     "legal_rc": "Payment charged to Apple ID at confirmation. Subscription auto-renews unless cancelled 24h before period end. Manage in App Store Settings.",
     "legal_stripe": "By subscribing you agree to our Terms of Service and Privacy Policy. Manage at rbtgenius.com/profile.",
     "not_signed_in": "Not signed in",
@@ -388,7 +388,8 @@
     "checkout_canceled": "Checkout canceled",
     "checkout_canceled_body": "No charge was made. You're back in the app.",
     "subscription_active": "Your subscription is active. The app is ready to continue.",
-    "purchase_failed": "Purchase failed. Try again."
+    "purchase_failed": "Purchase failed. Try again.",
+    "equiv_monthly": "= {{price}}/mo billed annually"
   },
   "domains": {
     "measurement": "Measurement",

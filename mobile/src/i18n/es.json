@@ -362,7 +362,7 @@
     "pro_you_are": "¡Eres Pro!",
     "pro_sub": "Todas las funciones premium desbloqueadas. ¡A estudiar!",
     "manage_subscription": "Administrar Suscripción",
-    "billed_yearly_desc": "Facturado $215.89/año",
+    "billed_yearly_desc": "Facturado $214.99/año",
     "legal_rc": "Pago cargado al ID de Apple al confirmar. La suscripción se renueva automáticamente a menos que se cancele 24h antes del fin del período. Gestiona en Configuración de App Store.",
     "legal_stripe": "Al suscribirte aceptas nuestros Términos de Servicio y Política de Privacidad. Gestiona en rbtgenius.com/profile.",
     "not_signed_in": "Sin sesión iniciada",
@@ -388,7 +388,8 @@
     "checkout_canceled": "Pago cancelado",
     "checkout_canceled_body": "No se hizo ningún cargo. Volviste a la app.",
     "subscription_active": "Tu suscripción está activa. La app está lista para continuar.",
-    "purchase_failed": "Compra fallida. Inténtalo de nuevo."
+    "purchase_failed": "Compra fallida. Inténtalo de nuevo.",
+    "equiv_monthly": "= {{price}}/mes, facturado anualmente"
   },
   "domains": {
     "measurement": "Medición",
