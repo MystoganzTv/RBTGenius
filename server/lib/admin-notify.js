@@ -199,7 +199,37 @@ async function sendAdminPush(pushTokens, { title, body, data = {} }) {
       console.error(`[admin-notify] push failed: ${response.status}`);
       return { sent: false, reason: "provider_error" };
     }
-    return { sent: true, count: tokens.length };
+
+    // Expo returns HTTP 200 even when individual messages fail — the real
+    // outcome is per-ticket in the body. Without reading it, a token that is
+    // no longer valid (DeviceNotRegistered) fails completely silently, which
+    // is exactly how one admin can stop receiving pushes unnoticed.
+    const body = await response.json().catch(() => null);
+    const tickets = Array.isArray(body?.data) ? body.data : [];
+    const failures = [];
+    tickets.forEach((ticket, index) => {
+      if (ticket?.status !== "ok") {
+        failures.push({
+          token: tokens[index],
+          error: ticket?.details?.error || ticket?.message || "unknown",
+        });
+      }
+    });
+
+    if (failures.length) {
+      for (const failure of failures) {
+        console.error(
+          `[admin-notify] push rejected for ${failure.token}: ${failure.error}`,
+        );
+      }
+    }
+
+    return {
+      sent: failures.length < tokens.length,
+      count: tokens.length - failures.length,
+      failed: failures.length,
+      failures,
+    };
   } catch (error) {
     console.error("[admin-notify] push error:", error);
     return { sent: false, reason: "request_failed" };
