@@ -426,6 +426,17 @@ export async function deletePushToken(userId) {
   await sql`DELETE FROM push_tokens WHERE user_id = ${userId}`;
 }
 
+export async function deletePushTokensByToken(tokens) {
+  const uniqueTokens = [...new Set((tokens || []).filter(Boolean))];
+  if (!uniqueTokens.length) return 0;
+  const rows = await sql`
+    DELETE FROM push_tokens
+    WHERE token = ANY(${uniqueTokens})
+    RETURNING token
+  `;
+  return rows.length;
+}
+
 export async function getAllPushTokens() {
   return sql`SELECT user_id, token, platform FROM push_tokens`;
 }

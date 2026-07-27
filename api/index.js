@@ -185,7 +185,23 @@ async function requireAdmin(req) {
 async function notifyBilling(kind, { user, plan, source, details }) {
   try {
     const pushTokens = await db.getAdminPushTokens(ADMIN_EMAILS);
-    await notifySubscriptionEvent({ kind, user, plan, source, details, pushTokens });
+    const result = await notifySubscriptionEvent({
+      kind,
+      user,
+      plan,
+      source,
+      details,
+      pushTokens,
+    });
+    const invalidTokens = (result?.push?.failures || [])
+      .filter((failure) => failure.error === 'DeviceNotRegistered')
+      .map((failure) => failure.token);
+    if (invalidTokens.length) {
+      const removed = await db.deletePushTokensByToken(invalidTokens);
+      console.warn(
+        `[notify-billing] Removed ${removed} unregistered Expo push token${removed === 1 ? '' : 's'}.`,
+      );
+    }
   } catch (err) {
     console.error(`[notify-billing] ${kind} failed:`, err.message);
   }

@@ -37,9 +37,13 @@ async function sendAdminEmail({ subject, preview, fields }) {
     return { sent: false, reason: "missing_api_key" };
   }
 
-  const to = parseRecipients(process.env.ADMIN_NOTIFICATION_EMAIL);
+  const to = parseRecipients(
+    process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAILS,
+  );
   if (!to.length) {
-    console.warn(`[admin-notify] Skipped "${subject}" because ADMIN_NOTIFICATION_EMAIL is not configured.`);
+    console.warn(
+      `[admin-notify] Skipped "${subject}" because neither ADMIN_NOTIFICATION_EMAIL nor ADMIN_EMAILS is configured.`,
+    );
     return { sent: false, reason: "missing_recipient" };
   }
   const from = process.env.ADMIN_NOTIFICATION_FROM_EMAIL || DEFAULT_FROM_EMAIL;
@@ -184,8 +188,14 @@ const SUBSCRIPTION_EVENTS = {
 
 // Fire-and-forget Expo push to the admins' phones. Never throws — a push
 // failure must not break a billing webhook.
-async function sendAdminPush(pushTokens, { title, body, data = {} }) {
-  const tokens = (pushTokens || []).filter(Boolean);
+function maskPushToken(token) {
+  const value = String(token || "");
+  if (value.length <= 12) return "[redacted]";
+  return `${value.slice(0, 8)}…${value.slice(-6)}`;
+}
+
+export async function sendAdminPush(pushTokens, { title, body, data = {} }) {
+  const tokens = [...new Set((pushTokens || []).filter(Boolean))];
   if (!tokens.length) return { sent: false, reason: "no_tokens" };
   try {
     const response = await fetch(EXPO_PUSH_URL, {
@@ -204,14 +214,27 @@ async function sendAdminPush(pushTokens, { title, body, data = {} }) {
     // outcome is per-ticket in the body. Without reading it, a token that is
     // no longer valid (DeviceNotRegistered) fails completely silently, which
     // is exactly how one admin can stop receiving pushes unnoticed.
-    const body = await response.json().catch(() => null);
-    const tickets = Array.isArray(body?.data) ? body.data : [];
+    const responseBody = await response.json().catch(() => null);
+    const tickets = Array.isArray(responseBody?.data) ? responseBody.data : null;
+    if (!tickets || tickets.length !== tokens.length) {
+      console.error(
+        `[admin-notify] Expo returned an invalid ticket response: expected ${tokens.length}, received ${tickets?.length ?? 0}`,
+      );
+      return {
+        sent: false,
+        count: 0,
+        failed: tokens.length,
+        reason: "invalid_provider_response",
+      };
+    }
+
     const failures = [];
     tickets.forEach((ticket, index) => {
       if (ticket?.status !== "ok") {
         failures.push({
           token: tokens[index],
           error: ticket?.details?.error || ticket?.message || "unknown",
+          message: ticket?.message || null,
         });
       }
     });
@@ -219,7 +242,7 @@ async function sendAdminPush(pushTokens, { title, body, data = {} }) {
     if (failures.length) {
       for (const failure of failures) {
         console.error(
-          `[admin-notify] push rejected for ${failure.token}: ${failure.error}`,
+          `[admin-notify] push rejected for ${maskPushToken(failure.token)}: ${failure.error}${failure.message ? ` (${failure.message})` : ""}`,
         );
       }
     }
