@@ -8,9 +8,12 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  Copy,
   CreditCard,
   Crown,
   Download,
+  ExternalLink,
+  Fingerprint,
   Loader2,
   Mail,
   Send,
@@ -52,6 +55,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
+import {
+  getPaymentAuditRows,
+  getPaymentProviderUrl,
+  getPaymentReference,
+  getPaymentSourceLabel,
+} from "@/lib/payment-audit";
 import { useLanguage } from "@/hooks/use-language";
 import { translateUi } from "@/lib/i18n";
 import { useAuth } from "@/lib/AuthContext";
@@ -238,6 +247,7 @@ export default function AdminMembers() {
   const [memberPendingDelete, setMemberPendingDelete] = useState(null);
   const [memberPaymentsOpen, setMemberPaymentsOpen] = useState(false);
   const [memberPaymentsTarget, setMemberPaymentsTarget] = useState(null);
+  const [expandedPaymentId, setExpandedPaymentId] = useState(null);
   const [emailTarget, setEmailTarget] = useState(null);
   const [emailForm, setEmailForm] = useState({ subject: "", message: "" });
   // Table view: which row is expanded for editing, and the active sort.
@@ -246,6 +256,22 @@ export default function AdminMembers() {
 
   const isAdmin = user?.role === "admin";
   const t = (value) => translateUi(value, language);
+
+  const copyPaymentValue = async (label, value) => {
+    try {
+      await navigator.clipboard.writeText(String(value));
+      toast({
+        title: `${label} copied`,
+        description: String(value),
+      });
+    } catch {
+      toast({
+        title: "Unable to copy reference",
+        description: "Copy the value manually and try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["admin-members"],
@@ -928,6 +954,7 @@ export default function AdminMembers() {
           setMemberPaymentsOpen(open);
           if (!open) {
             setMemberPaymentsTarget(null);
+            setExpandedPaymentId(null);
           }
         }}
       >
@@ -997,56 +1024,148 @@ export default function AdminMembers() {
               </Card>
             ) : (
               <div className="space-y-3">
-                {memberPaymentsData.payments.map((payment) => (
-                  <div
-                    key={payment.id}
-                    className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-[#1E5EFF]/15 dark:bg-[#0B1628]"
-                  >
-                    <div className="flex min-w-0 items-center gap-4">
-                      <div
-                        className={[
-                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-                          payment.status === "completed" ? "bg-emerald-100 text-emerald-600" : "",
-                          payment.status === "pending" ? "bg-amber-100 text-amber-600" : "",
-                          payment.status === "failed" ? "bg-red-100 text-red-600" : "",
-                          !["completed", "pending", "failed"].includes(payment.status)
-                            ? "bg-slate-100 text-slate-500"
-                            : "",
-                        ].join(" ")}
-                      >
-                        {payment.status === "completed" ? (
-                          <CheckCircle2 className="h-5 w-5" />
-                        ) : payment.status === "pending" ? (
-                          <Clock className="h-5 w-5" />
-                        ) : payment.status === "failed" ? (
-                          <XCircle className="h-5 w-5" />
-                        ) : (
-                          <CreditCard className="h-5 w-5" />
-                        )}
-                      </div>
+                {memberPaymentsData.payments.map((payment) => {
+                  const isExpanded = expandedPaymentId === payment.id;
+                  const auditRows = getPaymentAuditRows(payment);
+                  const providerUrl = getPaymentProviderUrl(payment);
+                  const reference = getPaymentReference(payment);
 
-                      <div className="min-w-0">
-                        <p className="font-medium text-slate-900 dark:text-slate-50">
-                          {getPaymentPlanLabel(payment.plan)}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {formatPaymentDate(payment.payment_date || payment.created_at)}
-                          </span>
-                          <span>{payment.provider_label || payment.provider || "Billing"}</span>
-                          <span className="uppercase tracking-wide">{payment.status}</span>
+                  return (
+                    <div
+                      key={payment.id}
+                      className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-[#1E5EFF]/15 dark:bg-[#0B1628]"
+                    >
+                      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div
+                            className={[
+                              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                              payment.status === "completed" ? "bg-emerald-100 text-emerald-600" : "",
+                              payment.status === "pending" ? "bg-amber-100 text-amber-600" : "",
+                              payment.status === "failed" ? "bg-red-100 text-red-600" : "",
+                              !["completed", "pending", "failed"].includes(payment.status)
+                                ? "bg-slate-100 text-slate-500"
+                                : "",
+                            ].join(" ")}
+                          >
+                            {payment.status === "completed" ? (
+                              <CheckCircle2 className="h-5 w-5" />
+                            ) : payment.status === "pending" ? (
+                              <Clock className="h-5 w-5" />
+                            ) : payment.status === "failed" ? (
+                              <XCircle className="h-5 w-5" />
+                            ) : (
+                              <CreditCard className="h-5 w-5" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="font-medium text-slate-900 dark:text-slate-50">
+                              {getPaymentPlanLabel(payment.plan)}
+                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {formatPaymentDate(payment.payment_date || payment.created_at)}
+                              </span>
+                              <span>{payment.provider_label || payment.provider || "Billing"}</span>
+                              <span className="uppercase tracking-wide">{payment.status}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="mt-2 flex max-w-full items-center gap-1.5 font-mono text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                              onClick={() => copyPaymentValue("Provider reference", reference)}
+                              title="Copy provider reference"
+                            >
+                              <Fingerprint className="h-3 w-3 shrink-0" />
+                              <span className="truncate">Ref: {reference}</span>
+                              <Copy className="h-3 w-3 shrink-0" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
+                          <div className="text-left sm:text-right">
+                            <p className="font-semibold text-slate-900 dark:text-slate-50">
+                              {formatCurrency(payment.amount, payment.currency)}
+                            </p>
+                            <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                              {getPaymentSourceLabel(payment)}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className={darkBadgeClass}
+                            onClick={() =>
+                              setExpandedPaymentId((current) =>
+                                current === payment.id ? null : payment.id,
+                              )
+                            }
+                          >
+                            {isExpanded ? "Hide details" : "Audit details"}
+                            <ChevronDown
+                              className={`ml-2 h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                            />
+                          </Button>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="shrink-0 text-right">
-                      <p className="font-semibold text-slate-900 dark:text-slate-50">
-                        {formatCurrency(payment.amount, payment.currency)}
-                      </p>
+                      {isExpanded ? (
+                        <div className="border-t border-slate-200/80 bg-slate-50/80 px-4 py-4 dark:border-[#1E5EFF]/15 dark:bg-[#101A31]">
+                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                                Audit trail
+                              </p>
+                              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                Stable references for support, reconciliation, and provider lookup.
+                              </p>
+                            </div>
+                            {providerUrl ? (
+                              <a
+                                href={providerUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-50 dark:border-blue-400/30 dark:bg-slate-950 dark:text-blue-300 dark:hover:bg-blue-950/30"
+                              >
+                                Open in {payment.provider === "stripe" ? "Stripe" : "RevenueCat"}
+                                <ExternalLink className="ml-2 h-3.5 w-3.5" />
+                              </a>
+                            ) : null}
+                          </div>
+
+                          <dl className="grid gap-2 sm:grid-cols-2">
+                            {auditRows.map((row) => (
+                              <div
+                                key={`${payment.id}-${row.label}`}
+                                className="rounded-xl border border-slate-200/80 bg-white p-3 dark:border-slate-700/80 dark:bg-slate-950/80"
+                              >
+                                <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                  {row.label}
+                                </dt>
+                                <dd className="mt-1 flex items-start justify-between gap-2">
+                                  <code className="break-all text-xs text-slate-800 dark:text-slate-200">
+                                    {row.value}
+                                  </code>
+                                  <button
+                                    type="button"
+                                    className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    onClick={() => copyPaymentValue(row.label, row.value)}
+                                    aria-label={`Copy ${row.label}`}
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </button>
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+                      ) : null}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

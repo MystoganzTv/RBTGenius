@@ -71,6 +71,8 @@ test('RevenueCat purchase becomes an idempotent payment record with display meta
         provider: 'revenuecat',
         provider_label: 'Apple App Store',
         revenuecat_event_id: 'B02D715C-5263-4411-AD3C-37E8920E4EFE',
+        revenuecat_event_type: 'INITIAL_PURCHASE',
+        revenuecat_app_user_id: 'user_1779228191783_nb7lz3',
         transaction_id: '1570000025466494',
         original_transaction_id: '1570000025466494',
         product_id: 'com.rbtgenius.monthly',
@@ -79,6 +81,7 @@ test('RevenueCat purchase becomes an idempotent payment record with display meta
         period_type: 'INTRO',
         renewal_number: 1,
         country_code: null,
+        event_timestamp: '2026-07-27T23:11:14.637Z',
       },
     },
   );

@@ -98,6 +98,8 @@ export function buildRevenueCatPayment(event, userId, plan = null) {
             ? 'Google Play'
             : 'RevenueCat',
       revenuecat_event_id: event.id || null,
+      revenuecat_event_type: event.type || null,
+      revenuecat_app_user_id: event.app_user_id || userId,
       transaction_id: event.transaction_id || null,
       original_transaction_id: event.original_transaction_id || null,
       product_id: event.product_id || null,
@@ -106,6 +108,9 @@ export function buildRevenueCatPayment(event, userId, plan = null) {
       period_type: event.period_type || null,
       renewal_number: event.renewal_number ?? null,
       country_code: event.country_code || null,
+      event_timestamp: Number.isFinite(Number(event.event_timestamp_ms))
+        ? new Date(Number(event.event_timestamp_ms)).toISOString()
+        : null,
     },
   };
 }
