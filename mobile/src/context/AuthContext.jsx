@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   GoogleSignin,
@@ -214,6 +215,12 @@ export function AuthProvider({ children }) {
 
   const loginWithGoogle = async () => {
     try {
+      if (Platform.OS === 'android') {
+        await GoogleSignin.hasPlayServices({
+          showPlayServicesUpdateDialog: true,
+        });
+      }
+
       const userInfo = await GoogleSignin.signIn();
 
       console.log('[Google] full userInfo:', JSON.stringify(userInfo));

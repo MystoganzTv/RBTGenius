@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { GraduationCap, Loader2, Sparkles } from "lucide-react";
+import { Apple, GraduationCap, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,10 @@ export default function Login() {
     () => api.getOAuthStartUrl("google", redirectPath),
     [redirectPath],
   );
+  const appleAuthUrl = useMemo(
+    () => api.getOAuthStartUrl("apple", redirectPath),
+    [redirectPath],
+  );
   const initialMode = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return params.get("mode") === "register" ? "register" : "login";
@@ -61,12 +65,39 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const [providers, setProviders] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const providerIds = useMemo(
+    () => new Set(providers.map((provider) => provider.id)),
+    [providers],
+  );
+  const hasQuickSignIn = providerIds.has("google") || providerIds.has("apple");
 
   useEffect(() => {
     setActiveTab(initialMode);
   }, [initialMode]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    api
+      .getAuthProviders()
+      .then((data) => {
+        if (isMounted) {
+          setProviders(Array.isArray(data?.providers) ? data.providers : []);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setProviders([]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (authError?.message) {
@@ -131,42 +162,55 @@ export default function Login() {
           </p>
         </div>
 
-        <div className="mb-6 space-y-4">
-          <p className="text-center text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-            {t("Quick sign in")}
-          </p>
-          <a
-            href={googleAuthUrl}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-[#1E5EFF]/12 dark:bg-[#0D1E3A] dark:text-slate-100 dark:hover:bg-slate-800"
-          >
-            <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
-              <path
-                fill="#EA4335"
-                d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.7 2.4 12 2.4 6.9 2.4 2.8 6.5 2.8 11.6S6.9 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"
-              />
-              <path
-                fill="#34A853"
-                d="M2.8 7.2l3.2 2.3c.9-1.7 2.7-2.9 5-2.9 1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.7 2.4 12 2.4c-3.6 0-6.7 2-8.3 4.8Z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M12 20.8c2.6 0 4.8-.9 6.4-2.5l-3-2.5c-.8.6-1.9 1-3.4 1-3.8 0-5.1-2.5-5.4-3.8l-3.2 2.5c1.6 3 4.7 5.3 8.6 5.3Z"
-              />
-              <path
-                fill="#4285F4"
-                d="M21.1 12.2c0-.6-.1-1.1-.2-1.6H12v3.9h5.4c-.2 1.1-.9 2-1.8 2.7l3 2.5c1.8-1.7 2.5-4.1 2.5-7.5Z"
-              />
-            </svg>
-            <span>{t("Continue with Google")}</span>
-          </a>
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-            <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
-              {t("Or use email")}
-            </span>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+        {hasQuickSignIn ? (
+          <div className="mb-6 space-y-4">
+            <p className="text-center text-xs font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+              {t("Quick sign in")}
+            </p>
+            {providerIds.has("google") ? (
+              <a
+                href={googleAuthUrl}
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-[#1E5EFF]/12 dark:bg-[#0D1E3A] dark:text-slate-100 dark:hover:bg-slate-800"
+              >
+                <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24">
+                  <path
+                    fill="#EA4335"
+                    d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.7 2.4 12 2.4 6.9 2.4 2.8 6.5 2.8 11.6S6.9 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M2.8 7.2l3.2 2.3c.9-1.7 2.7-2.9 5-2.9 1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.7 2.4 12 2.4c-3.6 0-6.7 2-8.3 4.8Z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M12 20.8c2.6 0 4.8-.9 6.4-2.5l-3-2.5c-.8.6-1.9 1-3.4 1-3.8 0-5.1-2.5-5.4-3.8l-3.2 2.5c1.6 3 4.7 5.3 8.6 5.3Z"
+                  />
+                  <path
+                    fill="#4285F4"
+                    d="M21.1 12.2c0-.6-.1-1.1-.2-1.6H12v3.9h5.4c-.2 1.1-.9 2-1.8 2.7l3 2.5c1.8-1.7 2.5-4.1 2.5-7.5Z"
+                  />
+                </svg>
+                <span>{t("Continue with Google")}</span>
+              </a>
+            ) : null}
+            {providerIds.has("apple") ? (
+              <a
+                href={appleAuthUrl}
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-900 bg-slate-950 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-slate-800 dark:border-white/15 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+              >
+                <Apple className="h-4 w-4" />
+                <span>{t("Continue with Apple")}</span>
+              </a>
+            ) : null}
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                {t("Or use email")}
+              </span>
+              <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">

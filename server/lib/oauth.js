@@ -351,7 +351,7 @@ export async function exchangeOAuthCodeForProfile({
       const errBody = await tokenResponse.json();
       detail = errBody.error_description || errBody.error || "";
     } catch { /* ignore */ }
-    throw new Error(detail ? `Google: ${detail}` : `Unable to complete ${provider.label} sign-in`);
+    throw new Error(detail ? `${provider.label}: ${detail}` : `Unable to complete ${provider.label} sign-in`);
   }
 
   const tokenData = await tokenResponse.json();
