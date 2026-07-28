@@ -132,7 +132,15 @@ function formatPaymentDate(value) {
 }
 
 function formatCurrency(amount, currency = "USD") {
-  return `$${Number(amount || 0).toFixed(2)} ${String(currency || "USD").toUpperCase()}`;
+  const normalizedCurrency = String(currency || "USD").toUpperCase();
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: normalizedCurrency,
+    }).format(Number(amount || 0));
+  } catch {
+    return `${Number(amount || 0).toFixed(2)} ${normalizedCurrency}`;
+  }
 }
 
 function getPaymentPlanLabel(plan) {

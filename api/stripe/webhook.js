@@ -3,7 +3,10 @@ import * as db from '../lib/db.js';
 import { resolvePlanFromPriceId } from '../../server/lib/billing.js';
 import { applyStripeWebhookEvent, syncConfirmedCheckout } from '../../server/lib/stripe-sync.js';
 import { findUserForBilling } from '../../server/lib/stripe-sync.js';
-import { notifyNewSubscription } from '../../server/lib/admin-notify.js';
+import {
+  notifyNewSubscription,
+  sendPaymentConfirmation,
+} from '../../server/lib/admin-notify.js';
 
 export const config = {
   api: { bodyParser: false },
@@ -64,15 +67,31 @@ export default async function handler(req, res) {
         if (orig && (orig.plan !== u.plan || orig.stripe_customer_id !== u.stripe_customer_id))
           await db.updateUser(u.id, { plan: u.plan, stripe_customer_id: u.stripe_customer_id });
       }
+      let recordedPayment = null;
       for (const p of mockNext.payments) {
-        if (!allPayments.find(x => x.id === p.id)) await db.createPayment(p);
+        if (!allPayments.find(x => x.id === p.id)) {
+          const paymentWrite = await db.createPayment(p);
+          if (paymentWrite.inserted) recordedPayment = paymentWrite.payment;
+        }
       }
       const user = findUserForBilling({ users: mockNext.users, payments: mockNext.payments }, {
         userId: checkout.client_reference_id,
         customerId: typeof checkout.customer === 'string' ? checkout.customer : checkout.customer?.id,
         email: checkout.customer_details?.email || checkout.customer_email,
       });
-      if (user) await notifyNewSubscription({ user, plan: checkout.metadata?.plan || user.plan, checkout });
+      if (user) {
+        await notifyNewSubscription({
+          user,
+          plan: checkout.metadata?.plan || user.plan,
+          checkout,
+        });
+        if (
+          recordedPayment?.status === 'completed' &&
+          recordedPayment.amount > 0
+        ) {
+          await sendPaymentConfirmation({ user, payment: recordedPayment });
+        }
+      }
       console.log('[stripe/webhook] checkout.session.completed processed');
     }
 
@@ -111,16 +130,34 @@ export default async function handler(req, res) {
         const priceId = invoice.lines?.data?.[0]?.price?.id;
         const plan = resolvePlanFromPriceId(priceId);
         if (plan && plan !== 'free' && user.plan !== plan) await db.updateUser(user.id, { plan });
-        await db.createPayment({
-          id: createId('pay'),
+        const paymentWrite = await db.createPayment({
+          id: `pay_stripe_invoice_${invoice.id}`,
           user_id: user.id,
           status: 'completed',
           amount: (invoice.amount_paid || 0) / 100,
           payment_date: new Date((invoice.created || Date.now() / 1000) * 1000).toISOString(),
           created_at: new Date().toISOString(),
-          metadata: { invoice_id: invoice.id, reason: 'subscription_renewal' },
+          plan: plan || user.plan,
+          currency: String(invoice.currency || 'usd').toUpperCase(),
+          provider: 'stripe',
+          provider_label: 'Stripe',
+          stripe_customer_id: customerId || null,
+          stripe_invoice_id: invoice.id,
+          metadata: {
+            invoice_id: invoice.id,
+            reason: 'subscription_renewal',
+          },
         });
         console.log(`[stripe/webhook] invoice.paid renewal recorded for ${user.email}`);
+        if (
+          paymentWrite.inserted &&
+          paymentWrite.payment.amount > 0
+        ) {
+          await sendPaymentConfirmation({
+            user,
+            payment: paymentWrite.payment,
+          });
+        }
       }
     }
   } catch (err) {

@@ -26,6 +26,90 @@ export function resolvePlanFromRevenueCatProduct(productId) {
   return null;
 }
 
+// Store product identifiers are labels, not a reliable source of billing
+// duration. The production App Store product was historically named
+// `com.rbtgenius.monthly` even though Apple configured it as a one-year
+// subscription. RevenueCat includes both timestamps, so prefer the actual
+// purchased period and only fall back to the product identifier.
+export function resolvePlanFromRevenueCatEvent(event) {
+  const purchasedAt = Number(event?.purchased_at_ms);
+  const expirationAt = Number(event?.expiration_at_ms);
+  const durationMs = expirationAt - purchasedAt;
+
+  if (Number.isFinite(durationMs) && durationMs > 0) {
+    const durationDays = durationMs / (24 * 60 * 60 * 1000);
+    if (durationDays >= 300) return PLAN_IDS.PREMIUM_YEARLY;
+    if (durationDays <= 45) return PLAN_IDS.PREMIUM_MONTHLY;
+  }
+
+  return resolvePlanFromRevenueCatProduct(event?.product_id);
+}
+
+const PAYMENT_EVENT_TYPES = new Set([
+  'INITIAL_PURCHASE',
+  'RENEWAL',
+  'NON_RENEWING_PURCHASE',
+]);
+
+export function buildRevenueCatPayment(event, userId, plan = null) {
+  if (!event || !userId || !PAYMENT_EVENT_TYPES.has(event.type)) return null;
+
+  const amount = Number(
+    event.price_in_purchased_currency ?? event.price ?? 0,
+  );
+  const usdPrice = Number(event.price ?? amount);
+  const occurredAtMs = Number(event.purchased_at_ms ?? event.event_timestamp_ms);
+  const occurredAt = Number.isFinite(occurredAtMs)
+    ? new Date(occurredAtMs).toISOString()
+    : new Date().toISOString();
+  const transactionId = String(event.transaction_id || event.id || '').trim();
+  if (!transactionId) return null;
+
+  const resolvedPlan =
+    plan || resolvePlanFromRevenueCatEvent(event) || PLAN_IDS.PREMIUM_MONTHLY;
+  const currency = String(event.currency || 'USD').toUpperCase();
+  const store = String(event.store || 'UNKNOWN').toUpperCase();
+
+  return {
+    id: `pay_rc_${transactionId}`,
+    user_id: userId,
+    status: event.environment === 'PRODUCTION' ? 'completed' : 'sandbox',
+    amount: Number.isFinite(amount) ? amount : 0,
+    payment_date: occurredAt,
+    created_at: occurredAt,
+    plan: resolvedPlan,
+    currency,
+    provider: 'revenuecat',
+    provider_label:
+      store === 'APP_STORE' || store === 'MAC_APP_STORE'
+        ? 'Apple App Store'
+        : store === 'PLAY_STORE'
+          ? 'Google Play'
+          : 'RevenueCat',
+    metadata: {
+      plan: resolvedPlan,
+      currency,
+      usd_price: Number.isFinite(usdPrice) ? usdPrice : null,
+      provider: 'revenuecat',
+      provider_label:
+        store === 'APP_STORE' || store === 'MAC_APP_STORE'
+          ? 'Apple App Store'
+          : store === 'PLAY_STORE'
+            ? 'Google Play'
+            : 'RevenueCat',
+      revenuecat_event_id: event.id || null,
+      transaction_id: event.transaction_id || null,
+      original_transaction_id: event.original_transaction_id || null,
+      product_id: event.product_id || null,
+      store,
+      environment: event.environment || null,
+      period_type: event.period_type || null,
+      renewal_number: event.renewal_number ?? null,
+      country_code: event.country_code || null,
+    },
+  };
+}
+
 function isEntitlementActive(entitlement, nowMs = Date.now()) {
   if (!entitlement) return false;
   const expires = entitlement.expires_date;
@@ -98,13 +182,18 @@ const EXPIRE_EVENT_TYPES = new Set([
 export function interpretWebhookEvent(event) {
   if (!event || !event.type) return { action: 'ignore' };
 
-  const appUserIds = [event.app_user_id, event.original_app_user_id].filter(Boolean);
+  const appUserIds = [
+    event.app_user_id,
+    event.original_app_user_id,
+    ...(Array.isArray(event.aliases) ? event.aliases : []),
+  ].filter((value, index, values) => value && values.indexOf(value) === index);
   const type = event.type;
 
   // CANCELLATION = auto-renew turned off; user keeps access until expiry → ignore.
   // BILLING_ISSUE = grace period → ignore (don't punish on a transient failure).
   if (ACTIVE_EVENT_TYPES.has(type)) {
-    const plan = resolvePlanFromRevenueCatProduct(event.product_id) || PLAN_IDS.PREMIUM_MONTHLY;
+    const plan =
+      resolvePlanFromRevenueCatEvent(event) || PLAN_IDS.PREMIUM_MONTHLY;
     return { action: 'upgrade', plan, appUserIds };
   }
   if (EXPIRE_EVENT_TYPES.has(type)) {

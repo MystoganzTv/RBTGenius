@@ -279,24 +279,83 @@ export async function deleteMockExamsByUser(userId) {
 
 // ── Payments ──────────────────────────────────────────────────────────────────
 
+function normalizePayment(row) {
+  if (!row) return null;
+  const metadata = typeof row.metadata === 'string'
+    ? (() => { try { return JSON.parse(row.metadata); } catch { return {}; } })()
+    : (row.metadata ?? {});
+
+  return {
+    ...row,
+    amount: Number(row.amount ?? 0),
+    metadata,
+    plan: row.plan || metadata.plan || null,
+    currency: row.currency || metadata.currency || 'USD',
+    provider: row.provider || metadata.provider || null,
+    provider_label:
+      row.provider_label || metadata.provider_label || metadata.provider || null,
+    stripe_session_id: row.stripe_session_id || metadata.stripe_session_id || null,
+    stripe_customer_id: row.stripe_customer_id || metadata.stripe_customer_id || null,
+    stripe_subscription_id:
+      row.stripe_subscription_id || metadata.stripe_subscription_id || null,
+    stripe_invoice_id: row.stripe_invoice_id || metadata.stripe_invoice_id || null,
+  };
+}
+
 export async function getPaymentsByUser(userId) {
-  return sql`SELECT * FROM payments WHERE user_id = ${userId} ORDER BY created_at DESC`;
+  const rows = await sql`SELECT * FROM payments WHERE user_id = ${userId} ORDER BY created_at DESC`;
+  return rows.map(normalizePayment);
 }
 
 export async function getAllPayments() {
-  return sql`SELECT * FROM payments ORDER BY created_at DESC`;
+  const rows = await sql`SELECT * FROM payments ORDER BY created_at DESC`;
+  return rows.map(normalizePayment);
 }
 
 export async function createPayment(payment) {
-  await sql`
+  const metadata = {
+    ...(payment.metadata ?? {}),
+    ...(payment.plan && !payment.metadata?.plan ? { plan: payment.plan } : {}),
+    ...(payment.currency && !payment.metadata?.currency ? { currency: payment.currency } : {}),
+    ...(payment.provider && !payment.metadata?.provider ? { provider: payment.provider } : {}),
+    ...(payment.provider_label && !payment.metadata?.provider_label
+      ? { provider_label: payment.provider_label }
+      : {}),
+    ...(payment.stripe_session_id && !payment.metadata?.stripe_session_id
+      ? { stripe_session_id: payment.stripe_session_id }
+      : {}),
+    ...(payment.stripe_customer_id && !payment.metadata?.stripe_customer_id
+      ? { stripe_customer_id: payment.stripe_customer_id }
+      : {}),
+    ...(payment.stripe_subscription_id && !payment.metadata?.stripe_subscription_id
+      ? { stripe_subscription_id: payment.stripe_subscription_id }
+      : {}),
+    ...(payment.stripe_invoice_id && !payment.metadata?.stripe_invoice_id
+      ? { stripe_invoice_id: payment.stripe_invoice_id }
+      : {}),
+  };
+  const inserted = await sql`
     INSERT INTO payments (id, user_id, status, amount, payment_date, created_at, metadata)
     VALUES (${payment.id}, ${payment.user_id}, ${payment.status ?? null},
       ${Number(payment.amount ?? 0)}, ${payment.payment_date ?? null},
-      ${payment.created_at}, ${JSON.stringify(payment.metadata ?? {})})
-    ON CONFLICT (id) DO UPDATE SET
-      status = EXCLUDED.status, amount = EXCLUDED.amount,
-      payment_date = EXCLUDED.payment_date, metadata = EXCLUDED.metadata
+      ${payment.created_at}, ${JSON.stringify(metadata)})
+    ON CONFLICT (id) DO NOTHING
+    RETURNING id
   `;
+  if (!inserted.length) {
+    await sql`
+      UPDATE payments
+      SET status = ${payment.status ?? null},
+          amount = ${Number(payment.amount ?? 0)},
+          payment_date = ${payment.payment_date ?? null},
+          metadata = ${JSON.stringify(metadata)}
+      WHERE id = ${payment.id}
+    `;
+  }
+  return {
+    inserted: inserted.length > 0,
+    payment: normalizePayment({ ...payment, metadata }),
+  };
 }
 
 export async function deletePaymentsByUser(userId) {

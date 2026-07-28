@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { notifyNewMember, sendAdminPush } from '../server/lib/admin-notify.js';
+import {
+  notifyNewMember,
+  sendAdminPush,
+  sendPaymentConfirmation,
+} from '../server/lib/admin-notify.js';
 
 const originalFetch = globalThis.fetch;
 const originalResendApiKey = process.env.RESEND_API_KEY;
 const originalNotificationEmails = process.env.ADMIN_NOTIFICATION_EMAIL;
 const originalAdminEmails = process.env.ADMIN_EMAILS;
+const originalFromEmail = process.env.NOTIFICATION_FROM_EMAIL;
 
 test.afterEach(() => {
   globalThis.fetch = originalFetch;
@@ -16,6 +21,8 @@ test.afterEach(() => {
   else process.env.ADMIN_NOTIFICATION_EMAIL = originalNotificationEmails;
   if (originalAdminEmails === undefined) delete process.env.ADMIN_EMAILS;
   else process.env.ADMIN_EMAILS = originalAdminEmails;
+  if (originalFromEmail === undefined) delete process.env.NOTIFICATION_FROM_EMAIL;
+  else process.env.NOTIFICATION_FROM_EMAIL = originalFromEmail;
 });
 
 test('admin email falls back to every address in ADMIN_EMAILS', async () => {
@@ -108,4 +115,39 @@ test('sendAdminPush does not treat a malformed Expo response as success', async 
     failed: 1,
     reason: 'invalid_provider_response',
   });
+});
+
+test('payment confirmation uses the verified sender and identifies Apple as the official receipt source', async () => {
+  process.env.RESEND_API_KEY = 'test-key';
+  process.env.NOTIFICATION_FROM_EMAIL = 'RBT Genius <info@rbtgenius.com>';
+  let requestBody;
+  globalThis.fetch = async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return new Response(JSON.stringify({ id: 'email-receipt-1' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
+  const result = await sendPaymentConfirmation({
+    user: {
+      email: 'mauro@example.com',
+      full_name: 'Mauricio Marti',
+    },
+    payment: {
+      id: 'pay_rc_1570000025466494',
+      amount: 214.99,
+      currency: 'USD',
+      plan: 'premium_yearly',
+      payment_date: '2026-07-27T23:11:09.000Z',
+      provider_label: 'Apple App Store',
+      metadata: { transaction_id: '1570000025466494' },
+    },
+  });
+
+  assert.deepEqual(result, { sent: true, id: 'email-receipt-1' });
+  assert.equal(requestBody.from, 'RBT Genius <info@rbtgenius.com>');
+  assert.equal(requestBody.to, 'mauro@example.com');
+  assert.match(requestBody.html, /USD 214\.99/);
+  assert.match(requestBody.html, /official App Store receipt/);
 });

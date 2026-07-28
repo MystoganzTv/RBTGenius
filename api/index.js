@@ -20,11 +20,18 @@ import {
   resolvePlanFromPriceId,
 } from '../server/lib/billing.js';
 import { findUserForBilling, syncConfirmedCheckout, applyStripeWebhookEvent } from '../server/lib/stripe-sync.js';
-import { notifyNewMember, notifyNewSubscription, notifySubscriptionEvent, sendVerificationEmail } from '../server/lib/admin-notify.js';
+import {
+  notifyNewMember,
+  notifyNewSubscription,
+  notifySubscriptionEvent,
+  sendPaymentConfirmation,
+  sendVerificationEmail,
+} from '../server/lib/admin-notify.js';
 import crypto from 'node:crypto';
 import appleSignin from 'apple-signin-auth';
 import { getEntitlements, isPremiumPlan } from '../shared/plan-access.js';
 import {
+  buildRevenueCatPayment,
   derivePlanFromSubscriber,
   fetchRevenueCatSubscriber,
   interpretWebhookEvent,
@@ -489,8 +496,12 @@ async function webApiHandler(req) {
               });
             }
           }
+          let recordedPayment = null;
           for (const p of mockNext.payments) {
-            if (!allPayments.find(x => x.id === p.id)) await db.createPayment(p);
+            if (!allPayments.find(x => x.id === p.id)) {
+              const paymentWrite = await db.createPayment(p);
+              if (paymentWrite.inserted) recordedPayment = paymentWrite.payment;
+            }
           }
           const user = findUserForBilling({ users: mockNext.users, payments: mockNext.payments }, {
             userId: checkout.client_reference_id,
@@ -511,6 +522,12 @@ async function webApiHandler(req) {
                 'Stripe session': checkout.id,
               },
             });
+            if (
+              recordedPayment?.status === 'completed' &&
+              recordedPayment.amount > 0
+            ) {
+              await sendPaymentConfirmation({ user, payment: recordedPayment });
+            }
           }
         }
       }
@@ -579,14 +596,23 @@ async function webApiHandler(req) {
             await db.updateUser(user.id, { plan });
           }
           // Record renewal payment
-          await db.createPayment({
-            id: createId('pay'),
+          const paymentWrite = await db.createPayment({
+            id: `pay_stripe_invoice_${invoice.id}`,
             user_id: user.id,
             status: 'completed',
             amount: (invoice.amount_paid || 0) / 100,
             payment_date: new Date((invoice.created || Date.now() / 1000) * 1000).toISOString(),
             created_at: new Date().toISOString(),
-            metadata: { invoice_id: invoice.id, reason: 'subscription_renewal' },
+            plan: plan || user.plan,
+            currency: String(invoice.currency || 'usd').toUpperCase(),
+            provider: 'stripe',
+            provider_label: 'Stripe',
+            stripe_customer_id: customerId || null,
+            stripe_invoice_id: invoice.id,
+            metadata: {
+              invoice_id: invoice.id,
+              reason: 'subscription_renewal',
+            },
           });
           console.log(`[webhook] Renewal payment recorded for ${user.email}`);
           await notifyBilling('renewed', {
@@ -598,6 +624,15 @@ async function webApiHandler(req) {
               Invoice: invoice.id,
             },
           });
+          if (
+            paymentWrite.inserted &&
+            paymentWrite.payment.amount > 0
+          ) {
+            await sendPaymentConfirmation({
+              user,
+              payment: paymentWrite.payment,
+            });
+          }
         }
       }
 
@@ -670,20 +705,57 @@ async function webApiHandler(req) {
           if (user) break;
         }
         if (user) {
-          if (action === 'upgrade' && plan && plan !== 'free' && user.plan !== plan) {
-            await db.updateUser(user.id, { plan });
-            console.log(`[rc/webhook] ${event.type} → ${user.email} = ${plan}`);
-            await notifyBilling(event.type === 'RENEWAL' ? 'renewed' : 'started', {
-              user,
-              plan,
-              source: 'revenuecat',
-              details: {
-                'RevenueCat event': event.type,
-                Product: event.product_id,
-                Store: event.store,
-                Environment: event.environment,
-              },
-            });
+          if (action === 'upgrade' && plan && plan !== 'free') {
+            const planChanged = user.plan !== plan;
+            if (planChanged) {
+              user = await db.updateUser(user.id, { plan });
+            }
+
+            // A mobile sync can update the plan before this asynchronous
+            // webhook arrives. Payment persistence and notifications must not
+            // depend on the plan still being different.
+            const payment = buildRevenueCatPayment(event, user.id, plan);
+            const paymentWrite = payment
+              ? await db.createPayment(payment)
+              : null;
+            const isNewPayment = Boolean(paymentWrite?.inserted);
+
+            if (planChanged || isNewPayment) {
+              console.log(
+                `[rc/webhook] ${event.type} → ${user.email} = ${plan}` +
+                (payment
+                  ? `; ${payment.currency} ${payment.amount.toFixed(2)} recorded`
+                  : ''),
+              );
+              await notifyBilling(event.type === 'RENEWAL' ? 'renewed' : 'started', {
+                user,
+                plan,
+                source: 'revenuecat',
+                details: {
+                  Amount: payment
+                    ? `${payment.currency} ${payment.amount.toFixed(2)}`
+                    : '',
+                  'RevenueCat event': event.type,
+                  Transaction: event.transaction_id,
+                  Product: event.product_id,
+                  Store: event.store,
+                  Environment: event.environment,
+                },
+              });
+            }
+
+            if (
+              isNewPayment &&
+              payment.status === 'completed' &&
+              payment.amount > 0
+            ) {
+              const receipt = await sendPaymentConfirmation({ user, payment });
+              if (!receipt.sent) {
+                console.error(
+                  `[rc/webhook] payment confirmation failed for ${user.email}`,
+                );
+              }
+            }
           }
           // Only downgrade RevenueCat-driven users; never clobber a Stripe sub.
           if (action === 'downgrade' && !user.stripe_subscription_id && isPremiumPlan(user.plan)) {
@@ -1313,7 +1385,11 @@ async function webApiHandler(req) {
         ]);
         const progress = computeProgress({ attempts, mockExams: exams, users: [user] }, user.id);
         const completedPayments = payments.filter(p => p.status === 'completed');
-        const totalPaid = completedPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
+        const totalPaid = completedPayments.reduce(
+          (sum, payment) =>
+            sum + Number(payment.metadata?.usd_price ?? payment.amount ?? 0),
+          0,
+        );
         const latestPayment = [...payments].sort((a, b) => new Date(b.payment_date || b.created_at || 0) - new Date(a.payment_date || a.created_at || 0))[0];
         return {
           id: user.id, full_name: user.full_name, email: user.email, created_at: user.created_at,

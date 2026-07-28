@@ -112,8 +112,13 @@ async function sendUserEmail({ to, subject, preview, bodyHtml }) {
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from, to, subject, html: bodyHtml, text: preview }),
     });
-    if (!r.ok) { console.error('[notify] email failed', r.status); return { sent: false }; }
-    return { sent: true };
+    if (!r.ok) {
+      const body = await r.text().catch(() => '');
+      console.error('[notify] email failed', r.status, body);
+      return { sent: false, status: r.status };
+    }
+    const data = await r.json().catch(() => ({}));
+    return { sent: true, id: data.id || null };
   } catch (e) { console.error('[notify] email error', e); return { sent: false }; }
 }
 
@@ -133,6 +138,68 @@ export async function sendVerificationEmail(user, verificationToken, origin = 'h
           <p style="margin:0 0 20px;color:#475569;">Hi ${escapeHtml(user.full_name || user.email)}, please click the button below to verify your email address and activate your account.</p>
           <a href="${link}" style="display:inline-block;padding:12px 28px;background:#1e5eff;color:white;border-radius:10px;text-decoration:none;font-weight:600;">Verify Email</a>
           <p style="margin:20px 0 0;font-size:12px;color:#94a3b8;">If you didn't create an account, you can safely ignore this email.</p>
+        </div>
+      </div>
+    </div>`,
+  });
+}
+
+function paymentPlanLabel(plan) {
+  if (plan === 'premium_yearly') return 'Premium Yearly';
+  if (plan === 'premium_monthly') return 'Premium Monthly';
+  return 'Premium';
+}
+
+export async function sendPaymentConfirmation({ user, payment }) {
+  if (!user?.email || !payment) {
+    return { sent: false, reason: 'missing_recipient_or_payment' };
+  }
+
+  const currency = String(
+    payment.currency || payment.metadata?.currency || 'USD',
+  ).toUpperCase();
+  const amount = Number(payment.amount || 0).toFixed(2);
+  const provider =
+    payment.provider_label ||
+    payment.metadata?.provider_label ||
+    payment.provider ||
+    'Billing provider';
+  const transactionId =
+    payment.metadata?.transaction_id ||
+    payment.metadata?.stripe_invoice_id ||
+    payment.id;
+  const paymentDate = new Date(
+    payment.payment_date || payment.created_at || Date.now(),
+  ).toLocaleString('en-US', { timeZone: 'UTC', timeZoneName: 'short' });
+  const plan = paymentPlanLabel(payment.plan || payment.metadata?.plan);
+  const isApple = String(provider).toLowerCase().includes('apple');
+  const officialReceiptNote = isApple
+    ? 'Apple processed this purchase. This message confirms your RBT Genius access; your official App Store receipt and purchase history are available from Apple.'
+    : 'This message confirms the payment recorded for your RBT Genius account.';
+
+  return sendUserEmail({
+    to: user.email,
+    subject: 'Payment confirmation — RBT Genius',
+    preview: `${plan}: ${currency} ${amount}. ${officialReceiptNote}`,
+    bodyHtml: `<div style="font-family:Inter,Arial,sans-serif;padding:24px;background:#f8fafc;color:#0f172a;">
+      <div style="max-width:600px;margin:0 auto;background:white;border:1px solid #e2e8f0;border-radius:18px;overflow:hidden;">
+        <div style="padding:22px 26px;background:#1e5eff;color:white;">
+          <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.8;">RBT Genius</div>
+          <h1 style="margin:8px 0 0;font-size:24px;">Payment confirmed</h1>
+        </div>
+        <div style="padding:28px 26px;">
+          <p style="margin:0 0 22px;color:#475569;">Hi ${escapeHtml(user.full_name || user.email)}, your RBT Genius payment was recorded successfully.</p>
+          <table style="width:100%;border-collapse:collapse;border-spacing:0;">
+            ${buildHtmlRows([
+              { label: 'Plan', value: plan },
+              { label: 'Amount', value: `${currency} ${amount}` },
+              { label: 'Payment date', value: paymentDate },
+              { label: 'Processed by', value: provider },
+              { label: 'Transaction', value: transactionId },
+            ])}
+          </table>
+          <p style="margin:22px 0 0;color:#64748b;font-size:13px;line-height:1.55;">${escapeHtml(officialReceiptNote)}</p>
+          ${isApple ? '<p style="margin:14px 0 0;"><a href="https://reportaproblem.apple.com/" style="color:#1e5eff;">View Apple purchase history</a></p>' : ''}
         </div>
       </div>
     </div>`,
