@@ -198,8 +198,9 @@ async function removeInvalidAdminPushTokens(result, context) {
   );
 }
 
-// A new account is notified exactly once because every caller invokes this
-// helper only when the user row has just been created.
+// A first access is notified exactly once: OAuth callers only invoke this for a
+// freshly created user, and password accounts invoke it when their one-time
+// verification token is consumed.
 async function notifyFirstMemberAccess(user, details = {}) {
   try {
     const pushTokens = await db.getAdminPushTokens(ADMIN_EMAILS);
@@ -979,7 +980,6 @@ async function webApiHandler(req) {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     await db.updateUser(newUser.id, { email_verified: false, email_verification_token: verificationToken });
     await recordRateLimitPg('register', [ip]);
-    await notifyFirstMemberAccess(safeUser(newUser), { source: 'manual_register', authProvider: 'password' });
     await sendVerificationEmail(safeUser(newUser), verificationToken, url.origin);
     return json({ message: 'Account created. Please check your email to verify your account.' }, { status: 201 });
   }
@@ -1061,7 +1061,11 @@ async function webApiHandler(req) {
       const user = await db.getUserByVerificationToken(token);
       if (!user) return Response.redirect(new URL('/login?oauthError=Verification+link+expired+or+already+used', url.origin).toString(), 302);
       const session = buildSession();
-      await db.updateUser(user.id, { email_verified: true, email_verification_token: null, token: session.token, token_issued_at: session.issued_at, token_expires_at: session.expires_at });
+      const updated = await db.updateUser(user.id, { email_verified: true, email_verification_token: null, token: session.token, token_issued_at: session.issued_at, token_expires_at: session.expires_at });
+      await notifyFirstMemberAccess(safeUser(updated), {
+        source: 'email_verification',
+        authProvider: 'password',
+      });
       const loginUrl = new URL('/login', url.origin);
       loginUrl.searchParams.set('authToken', session.token);
       loginUrl.searchParams.set('redirectTo', '/dashboard');
