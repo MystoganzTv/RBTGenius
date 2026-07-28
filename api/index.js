@@ -186,6 +186,35 @@ async function requireAdmin(req) {
   return auth;
 }
 
+async function removeInvalidAdminPushTokens(result, context) {
+  const invalidTokens = (result?.push?.failures || [])
+    .filter((failure) => failure.error === 'DeviceNotRegistered')
+    .map((failure) => failure.token);
+  if (!invalidTokens.length) return;
+
+  const removed = await db.deletePushTokensByToken(invalidTokens);
+  console.warn(
+    `[${context}] Removed ${removed} unregistered Expo push token${removed === 1 ? '' : 's'}.`,
+  );
+}
+
+// A new account is notified exactly once because every caller invokes this
+// helper only when the user row has just been created.
+async function notifyFirstMemberAccess(user, details = {}) {
+  try {
+    const pushTokens = await db.getAdminPushTokens(ADMIN_EMAILS);
+    const result = await notifyNewMember(user, {
+      ...details,
+      pushTokens,
+    });
+    await removeInvalidAdminPushTokens(result, 'notify-new-member');
+  } catch (err) {
+    // Account creation and sign-in must remain available if either Resend or
+    // Expo is temporarily unavailable.
+    console.error('[notify-new-member] failed:', err.message);
+  }
+}
+
 // Wrapper around notifySubscriptionEvent that resolves the admins' push tokens
 // first. Never throws — a notification failure must not break a billing webhook
 // (that would make the provider retry and double-apply the plan change).
@@ -200,15 +229,7 @@ async function notifyBilling(kind, { user, plan, source, details }) {
       details,
       pushTokens,
     });
-    const invalidTokens = (result?.push?.failures || [])
-      .filter((failure) => failure.error === 'DeviceNotRegistered')
-      .map((failure) => failure.token);
-    if (invalidTokens.length) {
-      const removed = await db.deletePushTokensByToken(invalidTokens);
-      console.warn(
-        `[notify-billing] Removed ${removed} unregistered Expo push token${removed === 1 ? '' : 's'}.`,
-      );
-    }
+    await removeInvalidAdminPushTokens(result, 'notify-billing');
   } catch (err) {
     console.error(`[notify-billing] ${kind} failed:`, err.message);
   }
@@ -848,7 +869,7 @@ async function webApiHandler(req) {
     try {
       const profile = await exchangeOAuthCodeForProfile({ providerId, code: String(callbackParams.code || ''), backendOrigin: url.origin, callbackParams });
       const authData = await upsertOAuthUser(profile, providerId);
-      if (authData.created) await notifyNewMember(authData.user, { source: 'oauth', authProvider: providerId });
+      if (authData.created) await notifyFirstMemberAccess(authData.user, { source: 'oauth', authProvider: providerId });
       return Response.redirect(loginUrl({ authToken: authData.token }), 302);
     } catch (err) {
       console.error('[oauth callback]', providerId, err.message);
@@ -870,7 +891,7 @@ async function webApiHandler(req) {
       const profile = { id: tokenData.sub, email: String(tokenData.email || '').trim().toLowerCase(), name: tokenData.name || tokenData.email };
       if (!profile.email) return json({ message: 'Google did not return an email address' }, { status: 401 });
       const authData = await upsertOAuthUser(profile, 'google');
-      if (authData.created) await notifyNewMember(authData.user, { source: 'google_native', authProvider: 'google' });
+      if (authData.created) await notifyFirstMemberAccess(authData.user, { source: 'google_native', authProvider: 'google' });
       return json({ token: authData.token, user: authData.user });
     } catch (err) {
       return json({ message: err.message || 'Google sign-in failed' }, { status: 500 });
@@ -925,7 +946,7 @@ async function webApiHandler(req) {
       const profile = { id: sub, email, name: fullName || email };
       const authData = await upsertOAuthUser(profile, 'apple');
       if (authData.created) {
-        await notifyNewMember(authData.user, { source: 'apple_native', authProvider: 'apple' });
+        await notifyFirstMemberAccess(authData.user, { source: 'apple_native', authProvider: 'apple' });
       }
       return json({ token: authData.token, user: authData.user });
     } catch (err) {
@@ -958,7 +979,7 @@ async function webApiHandler(req) {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     await db.updateUser(newUser.id, { email_verified: false, email_verification_token: verificationToken });
     await recordRateLimitPg('register', [ip]);
-    await notifyNewMember(safeUser(newUser), { source: 'manual_register', authProvider: 'password' });
+    await notifyFirstMemberAccess(safeUser(newUser), { source: 'manual_register', authProvider: 'password' });
     await sendVerificationEmail(safeUser(newUser), verificationToken, url.origin);
     return json({ message: 'Account created. Please check your email to verify your account.' }, { status: 201 });
   }

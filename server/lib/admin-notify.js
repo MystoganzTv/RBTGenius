@@ -207,20 +207,40 @@ export async function sendPaymentConfirmation({ user, payment }) {
 }
 
 export async function notifyNewMember(user, details = {}) {
-  return sendAdminEmail({
-    subject: "New member created",
-    preview: "A new member account was created in RBT Genius.",
+  const plan = memberPlanLabel(user?.plan);
+  const authProvider = String(
+    user?.auth_provider || details.authProvider || "unknown",
+  );
+  const source = details.source || "app";
+  const name = user?.full_name || user?.email || "A new member";
+
+  const emailResult = await sendAdminEmail({
+    subject: "New member joined RBT Genius",
+    preview: `${name} accessed RBT Genius for the first time with the ${plan} plan.`,
     fields: [
       { label: "Full name", value: user.full_name },
       { label: "Email", value: user.email },
       { label: "Role", value: user.role || "student" },
-      { label: "Plan", value: user.plan || "free" },
-      { label: "Auth provider", value: user.auth_provider || details.authProvider || "unknown" },
-      { label: "Created at", value: user.created_at },
-      { label: "Source", value: details.source || "app" },
+      { label: "Plan", value: plan },
+      { label: "Auth provider", value: authProvider },
+      { label: "First access", value: user.created_at || new Date().toISOString() },
+      { label: "Source", value: source },
       { label: "User ID", value: user.id },
     ],
   });
+
+  const pushResult = await sendAdminPush(details.pushTokens, {
+    title: "New RBT Genius member",
+    body: `${name} joined with ${plan} via ${authProvider}.`,
+    data: {
+      type: "admin_new_member",
+      user_id: user?.id ?? null,
+      plan: user?.plan || "free",
+      auth_provider: authProvider,
+    },
+  });
+
+  return { email: emailResult, push: pushResult };
 }
 
 // ── Subscription lifecycle notifications ─────────────────────────────────────
@@ -229,6 +249,12 @@ export async function notifyNewMember(user, details = {}) {
 // subscriptions — the main revenue channel — were completely silent.
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+
+function memberPlanLabel(plan) {
+  if (plan === "premium_yearly") return "Premium Yearly";
+  if (plan === "premium_monthly") return "Premium Monthly";
+  return "Free";
+}
 
 const SUBSCRIPTION_EVENTS = {
   started: {

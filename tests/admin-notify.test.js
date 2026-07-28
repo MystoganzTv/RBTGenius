@@ -50,6 +50,62 @@ test('admin email falls back to every address in ADMIN_EMAILS', async () => {
   ]);
 });
 
+test('new member notification emails both admins and pushes plan details to both phones', async () => {
+  process.env.RESEND_API_KEY = 'test-key';
+  delete process.env.ADMIN_NOTIFICATION_EMAIL;
+  process.env.ADMIN_EMAILS = 'enrique@example.com, mauro@example.com';
+  const requests = [];
+  globalThis.fetch = async (url, options) => {
+    requests.push({ url: String(url), body: JSON.parse(options.body) });
+    if (String(url).includes('resend.com')) {
+      return new Response(JSON.stringify({ id: 'email-new-member-1' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify({
+      data: [
+        { status: 'ok', id: 'ticket-enrique' },
+        { status: 'ok', id: 'ticket-mauro' },
+      ],
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+
+  const result = await notifyNewMember({
+    id: 'user-new-1',
+    email: 'new.member@example.com',
+    full_name: 'New Member',
+    role: 'student',
+    plan: 'free',
+    auth_provider: 'apple',
+    created_at: '2026-07-28T12:00:00.000Z',
+  }, {
+    source: 'apple_native',
+    pushTokens: [
+      'ExponentPushToken[enrique]',
+      'ExponentPushToken[mauro]',
+    ],
+  });
+
+  const emailRequest = requests.find((request) => request.url.includes('resend.com'));
+  const pushRequest = requests.find((request) => request.url.includes('exp.host'));
+
+  assert.deepEqual(emailRequest.body.to, [
+    'enrique@example.com',
+    'mauro@example.com',
+  ]);
+  assert.equal(emailRequest.body.subject, 'New member joined RBT Genius');
+  assert.match(emailRequest.body.html, /New Member/);
+  assert.match(emailRequest.body.html, /Free/);
+  assert.match(emailRequest.body.html, /apple/);
+  assert.equal(pushRequest.body.length, 2);
+  assert.equal(pushRequest.body[0].title, 'New RBT Genius member');
+  assert.match(pushRequest.body[0].body, /New Member joined with Free via apple/);
+  assert.equal(pushRequest.body[0].data.type, 'admin_new_member');
+  assert.equal(result.push.count, 2);
+  assert.equal(result.push.failed, 0);
+});
+
 test('sendAdminPush reports every successful Expo ticket', async () => {
   globalThis.fetch = async () => new Response(JSON.stringify({
     data: [
