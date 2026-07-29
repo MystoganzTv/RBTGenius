@@ -813,7 +813,7 @@ export default function Landing() {
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <a
-                    href="https://apps.apple.com/app/rbt-genius/id0000000000"
+                    href="https://apps.apple.com/us/app/rbtgenius/id6766110248"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`inline-flex items-center gap-3 rounded-2xl border px-5 py-3 transition-opacity hover:opacity-80 ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-slate-50 shadow-sm"}`}
