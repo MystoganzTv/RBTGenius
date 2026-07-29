@@ -14,7 +14,7 @@ export default function TermsOfService() {
     >
       <section>
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{localized("1. About RBT Genius").primary}</h2>
-        <BilingualText content={localized("RBT Genius is an educational platform designed to help users prepare for the Registered Behavior Technician exam through practice questions, flashcards, mock exams, analytics, and tutoring features. The platform is intended for study support and does not replace formal supervision, clinical judgment, or BACB guidance.")} className="mt-3" />
+        <BilingualText content={localized("RBT Genius is an educational platform designed to help users prepare for the Registered Behavior Technician exam through practice questions, flashcards, mock exams, and analytics. The platform is intended for study support and does not replace formal supervision, clinical judgment, or BACB guidance.")} className="mt-3" />
       </section>
 
       <section>

@@ -13,6 +13,8 @@
     "mobile:ios": "npm --prefix mobile run ios",
     "mobile:android": "npm --prefix mobile run android",
     "check:i18n": "node scripts/check-i18n.mjs",
+    "check:pricing": "node scripts/check-pricing.mjs",
+    "stripe:sync-yearly-price": "node scripts/sync-stripe-yearly-price.mjs",
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",

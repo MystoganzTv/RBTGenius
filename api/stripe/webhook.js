@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import * as db from '../lib/db.js';
-import { resolvePlanFromPriceId } from '../../server/lib/billing.js';
+import { resolvePlanFromStripeData } from '../../server/lib/billing.js';
 import { applyStripeWebhookEvent, syncConfirmedCheckout } from '../../server/lib/stripe-sync.js';
 import { findUserForBilling } from '../../server/lib/stripe-sync.js';
 import {
@@ -102,7 +102,7 @@ export default async function handler(req, res) {
       if (user) {
         if (sub.status === 'active') {
           const priceId = sub.items?.data?.[0]?.price?.id;
-          const plan = resolvePlanFromPriceId(priceId);
+          const plan = resolvePlanFromStripeData(sub.metadata, priceId);
           if (plan && plan !== 'free') await db.updateUser(user.id, { plan });
         }
         if (sub.status === 'canceled' || sub.status === 'unpaid') {
@@ -128,7 +128,10 @@ export default async function handler(req, res) {
       const user = await db.getUserByStripeCustomerId(customerId);
       if (user && invoice.billing_reason === 'subscription_cycle') {
         const priceId = invoice.lines?.data?.[0]?.price?.id;
-        const plan = resolvePlanFromPriceId(priceId);
+        const plan = resolvePlanFromStripeData(
+          invoice.parent?.subscription_details?.metadata || invoice.subscription_details?.metadata,
+          priceId,
+        );
         if (plan && plan !== 'free' && user.plan !== plan) await db.updateUser(user.id, { plan });
         const paymentWrite = await db.createPayment({
           id: `pay_stripe_invoice_${invoice.id}`,

@@ -45,7 +45,7 @@ export const PLAN_CATALOG = [
     name: "Premium Monthly",
     price: "$19.99",
     period: "/month",
-    description: "Unlimited prep with mock exams, analytics, and a full AI study coach.",
+    description: "Unlimited prep with mock exams, analytics, and the full study system.",
     cta: "Upgrade Monthly",
     popular: true,
     badge: "Most Popular",
@@ -53,12 +53,12 @@ export const PLAN_CATALOG = [
   {
     id: PLAN_IDS.PREMIUM_YEARLY,
     name: "Premium Yearly",
-    price: "$215.89",
+    price: "$99.99",
     period: "/year",
-    description: "Best value for long-term prep with everything in Premium plus a 10% annual discount.",
+    description: "Long-term access to everything in Premium with 58% annual savings.",
     cta: "Upgrade Yearly",
     popular: false,
-    badge: "Save 10%",
+    badge: "Save 58%",
   },
 ];
 
@@ -67,7 +67,7 @@ export const ACCESS_COMPARISON = [
     id: "access",
     label: "App access",
     guest: "Landing page and pricing",
-    free: "Dashboard, practice, flashcards, AI tutor",
+    free: "Dashboard, practice, and flashcards",
     premium: "Everything unlocked",
   },
   {
@@ -83,13 +83,6 @@ export const ACCESS_COMPARISON = [
     guest: "Preview only",
     free: `${FREE_FLASHCARD_LIMIT} cards per session`,
     premium: "Unlimited flashcard review",
-  },
-  {
-    id: "ai_tutor",
-    label: "AI tutor",
-    guest: "Preview only",
-    free: `${FREE_DAILY_TUTOR_LIMIT} messages per day`,
-    premium: `${PREMIUM_DAILY_TUTOR_LIMIT} messages per day`,
   },
   {
     id: "mock_exams",

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   BarChart3,
-  Bot,
   ClipboardCheck,
   CreditCard,
   GraduationCap,
@@ -26,7 +25,6 @@ const primaryTabs = [
 ];
 
 const moreItems = [
-  { name: "AI Tutor", icon: Bot, page: "AITutor", badge: "AI" },
   { name: "Analytics", icon: BarChart3, page: "Analytics" },
   { name: "Pricing", icon: CreditCard, page: "Pricing" },
 ];

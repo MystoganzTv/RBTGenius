@@ -24,7 +24,7 @@ import {
   createStripeStoreCheckoutSession,
   getBillingConfig,
   getStripeSubscriptionSummary,
-  resolvePlanFromPriceId,
+  resolvePlanFromStripeData,
 } from '../server/lib/billing.js';
 import { findUserForBilling, syncConfirmedCheckout, applyStripeWebhookEvent } from '../server/lib/stripe-sync.js';
 import {
@@ -593,7 +593,7 @@ async function webApiHandler(req) {
         const user = await db.getUserByStripeCustomerId(customerId);
         if (user && sub.status === 'active') {
           const priceId = sub.items?.data?.[0]?.price?.id;
-          const plan = resolvePlanFromPriceId(priceId);
+          const plan = resolvePlanFromStripeData(sub.metadata, priceId);
           if (plan && plan !== 'free') {
             await db.updateUser(user.id, {
               plan,
@@ -626,7 +626,10 @@ async function webApiHandler(req) {
         if (user && invoice.billing_reason === 'subscription_cycle') {
           // Recurring renewal — ensure plan stays active
           const priceId = invoice.lines?.data?.[0]?.price?.id;
-          const plan = resolvePlanFromPriceId(priceId);
+          const plan = resolvePlanFromStripeData(
+            invoice.parent?.subscription_details?.metadata || invoice.subscription_details?.metadata,
+            priceId,
+          );
           if (plan && plan !== 'free' && user.plan !== plan) {
             await db.updateUser(user.id, { plan });
           }

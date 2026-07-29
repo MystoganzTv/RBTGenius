@@ -6,7 +6,6 @@ import { useLanguage } from "@/hooks/use-language";
 import { localizeText, translateUi } from "@/lib/i18n";
 import { getGateCopy } from "@/lib/plan-access";
 import { OFFICIAL_CONCEPT_COUNT, TOTAL_PRACTICE_QUESTIONS } from "@/lib/questions/index.js";
-import { PREMIUM_DAILY_TUTOR_LIMIT } from "@/lib/plan-access";
 import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 
@@ -26,7 +25,6 @@ export default function PremiumGate({
     : [
         `Unlimited practice across ${TOTAL_PRACTICE_QUESTIONS} questions and ${OFFICIAL_CONCEPT_COUNT} concepts`,
         "Full analytics and mock exams",
-        `${PREMIUM_DAILY_TUTOR_LIMIT} AI tutor messages each day`,
       ];
 
   return (

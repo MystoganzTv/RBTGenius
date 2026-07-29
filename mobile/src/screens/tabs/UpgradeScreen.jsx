@@ -48,10 +48,10 @@ export default function UpgradeScreen({ navigation }) {
   ];
 
   const FALLBACK = [
-    { id: 'premium_monthly', label: t('upgrade.monthly'), price: '$19.99',  period: '/mo', badge: null,                    savings: null,              desc: t('upgrade.cancel_anytime') },
-    { id: 'premium_yearly',  label: t('upgrade.yearly'),  price: '$214.99', period: '/yr', badge: t('upgrade.best_value'), savings: t('upgrade.save_10'), desc: t('upgrade.equiv_monthly', { price: '$17.92' }) },
+    { id: 'premium_monthly', label: t('upgrade.monthly'), price: '$19.99', period: '/mo', badge: t('upgrade.recommended'), savings: null,              desc: t('upgrade.cancel_anytime'), isMonthly: true },
+    { id: 'premium_yearly',  label: t('upgrade.yearly'),  price: '$99.99', period: '/yr', badge: null,                     savings: t('upgrade.save_58'), desc: t('upgrade.equiv_monthly', { price: '$8.33' }), isMonthly: false },
   ];
-  const [planId,          setPlanId]          = useState('premium_yearly');
+  const [planId,          setPlanId]          = useState('premium_monthly');
   const [loading,         setLoading]         = useState(false);
   const [offering,        setOffering]        = useState(null);
   const [offeringsLoading, setOfferingsLoading] = useState(rcAvailable);
@@ -97,22 +97,24 @@ export default function UpgradeScreen({ navigation }) {
   const plans = useRC
     ? (offering?.availablePackages ?? []).map(pkg => {
         const monthly = pkg.packageType === 'MONTHLY';
-        // Precio REAL cobrado, con su período correcto (Apple 3.1.2(c)):
-        // mensual → "$19.99/mo", anual → "$214.99/yr" (nunca el total anual con "/mo").
+        // Precio REAL cobrado, con su período correcto (Apple 3.1.2(c)).
         const currency = pkg.product.priceString.replace(/[\d.,\s]/g, '') || '$';
         const perMonth = `${currency}${(pkg.product.price / 12).toFixed(2)}`;
         return {
           id: pkg.identifier,
           label: monthly ? t('upgrade.monthly') : t('upgrade.yearly'),
           price: pkg.product.priceString, period: monthly ? '/mo' : '/yr',
-          badge: !monthly ? t('upgrade.best_value') : null,
-          savings: !monthly ? t('upgrade.save_10') : null,
+          badge: monthly ? t('upgrade.recommended') : null,
+          savings: !monthly ? t('upgrade.save_58') : null,
           desc: monthly ? t('upgrade.cancel_anytime') : t('upgrade.equiv_monthly', { price: perMonth }),
+          isMonthly: monthly,
           _pkg: pkg,
         };
       })
     : FALLBACK;
-  const sel = plans.find(p => p.id === planId) ?? plans[plans.length - 1];
+  const defaultPlan = plans.find(p => p.isMonthly) ?? plans[0];
+  const selectedPlanId = plans.some(p => p.id === planId) ? planId : defaultPlan?.id;
+  const sel = plans.find(p => p.id === selectedPlanId) ?? defaultPlan;
 
   const handleBillingReturn = useCallback(async (incomingUrl) => {
     if (!incomingUrl) return false;
@@ -251,7 +253,7 @@ export default function UpgradeScreen({ navigation }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       if (useRC) {
-        const pkg = plans.find(p => p.id === planId)?._pkg;
+        const pkg = plans.find(p => p.id === selectedPlanId)?._pkg;
         if (!pkg) { Alert.alert(t('common.error'), t('upgrade.error')); return; }
         const r = await purchasePackage(pkg);
         // No cerrar el paywall en cancelación: tras el modal de login de Apple,
@@ -269,7 +271,7 @@ export default function UpgradeScreen({ navigation }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
-            plan: planId,
+            plan: selectedPlanId,
             success_url: buildAppReturnUrl(),
             cancel_url: buildAppReturnUrl(),
           }),
@@ -347,7 +349,7 @@ export default function UpgradeScreen({ navigation }) {
         {/* Plans */}
         <View style={s.planRow}>
           {plans.map(plan => {
-            const active = planId === plan.id;
+            const active = selectedPlanId === plan.id;
             return (
               <Pressable key={plan.id}
                 style={[s.plan, active && s.planActive]}

@@ -27,13 +27,13 @@ const PLANS = [
   {
     id: PLAN_IDS.PREMIUM_YEARLY,
     name: "Premium Yearly",
-    price: "$215.89",
+    price: "$99.99",
     period: "/year",
-    badge: "Save 10%",
+    badge: "Save 58%",
     upgradeLabel: "Upgrade Yearly",
     features: [
       "Everything in Premium Monthly",
-      "10% less than paying monthly for a full year",
+      "58% less than paying monthly for a full year",
       "One yearly payment, same study access",
       "Cancel anytime",
     ],
@@ -170,7 +170,7 @@ export default function Pricing() {
                         : "border border-transparent text-transparent"
                     }`}
                   >
-                    {isCurrent ? "✓ Current" : isYearly ? "Best value" : "Placeholder"}
+                    {isCurrent ? "✓ Current" : isYearly ? "Long-term value" : "Placeholder"}
                   </span>
 
                   <span
@@ -180,7 +180,7 @@ export default function Pricing() {
                         : "invisible"
                     }`}
                   >
-                    Save 10%
+                    Save 58%
                   </span>
                 </div>
 
@@ -192,7 +192,7 @@ export default function Pricing() {
                   </div>
                   <p className="mt-3 min-h-[3rem] max-w-[24rem] text-sm font-medium leading-6 text-slate-500 dark:text-slate-400">
                     {isYearly
-                      ? "10% less than paying monthly for a full year."
+                      ? "$8.33/month equivalent, billed annually."
                       : "Full premium access billed month to month."}
                   </p>
                 </div>

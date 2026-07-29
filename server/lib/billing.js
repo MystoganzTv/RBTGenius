@@ -14,7 +14,7 @@ const STRIPE_PRICE_ENV = {
 
 const PLAN_AMOUNTS = {
   [PLAN_IDS.PREMIUM_MONTHLY]: 1999,
-  [PLAN_IDS.PREMIUM_YEARLY]: 21589,
+  [PLAN_IDS.PREMIUM_YEARLY]: 9999,
 };
 
 let stripeClient = null;
@@ -44,6 +44,15 @@ export function resolvePlanFromPriceId(priceId) {
   );
 
   return normalizePlan(matchedPlan || PLAN_IDS.FREE);
+}
+
+export function resolvePlanFromStripeData(metadata = null, priceId = null) {
+  const metadataPlan = normalizePlan(metadata?.plan);
+  if (isPremiumPlan(metadataPlan)) {
+    return metadataPlan;
+  }
+
+  return resolvePlanFromPriceId(priceId);
 }
 
 export function getBillingConfig(user = null) {
@@ -219,6 +228,27 @@ export async function createStripeCheckoutSession({
   }
 
   const stripe = ensureStripeReady(normalizedPlan);
+  const lineItem =
+    normalizedPlan === PLAN_IDS.PREMIUM_YEARLY
+      ? {
+          price_data: {
+            currency: "usd",
+            unit_amount: PLAN_AMOUNTS[PLAN_IDS.PREMIUM_YEARLY],
+            recurring: {
+              interval: "year",
+              interval_count: 1,
+            },
+            product_data: {
+              name: "RBTGenius Pro Annual",
+              description: "Annual access to the complete RBT exam prep study system.",
+            },
+          },
+          quantity: 1,
+        }
+      : {
+          price: getPlanPriceId(normalizedPlan),
+          quantity: 1,
+        };
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     success_url: successUrl
@@ -238,16 +268,17 @@ export async function createStripeCheckoutSession({
           checkout: "cancelled",
         }),
     client_reference_id: user.id,
-    line_items: [
-      {
-        price: getPlanPriceId(normalizedPlan),
-        quantity: 1,
-      },
-    ],
+    line_items: [lineItem],
     allow_promotion_codes: true,
     metadata: {
       user_id: user.id,
       plan: normalizedPlan,
+    },
+    subscription_data: {
+      metadata: {
+        user_id: user.id,
+        plan: normalizedPlan,
+      },
     },
     ...(user.stripe_customer_id
       ? { customer: user.stripe_customer_id }

@@ -4,7 +4,7 @@ Proyecto local con Vite, React y Tailwind para estudiar y practicar contenidos d
 
 ## About
 
-Este repositorio ya no depende de Base44. La app funciona como un proyecto frontend local y usa almacenamiento del navegador para varias pantallas demo, como `Dashboard`, `Practice`, `MockExams`, `Flashcards`, `Analytics`, `AI Tutor`, `Pricing` y `Profile`.
+Este repositorio ya no depende de Base44. La app funciona como un proyecto frontend local y usa almacenamiento del navegador para varias pantallas demo, como `Dashboard`, `Practice`, `MockExams`, `Flashcards`, `Analytics`, `Pricing` y `Profile`.
 
 ## Run Locally
 

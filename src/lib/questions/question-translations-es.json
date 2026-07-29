@@ -6225,5 +6225,41 @@
       "Consulting policy before giving or accepting gifts": "Consultar la política antes de dar o recibir regalos",
       "To make decisions about gifts in an informed way and within ethical and organizational limits.": "Para tomar decisiones sobre regalos de manera informada y dentro de los límites éticos y organizacionales."
     }
+  },
+  "measurement_cumulative_record": {
+    "status": "reviewed",
+    "answer": "Registro acumulativo",
+    "definition": "el RBT mantiene un total acumulado de respuestas a lo largo de las sesiones, de modo que la línea graficada sube con cada respuesta nueva y nunca baja.",
+    "scenario": "Un RBT registra el número total de palabras que un cliente puede leer de una lista en cada sesión y mantiene un total acumulado a lo largo de varias sesiones para mostrar la mejora en el tiempo.",
+    "purpose": "Para mostrar el número total de respuestas acumuladas en el tiempo y hacer visible el progreso general de un vistazo.",
+    "explanation": "Un registro acumulativo suma las respuestas de cada sesión al total anterior: una línea ascendente muestra que la conducta sigue ocurriendo y una línea plana indica que no hay respuestas nuevas.",
+    "options_es": {
+      "answer": "Registro acumulativo",
+      "purpose": "Para mostrar el número total de respuestas acumuladas en el tiempo y hacer visible el progreso general de un vistazo."
+    }
+  },
+  "professional_exploitative_relationships": {
+    "status": "reviewed",
+    "answer": "Evitar relaciones de explotación",
+    "definition": "el RBT nunca debe usar su posición profesional para influir en un cliente o cuidador en beneficio propio, ya sea económico, social o de otro tipo.",
+    "scenario": "Un cuidador menciona que tiene un negocio de jardinería, y el RBT insinúa que agradecería un descuento en el trabajo de jardinería dado el progreso que ha tenido su hijo en las sesiones.",
+    "purpose": "Para proteger a los clientes y cuidadores de ser presionados o aprovechados por alguien en una posición de confianza profesional.",
+    "explanation": "Usar la relación profesional para beneficio personal constituye una relación de explotación y viola las normas de ética del BACB. Los servicios nunca deben aprovecharse para obtener beneficios personales.",
+    "options_es": {
+      "answer": "Evitar relaciones de explotación",
+      "purpose": "Para proteger a los clientes y cuidadores de ser presionados o aprovechados por alguien en una posición de confianza profesional."
+    }
+  },
+  "professional_client_advocacy": {
+    "status": "reviewed",
+    "answer": "Abogar por las necesidades del cliente",
+    "definition": "el RBT plantea, a través de los canales apropiados, cuando el cliente necesita recursos, servicios o apoyos adicionales para alcanzar sus metas.",
+    "scenario": "Un RBT nota que los materiales actuales son insuficientes para que un cliente alcance sus metas de tratamiento, así que solicita recursos adicionales al supervisor en lugar de ignorar la carencia.",
+    "purpose": "Para asegurar que el cliente reciba los recursos y servicios necesarios para lograr un progreso significativo.",
+    "explanation": "Abogar por el cliente significa plantear sus necesidades por los canales adecuados — como solicitar recursos adicionales cuando los actuales son insuficientes — respetando el proceso de decisión del equipo.",
+    "options_es": {
+      "answer": "Abogar por las necesidades del cliente",
+      "purpose": "Para asegurar que el cliente reciba los recursos y servicios necesarios para lograr un progreso significativo."
+    }
   }
 }

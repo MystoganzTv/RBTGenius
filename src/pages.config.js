@@ -50,7 +50,6 @@
 import Dashboard from "./pages/Dashboard";
 import Practice from "./pages/Practice";
 import MockExams from "./pages/MockExams";
-import AITutor from "./pages/AITutor";
 import Pricing from "./pages/Pricing";
 import Analytics from "./pages/Analytics";
 import Flashcards from "./pages/Flashcards";
@@ -69,7 +68,6 @@ export const PAGES = {
   Dashboard,
   Practice,
   MockExams,
-  AITutor,
   Pricing,
   Analytics,
   Flashcards,
