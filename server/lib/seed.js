@@ -62,6 +62,7 @@ export function resolveUserRole(email, fallbackRole = "student") {
 export function buildSeedDb() {
   return {
     users: [],
+    sessions: [],
     attempts: [],
     mockExams: [],
     payments: [],
@@ -129,10 +130,36 @@ export function normalizeDb(db) {
     ];
   }
 
+  const normalizedSessions = Array.isArray(db.sessions)
+    ? db.sessions.filter(
+        (session) =>
+          session?.token &&
+          session?.user_id &&
+          usersWithHardcodedTest.some((user) => user.id === session.user_id),
+      )
+    : [];
+  const knownSessionTokens = new Set(
+    normalizedSessions.map((session) => session.token),
+  );
+  const sessionsWithLegacyBackfill = [
+    ...normalizedSessions,
+    ...usersWithHardcodedTest
+      .filter((user) => user.token && !knownSessionTokens.has(user.token))
+      .map((user) => ({
+        token: user.token,
+        user_id: user.id,
+        issued_at: user.token_issued_at || user.created_at || seedDb.createdAt,
+        expires_at: user.token_expires_at,
+        last_seen_at: seedDb.updatedAt,
+        platform: "migrated",
+      })),
+  ];
+
   return {
     ...seedDb,
     ...db,
     users: usersWithHardcodedTest,
+    sessions: sessionsWithLegacyBackfill,
     attempts: Array.isArray(db.attempts) ? db.attempts : [],
     mockExams: Array.isArray(db.mockExams) ? db.mockExams : [],
     payments: Array.isArray(db.payments) ? db.payments : [],

@@ -1,10 +1,19 @@
 import postgres from 'postgres';
+import { attachSessionToUser } from '../../server/lib/auth.js';
 
 let _sql = null;
 function getSql() {
   if (!_sql) {
     if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
-    _sql = postgres(process.env.DATABASE_URL, { ssl: 'require', max: 1, prepare: false });
+    _sql = postgres(process.env.DATABASE_URL, {
+      ssl: 'require',
+      max: 1,
+      prepare: false,
+      // Supabase's transaction pooler can open connections with an empty
+      // search_path. Set it explicitly so every existing unqualified query
+      // resolves to the application's public schema.
+      connection: { search_path: 'public' },
+    });
   }
   return _sql;
 }
@@ -46,6 +55,102 @@ export async function getUserByToken(token) {
   if (!token) return null;
   const rows = await sql`SELECT * FROM users WHERE token = ${token} LIMIT 1`;
   return normalizeUser(rows[0] ?? null);
+}
+
+// ── Sessions ──────────────────────────────────────────────────────────────────
+//
+// One row per signed-in device. `users.token` is still written by the sign-in
+// paths for backward compatibility, but it is no longer what keeps you signed
+// in — that's this table. See the migration for the full rationale.
+
+// Resolve a bearer token to its owner.
+//
+// Checks `sessions` first, then falls back to the legacy `users.token` column
+// so tokens issued before the sessions table existed keep working. Returns the
+// user with the presented session attached so callers can reuse the existing
+// expiry checks without a second query.
+export async function getUserBySessionToken(token) {
+  if (!token) return null;
+
+  const rows = await sql`
+    SELECT
+      u.*,
+      s.token AS _session_token,
+      s.issued_at AS _session_issued_at,
+      s.expires_at AS _session_expires_at
+    FROM sessions s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.token = ${token}
+    LIMIT 1
+  `;
+  if (rows[0]) {
+    // Strip the joined aliases, then replace the legacy account-level
+    // credential with the credential for the device making this request.
+    const {
+      _session_expires_at,
+      _session_issued_at,
+      _session_token,
+      ...row
+    } = rows[0];
+    return attachSessionToUser(normalizeUser(row), {
+      token: _session_token,
+      issued_at: _session_issued_at,
+      expires_at: _session_expires_at,
+    });
+  }
+
+  // Legacy fallback — a session predating the sessions table.
+  return getUserByToken(token);
+}
+
+export async function createSession(userId, session, platform = null) {
+  await sql`
+    INSERT INTO sessions (token, user_id, issued_at, expires_at, last_seen_at, platform)
+    VALUES (${session.token}, ${userId}, ${session.issued_at}, ${session.expires_at}, NOW(), ${platform})
+    ON CONFLICT (token) DO NOTHING
+  `;
+}
+
+// Swap one session row for another, preserving the device's platform tag.
+// Used when a token is close to expiry and gets rotated.
+export async function rotateSession(oldToken, userId, session) {
+  await sql.begin(async (tx) => {
+    const [previous] = await tx`SELECT platform FROM sessions WHERE token = ${oldToken}`;
+    await tx`DELETE FROM sessions WHERE token = ${oldToken}`;
+    await tx`
+      INSERT INTO sessions (token, user_id, issued_at, expires_at, last_seen_at, platform)
+      VALUES (${session.token}, ${userId}, ${session.issued_at}, ${session.expires_at}, NOW(), ${previous?.platform ?? null})
+      ON CONFLICT (token) DO NOTHING
+    `;
+  });
+}
+
+// Sign out a single device. Other sessions for the same user survive.
+export async function deleteSession(token) {
+  if (!token) return;
+  await sql`DELETE FROM sessions WHERE token = ${token}`;
+}
+
+export async function deleteSessionsByUser(userId) {
+  await sql`DELETE FROM sessions WHERE user_id = ${userId}`;
+}
+
+export async function listSessionsByUser(userId) {
+  return sql`
+    SELECT token, issued_at, expires_at, last_seen_at, platform
+    FROM sessions
+    WHERE user_id = ${userId} AND expires_at > NOW()
+    ORDER BY last_seen_at DESC
+  `;
+}
+
+export async function touchSession(token) {
+  if (!token) return;
+  await sql`UPDATE sessions SET last_seen_at = NOW() WHERE token = ${token}`;
+}
+
+export async function pruneExpiredSessions() {
+  await sql`DELETE FROM sessions WHERE expires_at < NOW()`;
 }
 
 export async function getUserByEmail(email) {
@@ -127,6 +232,14 @@ export async function clearUserSession(id) {
   `;
 }
 
+export async function clearLegacySessionIfTokenMatches(id, token) {
+  if (!token) return;
+  await sql`
+    UPDATE users SET token = NULL, token_issued_at = NULL, token_expires_at = NULL
+    WHERE id = ${id} AND token = ${token}
+  `;
+}
+
 // Delete a member and every row that references them.
 //
 // A plain `DELETE FROM users` fails: attempts, mock_exams, payments,
@@ -147,6 +260,7 @@ export async function deleteUser(id) {
     await tx`DELETE FROM payments WHERE user_id = ${id}`;
     await tx`DELETE FROM practice_sessions WHERE user_id = ${id}`;
     await tx`DELETE FROM push_tokens WHERE user_id = ${id}`;
+    await tx`DELETE FROM sessions WHERE user_id = ${id}`;
     await tx`DELETE FROM users WHERE id = ${id}`;
   });
 }

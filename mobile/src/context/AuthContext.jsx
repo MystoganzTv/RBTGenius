@@ -106,17 +106,31 @@ export function AuthProvider({ children }) {
         });
 
         if (!meRes.ok) {
-          await AsyncStorage.removeItem(TOKEN_KEY);
+          // Keep the saved session through temporary server failures. Delete it
+          // only when the backend explicitly says the credential is invalid.
+          if (meRes.status === 401 || meRes.status === 403) {
+            await AsyncStorage.removeItem(TOKEN_KEY);
+          }
           setLoading(false);
           return;
         }
 
-        const rawUser = await meRes.json();
+        const rawResponse = await meRes.json();
+        const {
+          token: rotatedToken,
+          expires_at: _expiresAt,
+          ...rawUser
+        } = rawResponse;
+        const activeToken = rotatedToken || saved;
 
-        setToken(saved);
+        if (activeToken !== saved) {
+          await AsyncStorage.setItem(TOKEN_KEY, activeToken);
+        }
+
+        setToken(activeToken);
         setUser(buildUser(rawUser));
         maybeInitRC(rawUser.id);
-        hydrateDashboard(rawUser, saved, setUser);
+        hydrateDashboard(rawUser, activeToken, setUser);
       } catch (error) {
         console.log('[Auth] Restore session error:', error);
       } finally {
@@ -339,8 +353,13 @@ export function AuthProvider({ children }) {
 
     if (!meRes.ok) return null;
 
-    const rawUser = await meRes.json();
-    const nextToken = rawUser?.token || token;
+    const rawResponse = await meRes.json();
+    const {
+      token: rotatedToken,
+      expires_at: _expiresAt,
+      ...rawUser
+    } = rawResponse;
+    const nextToken = rotatedToken || token;
 
     if (nextToken !== token) {
       await AsyncStorage.setItem(TOKEN_KEY, nextToken);

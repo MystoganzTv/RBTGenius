@@ -5,7 +5,14 @@ import {
   TOTAL_PRACTICE_QUESTIONS, topicLabels,
 } from '../shared/questions/question-bank.js';
 import { STORE_PRODUCTS } from '../src/lib/store-catalog.js';
-import { buildSession, hashPassword, isSessionExpired, shouldRotateSession, verifyPassword } from '../server/lib/auth.js';
+import {
+  buildSession,
+  createSafeUser,
+  hashPassword,
+  isSessionExpired,
+  shouldRotateSession,
+  verifyPassword,
+} from '../server/lib/auth.js';
 import { buildOAuthAuthorizationUrl, createOAuthState, exchangeOAuthCodeForProfile, listOAuthProviders, normalizeOrigin, normalizeRedirectPath } from '../server/lib/oauth.js';
 import { resolveUserRole, ADMIN_EMAILS, HARDCODED_TEST_ACCOUNT } from '../server/lib/seed.js';
 import {
@@ -73,8 +80,7 @@ function readBody(nodeReq) {
 }
 
 function safeUser(user) {
-  const { password_hash: _h, password_salt: _s, ...rest } = user;
-  return rest;
+  return createSafeUser(user);
 }
 
 function getToken(req) {
@@ -174,9 +180,11 @@ async function buildProfilePayloadAsync(user) {
 async function requireUser(req) {
   const token = getToken(req);
   if (!token) return { error: json({ message: 'Authentication required', extra_data: { reason: 'auth_required' } }, { status: 401 }) };
-  const user = await db.getUserByToken(token);
+  const user = await db.getUserBySessionToken(token);
   if (!user || isSessionExpired(user)) return { error: json({ message: 'Authentication required', extra_data: { reason: 'auth_required' } }, { status: 401 }) };
-  return { user };
+  // Return the presented token so callers can act on this session specifically
+  // (sign out one device, rotate just this session) instead of the whole account.
+  return { user, token };
 }
 
 async function requireAdmin(req) {
@@ -239,7 +247,7 @@ async function notifyBilling(kind, { user, plan, source, details }) {
 async function getOptionalUser(req) {
   const token = getToken(req);
   if (!token) return null;
-  const user = await db.getUserByToken(token);
+  const user = await db.getUserBySessionToken(token);
   if (!user || isSessionExpired(user)) return null;
   return user;
 }
@@ -416,6 +424,11 @@ async function upsertOAuthUser(profile, providerId) {
     });
     wasCreated = true;
   }
+
+  // Register this device's session. `users.token` above is kept for backward
+  // compatibility, but this row is what actually keeps the device signed in —
+  // and it survives the user signing in somewhere else.
+  await db.createSession(user.id, session, `oauth:${providerId}`);
 
   return { token: session.token, expires_at: session.expires_at, user: safeUser(user), created: wasCreated };
 }
@@ -1003,6 +1016,7 @@ async function webApiHandler(req) {
     }
     const session = buildSession();
     const updated = await db.updateUser(user.id, { role: resolveUserRole(user.email, user.role), token: session.token, token_issued_at: session.issued_at, token_expires_at: session.expires_at });
+    await db.createSession(user.id, session, 'password');
     await clearRateLimitPg('login', [ip, email]);
     return json({ token: session.token, expires_at: session.expires_at, user: safeUser(updated) });
   }
@@ -1011,6 +1025,7 @@ async function webApiHandler(req) {
   if (apiPath === '/auth/me' && req.method === 'GET') {
     const auth = await requireUser(req);
     if (auth.error) return auth.error;
+    await db.touchSession(auth.token);
     const correctRole = resolveUserRole(auth.user.email, auth.user.role);
     const needsRoleUpdate = auth.user.role !== correctRole;
     if (shouldRotateSession(auth.user) || needsRoleUpdate) {
@@ -1019,6 +1034,9 @@ async function webApiHandler(req) {
         role: correctRole,
         ...(session ? { token: session.token, token_issued_at: session.issued_at, token_expires_at: session.expires_at } : {}),
       });
+      // Rotate only the session that made this request. Other devices keep
+      // their own tokens and stay signed in.
+      if (session) await db.rotateSession(auth.token, auth.user.id, session);
       if (session) return json({ ...safeUser(rotated), token: session.token, expires_at: session.expires_at });
       return json({ ...safeUser(rotated), expires_at: auth.user.token_expires_at });
     }
@@ -1029,7 +1047,12 @@ async function webApiHandler(req) {
   if (apiPath === '/auth/logout' && req.method === 'POST') {
     const auth = await requireUser(req);
     if (auth.error) return auth.error;
-    await db.clearUserSession(auth.user.id);
+    // Sign out this device only — other devices keep their sessions.
+    await db.deleteSession(auth.token);
+    // Clear the legacy column only when it contains the exact token presented.
+    // The conditional update is performed in SQL because auth.user intentionally
+    // carries this device's session token rather than the account-level value.
+    await db.clearLegacySessionIfTokenMatches(auth.user.id, auth.token);
     return json({ ok: true });
   }
 
@@ -1062,6 +1085,7 @@ async function webApiHandler(req) {
       if (!user) return Response.redirect(new URL('/login?oauthError=Verification+link+expired+or+already+used', url.origin).toString(), 302);
       const session = buildSession();
       const updated = await db.updateUser(user.id, { email_verified: true, email_verification_token: null, token: session.token, token_issued_at: session.issued_at, token_expires_at: session.expires_at });
+      await db.createSession(user.id, session, 'email_verification');
       await notifyFirstMemberAccess(safeUser(updated), {
         source: 'email_verification',
         authProvider: 'password',

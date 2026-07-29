@@ -10,7 +10,9 @@ import {
   writeDb,
 } from './lib/store.js';
 import {
+  attachSessionToUser,
   buildSession,
+  createSafeUser,
   hashPassword,
   isSessionExpired,
   shouldRotateSession,
@@ -190,28 +192,34 @@ function getToken(req) {
   return authHeader.slice('Bearer '.length);
 }
 
-function getCurrentUser(req) {
+function getCurrentAuth(req) {
   const token = getToken(req);
   if (!token) {
     return null;
   }
 
   const db = readDb();
-  const user = db.users.find(entry => entry.token === token) || null;
+  const storedSession = db.sessions?.find(entry => entry.token === token) || null;
+  const storedUser = storedSession
+    ? db.users.find(entry => entry.id === storedSession.user_id)
+    : db.users.find(entry => entry.token === token);
+  const user = storedSession
+    ? attachSessionToUser(storedUser, storedSession)
+    : storedUser || null;
   if (!user) return null;
   if (isSessionExpired(user)) return null;
-  return user;
+  return { user, token };
 }
 
-function rotateSessionIfNeeded(req, res, user) {
-  if (!user || !shouldRotateSession(user)) return user;
+function rotateSessionIfNeeded(req, res, auth) {
+  if (!auth?.user || !shouldRotateSession(auth.user)) return auth?.user || null;
 
   const session = buildSession();
-  let rotatedUser = user;
+  let rotatedUser = auth.user;
   updateDb(current => ({
     ...current,
     users: current.users.map(entry => {
-      if (entry.id !== user.id) return entry;
+      if (entry.id !== auth.user.id) return entry;
       rotatedUser = {
         ...entry,
         token: session.token,
@@ -220,17 +228,31 @@ function rotateSessionIfNeeded(req, res, user) {
       };
       return rotatedUser;
     }),
+    sessions: [
+      ...(current.sessions || []).filter(entry => entry.token !== auth.token),
+      {
+        token: session.token,
+        user_id: auth.user.id,
+        issued_at: session.issued_at,
+        expires_at: session.expires_at,
+        last_seen_at: new Date().toISOString(),
+        platform:
+          current.sessions?.find(entry => entry.token === auth.token)?.platform ||
+          "local",
+      },
+    ],
   }));
 
   res.setHeader('X-New-Auth-Token', session.token);
   res.setHeader('X-Auth-Token-Expires-At', session.expires_at);
-  return rotatedUser;
+  req.rotatedAuthToken = session.token;
+  return attachSessionToUser(rotatedUser, session);
 }
 
 function requireUser(req, res, next) {
-  const user = getCurrentUser(req);
+  const auth = getCurrentAuth(req);
 
-  if (!user) {
+  if (!auth) {
     res.status(401).json({
       message: 'Authentication required',
       extra_data: { reason: 'auth_required' },
@@ -238,7 +260,8 @@ function requireUser(req, res, next) {
     return;
   }
 
-  req.currentUser = rotateSessionIfNeeded(req, res, user);
+  req.authToken = auth.token;
+  req.currentUser = rotateSessionIfNeeded(req, res, auth);
   next();
 }
 
@@ -279,15 +302,6 @@ function createId(prefix) {
 
 function getBackendOrigin(req) {
   return `${req.protocol}://${req.get('host')}`;
-}
-
-function createSafeUser(user) {
-  const {
-    password_hash: _passwordHash,
-    password_salt: _passwordSalt,
-    ...safeUser
-  } = user;
-  return safeUser;
 }
 
 function buildUserAccessState(db, user) {
@@ -571,6 +585,17 @@ function upsertOAuthUser(profile, providerId) {
     return {
       ...current,
       users: nextUsers,
+      sessions: [
+        ...(current.sessions || []),
+        {
+          token: session.token,
+          user_id: safeUser.id,
+          issued_at: session.issued_at,
+          expires_at: session.expires_at,
+          last_seen_at: new Date().toISOString(),
+          platform: `oauth:${providerId}`,
+        },
+      ],
     };
   });
 
@@ -886,6 +911,17 @@ app.post('/api/auth/register', (req, res) => {
 
   updateDb(current => {
     const withUser = { ...current, users: [...current.users, newUser] };
+    withUser.sessions = [
+      ...(current.sessions || []),
+      {
+        token: session.token,
+        user_id: newUser.id,
+        issued_at: session.issued_at,
+        expires_at: session.expires_at,
+        last_seen_at: new Date().toISOString(),
+        platform: 'password',
+      },
+    ];
     // Successful signup still counts toward the IP quota — prevents one IP
     // from creating 50 accounts in a row even with valid bodies.
     return recordRateLimitAttempt(withUser, 'register', [ip]);
@@ -953,6 +989,17 @@ app.post('/api/auth/login', (req, res) => {
         };
         return updatedUser;
       }),
+      sessions: [
+        ...(current.sessions || []),
+        {
+          token: session.token,
+          user_id: user.id,
+          issued_at: session.issued_at,
+          expires_at: session.expires_at,
+          last_seen_at: new Date().toISOString(),
+          platform: 'password',
+        },
+      ],
     };
     // Successful login resets the failure counter for this (IP, email).
     return clearRateLimit(withRotatedSession, 'login', [ip, email]);
@@ -966,14 +1013,21 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 app.get('/api/auth/me', requireUser, (req, res) => {
-  res.json(createSafeUser(req.currentUser));
+  res.json({
+    ...createSafeUser(req.currentUser),
+    expires_at: req.currentUser.token_expires_at,
+    ...(req.rotatedAuthToken ? { token: req.rotatedAuthToken } : {}),
+  });
 });
 
 app.post('/api/auth/logout', requireUser, (req, res) => {
   updateDb(current => ({
     ...current,
+    sessions: (current.sessions || []).filter(
+      session => session.token !== req.authToken,
+    ),
     users: current.users.map(user =>
-      user.id === req.currentUser.id
+      user.id === req.currentUser.id && user.token === req.authToken
         ? {
             ...user,
             token: null,
@@ -1001,6 +1055,9 @@ app.delete('/api/auth/account', requireUser, (req, res) => {
     return {
       ...current,
       users: current.users.filter(user => user.id !== userId),
+      sessions: (current.sessions || []).filter(
+        session => session.user_id !== userId,
+      ),
       attempts: current.attempts.filter(attempt => attempt.user_id !== userId),
       mockExams: current.mockExams.filter(exam => exam.user_id !== userId),
       practiceSessions: nextPracticeSessions,

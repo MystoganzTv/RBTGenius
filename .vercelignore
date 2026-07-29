@@ -1,0 +1,12 @@
+# Vercel builds only the web app and serverless API. Native projects and local
+# build artifacts make deployments unnecessarily large and are released through
+# the mobile build pipeline instead.
+mobile/
+ios/
+node_modules/
+dist/
+.netlify/
+exports/
+tests/
+rbt-genius-mobile-mockups.html
+rbt-questions-and-answers.txt

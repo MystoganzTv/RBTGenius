@@ -20,6 +20,21 @@ CREATE TABLE IF NOT EXISTS users (
   email_verification_token TEXT
 );
 
+-- One row per signed-in device. Without this, `users.token` allowed a single
+-- session per account and every new sign-in silently invalidated the previous
+-- one. See scripts/migrations/2026-07-27-add-sessions-table.sql.
+CREATE TABLE IF NOT EXISTS sessions (
+  token        TEXT PRIMARY KEY,
+  user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  issued_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at   TIMESTAMPTZ NOT NULL,
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  platform     TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user    ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS attempts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

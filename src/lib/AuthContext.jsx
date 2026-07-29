@@ -257,10 +257,18 @@ export function AuthProvider({
       await loadCurrentUser(token);
       stripAuthParamsFromUrl();
     } catch (error) {
-      clearStoredToken();
+      const normalizedError = normalizeAuthError(error);
+      // A temporary outage must not turn into a permanent logout. Only discard
+      // the saved credential when the server explicitly rejects it.
+      if (
+        normalizedError.type === "auth_required" ||
+        normalizedError.type === "user_not_registered"
+      ) {
+        clearStoredToken();
+      }
       setUser(null);
       setIsAuthenticated(false);
-      setAuthError(normalizeAuthError(error));
+      setAuthError(normalizedError);
     } finally {
       setIsLoadingAuth(false);
       setIsLoadingPublicSettings(false);
