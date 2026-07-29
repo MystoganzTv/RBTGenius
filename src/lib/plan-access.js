@@ -105,13 +105,6 @@ export const ACCESS_COMPARISON = [
     free: "Coming soon",
     premium: "Coming soon",
   },
-  {
-    id: "billing",
-    label: "Billing tools",
-    guest: "Not needed",
-    free: "Upgrade from pricing page",
-    premium: "Stripe checkout and billing portal",
-  },
 ];
 
 function clampCount(value) {

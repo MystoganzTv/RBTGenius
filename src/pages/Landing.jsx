@@ -5,6 +5,7 @@ import {
   Brain,
   ClipboardCheck,
   Crown,
+  Download,
   GraduationCap,
   LayoutDashboard,
   Moon,
@@ -13,6 +14,7 @@ import {
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import PublicSiteFooter from "@/components/public/PublicSiteFooter";
 import { useLanguage } from "@/hooks/use-language";
 import { useTheme } from "@/hooks/use-theme";
@@ -359,10 +361,11 @@ export default function Landing() {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+            <LanguageSwitcher compact />
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
+              className="hidden rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100 sm:inline-flex"
               onClick={toggleTheme}
             >
               {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
@@ -371,13 +374,13 @@ export default function Landing() {
               <>
                 <Link to={createPageUrl("Store")} className="hidden sm:block">
                   <Button variant="ghost" className="rounded-xl">
-                    Store
+                    {isEs ? "Tienda" : "Store"}
                   </Button>
                 </Link>
                 <Link to={createPageUrl("Dashboard")}>
                   <Button className="rounded-xl bg-[#1E5EFF] px-3 text-sm hover:bg-[#1E5EFF]/90 sm:px-4 sm:text-base">
-                    <span className="hidden sm:inline">Go to Dashboard</span>
-                    <span className="sm:hidden">Dashboard</span>
+                    <span className="hidden sm:inline">{isEs ? "Ir al panel" : "Go to Dashboard"}</span>
+                    <span className="sm:hidden">{isEs ? "Panel" : "Dashboard"}</span>
                   </Button>
                 </Link>
               </>
@@ -385,18 +388,18 @@ export default function Landing() {
               <>
                 <Link to={createPageUrl("Store")} className="hidden sm:block">
                   <Button variant="ghost" className="rounded-xl">
-                    Store
+                    {isEs ? "Tienda" : "Store"}
                   </Button>
                 </Link>
                 <Link to="/login" className="hidden sm:block">
                   <Button variant="ghost" className="rounded-xl">
-                    Log In
+                    {isEs ? "Iniciar sesión" : "Log In"}
                   </Button>
                 </Link>
                 <Link to="/login?mode=register">
                   <Button className="rounded-xl bg-[#1E5EFF] px-3 text-sm hover:bg-[#1E5EFF]/90 sm:px-4 sm:text-base">
-                    <span className="hidden sm:inline">Create Account</span>
-                    <span className="sm:hidden">Start</span>
+                    <span className="hidden sm:inline">{isEs ? "Crear cuenta" : "Create Account"}</span>
+                    <span className="sm:hidden">{isEs ? "Empezar" : "Start"}</span>
                   </Button>
                 </Link>
               </>
@@ -455,8 +458,8 @@ export default function Landing() {
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-6 sm:text-xl">
               {isEs
-                ? `RBT Genius combina más de ${TOTAL_PRACTICE_QUESTIONS} preguntas de práctica, tarjetas y exámenes simulados — todo diseñado para que llegues al examen listo y confiado.`
-                : `RBT Genius combines ${TOTAL_PRACTICE_QUESTIONS}+ practice questions, flashcards, and mock exams — all designed to get you to exam day ready and confident.`}
+                ? "RBT Genius combina más de 1,100 preguntas de práctica, tarjetas y exámenes simulados — todo diseñado para que llegues al examen listo y confiado."
+                : "RBT Genius combines 1,100+ practice questions, flashcards, and mock exams — all designed to get you to exam day ready and confident."}
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
@@ -480,9 +483,25 @@ export default function Landing() {
                       {isEs ? "Ya tengo una cuenta" : "I already have an account"}
                     </Button>
                   </Link>
+                  <a
+                    href="https://apps.apple.com/us/app/rbtgenius/id6766110248"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" className="h-12 w-full rounded-2xl px-6 text-base sm:w-auto">
+                      <Download className="mr-2 h-4 w-4" />
+                      {isEs ? "Descargar para iOS" : "Download for iOS"}
+                    </Button>
+                  </a>
                 </>
               )}
             </div>
+
+            <p className="mt-5 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {isEs
+                ? "Basado en la BACB RBT Task List, 3.ª edición · Inglés y español · Disponible en Estados Unidos y Canadá"
+                : "Built around the BACB RBT Task List, 3rd Edition · English and Spanish · Available in the U.S. and Canada"}
+            </p>
           </div>
 
           <div className="relative min-h-[380px] px-0 py-2 sm:min-h-[520px] sm:px-2 sm:py-6 lg:px-4">
@@ -779,15 +798,15 @@ export default function Landing() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/40 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                  {isEs ? "App nativa iOS y Android" : "Native iOS & Android App"}
+                  {isEs ? "App para iOS disponible ahora" : "iOS app available now"}
                 </div>
                 <h2 className={`mt-5 font-jakarta text-2xl font-black tracking-tight sm:text-3xl ${isDark ? "text-slate-50" : "text-slate-900"}`}>
                   {isEs ? "Estudia en cualquier lugar, incluso sin conexión." : "Study anywhere — even offline."}
                 </h2>
                 <p className={`mt-3 text-base leading-7 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                   {isEs
-                    ? "La app nativa de RBT Genius te da la experiencia completa en tu iPhone o Android. Preguntas de práctica, tarjetas y exámenes simulados, todo en tu bolsillo con la misma cuenta que usas en la web."
-                    : "The RBT Genius native app gives you the full experience on your iPhone or Android device. Practice questions, flashcards, and mock exams — all in your pocket with the same account you use on the web."}
+                    ? "La app nativa de RBT Genius te da la experiencia completa en tu iPhone o iPad. Preguntas de práctica, tarjetas y exámenes simulados, todo en tu bolsillo con la misma cuenta que usas en la web."
+                    : "The RBT Genius native app gives you the full experience on your iPhone or iPad. Practice questions, flashcards, and mock exams — all in your pocket with the same account you use on the web."}
                 </p>
 
                 <ul className="mt-6 space-y-3">
@@ -824,19 +843,20 @@ export default function Landing() {
                       <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>App Store</p>
                     </div>
                   </a>
-                  <a
-                    href="https://play.google.com/store/apps/details?id=com.rbtgenius.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-3 rounded-2xl border px-5 py-3 transition-opacity hover:opacity-80 ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-slate-50 shadow-sm"}`}
+                  <div
+                    aria-disabled="true"
+                    className={`inline-flex cursor-default items-center gap-3 rounded-2xl border px-5 py-3 opacity-60 ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-slate-50 shadow-sm"}`}
                   >
                     <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none"><path d="M3.18 23.76a2 2 0 01-.68-.62V.86a2 2 0 01.68-.62l.1-.05L13.37 12l-10.09 11.8-.1-.04z" fill="#EA4335"/><path d="M17.31 15.93L13.73 12.3l3.58-3.63 4.24 2.43a1.42 1.42 0 010 2.4l-4.24 2.43z" fill="#FBBC04"/><path d="M3.18.24l10.55 10.56-3.58 3.63L3.18.86V.24z" fill="#4285F4"/><path d="M3.18 23.76V23.14l7.01-7.01 3.54 3.55L3.18 23.76z" fill="#34A853"/></svg>
                     <div>
-                      <p className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>{isEs ? "Disponible en" : "Get it on"}</p>
-                      <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Google Play</p>
+                      <p className={`text-[10px] font-medium uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>Android</p>
+                      <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>{isEs ? "Próximamente" : "Coming soon"}</p>
                     </div>
-                  </a>
+                  </div>
                 </div>
+                <p className={`mt-3 text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                  {isEs ? "Disponible en App Store en Estados Unidos y Canadá." : "Available on the App Store in the U.S. and Canada."}
+                </p>
               </div>
 
               {/* Right phone mockup */}
@@ -885,16 +905,16 @@ export default function Landing() {
               {isEs ? "Lo que obtienes hoy" : "What you get today"}
             </div>
             <h2 className="mt-5 font-jakarta text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
-              {isEs ? "La oferta actual, sin relleno." : "The current offer, without padding."}
+              {isEs ? "Todo lo que necesitas para prepararte con confianza." : "Everything you need to prepare with confidence."}
             </h2>
             <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500 dark:text-slate-400">
               {isEs
-                ? `Hoy RBT Genius ofrece un banco compartido de preguntas entre práctica, tarjetas y exámenes simulados, más analíticas de preparación. El curso de 40 horas aún no está disponible y aparece aquí solo como lanzamiento futuro.`
-                : `Today RBT Genius sells a shared question bank across practice, flashcards, and mock exams, plus readiness analytics. The 40-hour course is not live yet, so it is shown here as a future release only.`}
+                ? "Practica por dominio, repasa con tarjetas, realiza exámenes simulados completos y mide tu preparación en un solo sistema de estudio. El curso de 40 horas está planificado para una versión futura y no forma parte de la membresía actual."
+                : "Practice by domain, review with flashcards, take full mock exams, and measure your readiness in one focused study system. The 40-hour course is planned for a future release and is not part of today’s membership."}
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 lg:grid-cols-5">
+          <div className="mt-8 grid gap-4 lg:grid-cols-4">
             {offeringCards.map(({ eyebrow, eyebrowEs, title, titleEs, description, descriptionEs, Icon, className }) => (
               <div
                 key={title}
@@ -927,6 +947,14 @@ export default function Landing() {
                 ? "Los invitados pueden explorar el producto y los precios; las cuentas gratuitas reciben herramientas de estudio diario guiadas; y Premium desbloquea preparación ilimitada con analíticas completas y exámenes simulados."
                 : "Guests can review the landing and pricing, free members get guided daily study tools, and Premium unlocks unlimited prep with full analytics and mock exams."}
             </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                {isEs ? "$19.99 al mes" : "$19.99 monthly"}
+              </span>
+              <span className="rounded-full border border-[#1E5EFF]/20 bg-[#1E5EFF]/8 px-4 py-2 text-sm font-semibold text-[#1E5EFF] dark:border-[#1E5EFF]/30 dark:bg-[#1E5EFF]/10 dark:text-[#8EB0FF]">
+                {isEs ? "$99.99 al año · Ahorra 58%" : "$99.99 yearly · Save 58%"}
+              </span>
+            </div>
           </div>
 
           <div className="mt-8 hidden overflow-x-auto md:block">
