@@ -72,7 +72,7 @@ import {
 const app = express();
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 // Trust the first proxy hop so req.ip reflects the real client IP when running
-// behind Netlify / Heroku / Render / nginx. Safe default for a single proxy.
+// behind Vercel or another single reverse proxy.
 app.set('trust proxy', 1);
 const port = Number(process.env.API_PORT || 8787);
 

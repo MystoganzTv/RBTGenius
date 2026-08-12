@@ -1,7 +1,7 @@
 /**
  * Lightweight rate limiter that piggybacks on the app's existing JSON store.
  * Same code runs against the Express dev server (server/index.js) and the
- * Netlify Function (netlify/functions/api.mjs).
+ * Vercel serverless API (api/index.js).
  *
  * Storage shape under db.rateLimits:
  *   {

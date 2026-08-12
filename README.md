@@ -57,19 +57,19 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 Google OAuth redirect URI:
 
 ```text
-https://rbtgenius.netlify.app/api/auth/oauth/google/callback
+https://www.rbtgenius.com/api/auth/oauth/google/callback
 ```
 
 Google OAuth origin:
 
 ```text
-https://rbtgenius.netlify.app
+https://www.rbtgenius.com
 ```
 
-Estas mismas variables se pueden poner en Netlify:
+Estas variables se configuran en Vercel:
 
-1. Site configuration
-2. Environment variables
+1. Project Settings
+2. Environment Variables
 3. Add variable
 
 Notas:

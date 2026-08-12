@@ -94,7 +94,7 @@ export async function createTutorReplyOpenAI({ content, history, progress, recen
 /**
  * Streaming. Returns an async iterator yielding small text chunks as they
  * arrive from OpenAI's SSE stream. Caller is responsible for forwarding to
- * the browser (via SSE on the Express side, or ReadableStream on Netlify).
+ * the browser via the hosting runtime's streaming response.
  *
  * Usage:
  *   for await (const chunk of streamTutorReplyOpenAI({...})) {
