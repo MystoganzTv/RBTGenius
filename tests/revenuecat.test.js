@@ -81,6 +81,8 @@ test('RevenueCat purchase becomes an idempotent payment record with display meta
         period_type: 'INTRO',
         renewal_number: 1,
         country_code: null,
+        purchased_at: '2026-07-27T23:11:09.000Z',
+        expiration_at: '2027-07-27T23:11:09.000Z',
         event_timestamp: '2026-07-27T23:11:14.637Z',
       },
     },
@@ -94,4 +96,22 @@ test('sandbox transactions remain visible without counting as completed revenue'
     'premium_yearly',
   );
   assert.equal(payment.status, 'sandbox');
+});
+
+test('free-trial starts grant access without counting as completed revenue', () => {
+  const payment = buildRevenueCatPayment(
+    {
+      ...yearlyPurchase,
+      period_type: 'TRIAL',
+      price: 0,
+      price_in_purchased_currency: 0,
+      transaction_id: 'trial-1',
+    },
+    'user-1',
+    'premium_monthly',
+  );
+
+  assert.equal(payment.status, 'trial');
+  assert.equal(payment.amount, 0);
+  assert.equal(payment.metadata.period_type, 'TRIAL');
 });

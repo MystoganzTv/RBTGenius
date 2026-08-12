@@ -35,6 +35,18 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user    ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
+CREATE TABLE IF NOT EXISTS user_daily_activity (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_date DATE NOT NULL,
+  first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  request_count INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (user_id, activity_date)
+);
+CREATE INDEX IF NOT EXISTS idx_user_daily_activity_last_seen
+  ON user_daily_activity(last_seen_at DESC);
+ALTER TABLE user_daily_activity ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS attempts (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

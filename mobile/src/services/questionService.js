@@ -9,6 +9,19 @@ export { OFFICIAL_CONCEPT_COUNT, TOTAL_PRACTICE_QUESTIONS, topicLabels };
 
 const STOP_WORDS = new Set(['the','a','an','of','in','on','at','to','for','is','are','was','were','be','been','it','its','this','that','and','or','but','with','as','by','from','which','what','who','how','so','if','not','no','can','will','do','does','did','have','has','had','they','them','their','we','our','you','your','my','me','he','she','his','her','would','could','should','may','might']);
 
+const QUESTION_MEDIA_BY_TOPIC = Object.freeze({
+  measurement: require('../../assets/question-media/measurement.jpg'),
+  assessment: require('../../assets/question-media/assessment.jpg'),
+  skill_acquisition: require('../../assets/question-media/skill-acquisition.jpg'),
+  behavior_reduction: require('../../assets/question-media/behavior-reduction.jpg'),
+  documentation: require('../../assets/question-media/documentation.jpg'),
+  professional_conduct: require('../../assets/question-media/professional-conduct.jpg'),
+});
+
+export function getQuestionMedia(topic) {
+  return QUESTION_MEDIA_BY_TOPIC[topic] ?? null;
+}
+
 function mixRatio(originalText, translatedText) {
   const origWords = (originalText || '').toLowerCase().match(/[a-z]{4,}/g) || [];
   const transWords = new Set((translatedText || '').toLowerCase().match(/[a-z]{4,}/g) || []);
@@ -49,6 +62,7 @@ export function adaptQuestion(q) {
     task_list_code: q.task_list_code ?? null,
     task_list_section: q.task_list_section ?? null,
     explanation: q.explanation ?? '',
+    imageSource: getQuestionMedia(q.topic),
     timeEstimate: q.difficulty === 'advanced' ? 3 : q.difficulty === 'intermediate' ? 2 : 1,
     _raw: q,
   };
@@ -85,6 +99,7 @@ export function getFlashcards(limit = 120) {
       answer: q.options.find(o => o.label === q.correct_answer)?.text ?? '',
       explanation: q.explanation ?? '',
       difficulty: diffMap[q.difficulty] ?? 'Medium',
+      imageSource: getQuestionMedia(q.topic),
       _raw: q,
     }));
   }

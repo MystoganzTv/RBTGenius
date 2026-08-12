@@ -11,10 +11,11 @@ import { CommonActions } from '@react-navigation/native';
 import { alpha, getTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 
-let rcAvailable = false, getOfferings, purchasePackage, restorePurchases;
+let rcAvailable = false, getOfferings, getTrialEligibility, purchasePackage, restorePurchases;
 try {
   const rc = require('../../services/RevenueCatService');
   getOfferings = rc.getOfferings; purchasePackage = rc.purchasePackage;
+  getTrialEligibility = rc.getTrialEligibility;
   restorePurchases = rc.restorePurchases; rcAvailable = true;
 } catch { rcAvailable = false; }
 
@@ -30,6 +31,17 @@ function buildAppReturnUrl(params = {}) {
     }
   });
   return url.toString();
+}
+
+function hasSevenDayFreeTrial(product) {
+  const intro = product?.introPrice;
+  if (!intro || Number(intro.price) !== 0) return false;
+
+  return intro.period === 'P1W' || (
+    intro.periodUnit === 'WEEK'
+    && Number(intro.periodNumberOfUnits) === 1
+    && Number(intro.cycles) === 1
+  );
 }
 
 
@@ -54,6 +66,7 @@ export default function UpgradeScreen({ navigation }) {
   const [planId,          setPlanId]          = useState('premium_monthly');
   const [loading,         setLoading]         = useState(false);
   const [offering,        setOffering]        = useState(null);
+  const [trialEligibility, setTrialEligibility] = useState({});
   const [offeringsLoading, setOfferingsLoading] = useState(rcAvailable);
   const [offeringsFailed, setOfferingsFailed] = useState(false);
   const fade  = useRef(new Animated.Value(0)).current;
@@ -71,7 +84,15 @@ export default function UpgradeScreen({ navigation }) {
           const o = await getOfferings();
           if (cancelled) return;
           if (o && (o.availablePackages?.length ?? 0) > 0) {
+            const trialProductIds = o.availablePackages
+              .filter(pkg => hasSevenDayFreeTrial(pkg.product))
+              .map(pkg => pkg.product.identifier);
+            const eligibility = trialProductIds.length > 0
+              ? await getTrialEligibility(trialProductIds)
+              : {};
+            if (cancelled) return;
             setOffering(o);
+            setTrialEligibility(eligibility);
             setOfferingsLoading(false);
             return;
           }
@@ -100,14 +121,31 @@ export default function UpgradeScreen({ navigation }) {
         // Precio REAL cobrado, con su período correcto (Apple 3.1.2(c)).
         const currency = pkg.product.priceString.replace(/[\d.,\s]/g, '') || '$';
         const perMonth = `${currency}${(pkg.product.price / 12).toFixed(2)}`;
+        const hasTrial = (
+          monthly
+          && hasSevenDayFreeTrial(pkg.product)
+          && trialEligibility[pkg.product.identifier] === true
+        );
         return {
           id: pkg.identifier,
           label: monthly ? t('upgrade.monthly') : t('upgrade.yearly'),
           price: pkg.product.priceString, period: monthly ? '/mo' : '/yr',
-          badge: monthly ? t('upgrade.recommended') : null,
+          badge: hasTrial
+            ? t('upgrade.trial_badge')
+            : monthly
+              ? t('upgrade.recommended')
+              : null,
           savings: !monthly ? t('upgrade.save_58') : null,
-          desc: monthly ? t('upgrade.cancel_anytime') : t('upgrade.equiv_monthly', { price: perMonth }),
+          desc: hasTrial
+            ? t('upgrade.trial_then_price', {
+                price: pkg.product.priceString,
+                period: monthly ? '/mo' : '/yr',
+              })
+            : monthly
+              ? t('upgrade.cancel_anytime')
+              : t('upgrade.equiv_monthly', { price: perMonth }),
           isMonthly: monthly,
+          hasTrial,
           _pkg: pkg,
         };
       })
@@ -263,7 +301,10 @@ export default function UpgradeScreen({ navigation }) {
         if (r.success) {
           await syncRevenueCatPlan();
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Alert.alert(t('upgrade.welcome_pro'), t('upgrade.features_unlocked'));
+          Alert.alert(
+            sel?.hasTrial ? t('upgrade.trial_welcome') : t('upgrade.welcome_pro'),
+            sel?.hasTrial ? t('upgrade.trial_started') : t('upgrade.features_unlocked'),
+          );
           navigation.goBack?.();
         } else Alert.alert(t('common.error'), r.error ?? t('upgrade.purchase_failed'));
       } else {
@@ -389,7 +430,11 @@ export default function UpgradeScreen({ navigation }) {
             : offeringsLoading
               ? <><Text style={s.ctaTxt}>{t('upgrade.products_loading')}</Text><ActivityIndicator color="rgba(255,255,255,0.7)" size="small" /></>
               : <>
-                  <Text style={s.ctaTxt}>{t('upgrade.start_pro', { price: sel?.price, period: sel?.period })}</Text>
+                  <Text style={s.ctaTxt}>
+                    {sel?.hasTrial
+                      ? t('upgrade.trial_cta')
+                      : t('upgrade.start_pro', { price: sel?.price, period: sel?.period })}
+                  </Text>
                   <Text style={s.ctaSub}>{sel?.desc}</Text>
                 </>}
         </Pressable>
@@ -422,7 +467,11 @@ export default function UpgradeScreen({ navigation }) {
         </View>
 
         <Text style={s.legal}>
-          {useRC ? t('upgrade.legal_rc') : t('upgrade.legal_stripe')}
+          {useRC && sel?.hasTrial
+            ? t('upgrade.trial_legal_rc', { price: sel.price, period: sel.period })
+            : useRC
+              ? t('upgrade.legal_rc')
+              : t('upgrade.legal_stripe')}
         </Text>
       </ScrollView>
 

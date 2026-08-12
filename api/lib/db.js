@@ -9,6 +9,9 @@ function getSql() {
       ssl: 'require',
       max: 1,
       prepare: false,
+      connect_timeout: 10,
+      idle_timeout: 5,
+      max_lifetime: 60,
       // Supabase's transaction pooler can open connections with an empty
       // search_path. Set it explicitly so every existing unqualified query
       // resolves to the application's public schema.
@@ -109,6 +112,7 @@ export async function createSession(userId, session, platform = null) {
     VALUES (${session.token}, ${userId}, ${session.issued_at}, ${session.expires_at}, NOW(), ${platform})
     ON CONFLICT (token) DO NOTHING
   `;
+  await recordDailyActivity(userId);
 }
 
 // Swap one session row for another, preserving the device's platform tag.
@@ -123,6 +127,7 @@ export async function rotateSession(oldToken, userId, session) {
       ON CONFLICT (token) DO NOTHING
     `;
   });
+  await recordDailyActivity(userId);
 }
 
 // Sign out a single device. Other sessions for the same user survive.
@@ -146,7 +151,38 @@ export async function listSessionsByUser(userId) {
 
 export async function touchSession(token) {
   if (!token) return;
-  await sql`UPDATE sessions SET last_seen_at = NOW() WHERE token = ${token}`;
+  const [session] = await sql`
+    UPDATE sessions SET last_seen_at = NOW()
+    WHERE token = ${token}
+    RETURNING user_id
+  `;
+  if (session?.user_id) await recordDailyActivity(session.user_id);
+}
+
+async function recordDailyActivity(userId) {
+  if (!userId) return;
+  try {
+    await sql`
+      INSERT INTO user_daily_activity (
+        user_id, activity_date, first_seen_at, last_seen_at, request_count
+      )
+      VALUES (
+        ${userId},
+        (NOW() AT TIME ZONE 'America/New_York')::date,
+        NOW(),
+        NOW(),
+        1
+      )
+      ON CONFLICT (user_id, activity_date) DO UPDATE SET
+        last_seen_at = EXCLUDED.last_seen_at,
+        request_count = user_daily_activity.request_count + 1
+    `;
+  } catch (error) {
+    // Activity telemetry must never prevent sign-in or an authenticated API
+    // request. This also keeps a staged deploy safe if its additive migration
+    // has not reached a preview database yet.
+    console.warn('[activity] unable to record daily visit:', error.message);
+  }
 }
 
 export async function pruneExpiredSessions() {
@@ -184,6 +220,270 @@ export async function getUserByAppleId(appleUserId) {
 export async function getAllUsers() {
   const rows = await sql`SELECT * FROM users ORDER BY created_at DESC`;
   return rows.map(normalizeUser);
+}
+
+// Load the compact admin dashboard dataset in one database round trip. This
+// prevents Supabase's transaction pooler from queuing dozens of serialized
+// serverless queries and starving ordinary authentication requests.
+export async function getAdminMembersDataset() {
+  const [row] = await sql`
+    SELECT
+      COALESCE((
+        SELECT jsonb_agg(to_jsonb(u) ORDER BY u.created_at DESC)
+        FROM users u
+      ), '[]'::jsonb) AS users,
+      COALESCE((
+        SELECT jsonb_agg(to_jsonb(a) ORDER BY a.created_at DESC)
+        FROM attempts a
+      ), '[]'::jsonb) AS attempts,
+      COALESCE((
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'id', e.id,
+            'user_id', e.user_id,
+            'score', e.score::float8,
+            'total_questions', e.total_questions,
+            'correct_answers', e.correct_answers,
+            'time_taken_minutes', e.time_taken_minutes,
+            'status', e.status,
+            'passed', e.passed,
+            'domain_scores', e.domain_scores,
+            'created_at', e.created_at
+          ) ORDER BY e.created_at DESC
+        )
+        FROM mock_exams e
+      ), '[]'::jsonb) AS exams,
+      COALESCE((
+        SELECT jsonb_agg(to_jsonb(p) ORDER BY p.created_at DESC)
+        FROM payments p
+      ), '[]'::jsonb) AS payments,
+      COALESCE((
+        SELECT jsonb_agg(jsonb_build_object(
+          'user_id', s.user_id,
+          'issued_at', s.issued_at,
+          'last_seen_at', s.last_seen_at,
+          'platform', s.platform
+        ))
+        FROM sessions s
+      ), '[]'::jsonb) AS sessions,
+      COALESCE((
+        SELECT jsonb_agg(jsonb_build_object(
+          'user_id', v.user_id,
+          'activity_date', v.activity_date,
+          'first_seen_at', v.first_seen_at,
+          'last_seen_at', v.last_seen_at,
+          'request_count', v.request_count
+        ))
+        FROM user_daily_activity v
+      ), '[]'::jsonb) AS visits,
+      COALESCE((
+        SELECT jsonb_agg(jsonb_build_object(
+          'user_id', t.user_id,
+          'created_at', t.created_at
+        ))
+        FROM tutor_messages t
+        WHERE t.role = 'user'
+      ), '[]'::jsonb) AS tutor_activity
+  `;
+
+  return {
+    users: (row?.users || []).map(normalizeUser),
+    attempts: row?.attempts || [],
+    exams: (row?.exams || []).map(exam => ({
+      ...exam,
+      domain_scores: parseJsonbField(exam.domain_scores),
+    })),
+    payments: (row?.payments || []).map(normalizePayment),
+    sessions: row?.sessions || [],
+    visits: row?.visits || [],
+    tutorActivity: row?.tutor_activity || [],
+  };
+}
+
+// One consistent source for the member table and its summary cards. A member
+// is active when they used the app, answered a question, completed an exam, or
+// sent a tutor message — not merely when an access token was first issued.
+export async function getAdminActivitySummaries() {
+  const rows = await sql`
+    WITH calendar AS (
+      SELECT (NOW() AT TIME ZONE 'America/New_York')::date AS today
+    ),
+    attempt_stats AS (
+      SELECT
+        user_id,
+        COUNT(*)::int AS total_questions,
+        COUNT(*) FILTER (
+          WHERE (created_at AT TIME ZONE 'America/New_York')::date = calendar.today
+        )::int AS questions_today,
+        COUNT(*) FILTER (
+          WHERE (created_at AT TIME ZONE 'America/New_York')::date = calendar.today - 1
+        )::int AS questions_yesterday,
+        COUNT(*) FILTER (
+          WHERE (created_at AT TIME ZONE 'America/New_York')::date >= calendar.today - 6
+        )::int AS questions_7d,
+        COUNT(*) FILTER (
+          WHERE (created_at AT TIME ZONE 'America/New_York')::date >= calendar.today - 29
+        )::int AS questions_30d,
+        MAX(created_at) AS last_attempt_at
+      FROM attempts
+      CROSS JOIN calendar
+      GROUP BY user_id
+    ),
+    exam_stats AS (
+      SELECT
+        user_id,
+        COUNT(*)::int AS total_exams,
+        COUNT(*) FILTER (
+          WHERE (created_at AT TIME ZONE 'America/New_York')::date >= calendar.today - 29
+        )::int AS exams_30d,
+        MAX(created_at) AS last_exam_at
+      FROM mock_exams
+      CROSS JOIN calendar
+      GROUP BY user_id
+    ),
+    session_stats AS (
+      SELECT user_id, MAX(last_seen_at) AS last_session_at
+      FROM sessions
+      GROUP BY user_id
+    ),
+    visit_stats AS (
+      SELECT user_id, MAX(last_seen_at) AS last_visit_at
+      FROM user_daily_activity
+      GROUP BY user_id
+    ),
+    tutor_stats AS (
+      SELECT user_id, MAX(created_at) AS last_tutor_at
+      FROM tutor_messages
+      WHERE role = 'user'
+      GROUP BY user_id
+    ),
+    activity_days AS (
+      SELECT user_id, activity_date FROM user_daily_activity
+      UNION
+      SELECT user_id, (created_at AT TIME ZONE 'America/New_York')::date FROM attempts
+      UNION
+      SELECT user_id, (created_at AT TIME ZONE 'America/New_York')::date FROM mock_exams
+      UNION
+      SELECT user_id, (created_at AT TIME ZONE 'America/New_York')::date
+      FROM tutor_messages WHERE role = 'user'
+    ),
+    day_stats AS (
+      SELECT
+        user_id,
+        COUNT(*) FILTER (WHERE activity_date >= calendar.today - 6)::int AS active_days_7d,
+        COUNT(*) FILTER (WHERE activity_date >= calendar.today - 29)::int AS active_days_30d
+      FROM activity_days
+      CROSS JOIN calendar
+      GROUP BY user_id
+    )
+    SELECT
+      u.id AS user_id,
+      COALESCE(a.total_questions, 0)::int AS total_questions,
+      COALESCE(a.questions_today, 0)::int AS questions_today,
+      COALESCE(a.questions_yesterday, 0)::int AS questions_yesterday,
+      COALESCE(a.questions_7d, 0)::int AS questions_7d,
+      COALESCE(a.questions_30d, 0)::int AS questions_30d,
+      COALESCE(e.total_exams, 0)::int AS total_exams,
+      COALESCE(e.exams_30d, 0)::int AS exams_30d,
+      COALESCE(d.active_days_7d, 0)::int AS active_days_7d,
+      COALESCE(d.active_days_30d, 0)::int AS active_days_30d,
+      GREATEST(
+        v.last_visit_at,
+        s.last_session_at,
+        a.last_attempt_at,
+        e.last_exam_at,
+        t.last_tutor_at,
+        u.token_issued_at
+      ) AS last_active_at
+    FROM users u
+    LEFT JOIN attempt_stats a ON a.user_id = u.id
+    LEFT JOIN exam_stats e ON e.user_id = u.id
+    LEFT JOIN session_stats s ON s.user_id = u.id
+    LEFT JOIN visit_stats v ON v.user_id = u.id
+    LEFT JOIN tutor_stats t ON t.user_id = u.id
+    LEFT JOIN day_stats d ON d.user_id = u.id
+  `;
+  return rows;
+}
+
+export async function getMemberDailyActivity(userId, days = 30) {
+  const safeDays = Math.min(90, Math.max(7, Number(days) || 30));
+  return sql`
+    WITH calendar AS (
+      SELECT (NOW() AT TIME ZONE 'America/New_York')::date AS today
+    ),
+    days AS (
+      SELECT generate_series(
+        calendar.today - (${safeDays}::int - 1),
+        calendar.today,
+        INTERVAL '1 day'
+      )::date AS activity_date
+      FROM calendar
+    ),
+    attempt_daily AS (
+      SELECT
+        (created_at AT TIME ZONE 'America/New_York')::date AS activity_date,
+        COUNT(*)::int AS questions,
+        COUNT(*) FILTER (WHERE is_correct)::int AS correct
+      FROM attempts
+      CROSS JOIN calendar
+      WHERE user_id = ${userId}
+        AND (created_at AT TIME ZONE 'America/New_York')::date >= calendar.today - (${safeDays}::int - 1)
+      GROUP BY 1
+    ),
+    exam_daily AS (
+      SELECT
+        (created_at AT TIME ZONE 'America/New_York')::date AS activity_date,
+        COUNT(*)::int AS exams
+      FROM mock_exams
+      CROSS JOIN calendar
+      WHERE user_id = ${userId}
+        AND (created_at AT TIME ZONE 'America/New_York')::date >= calendar.today - (${safeDays}::int - 1)
+      GROUP BY 1
+    ),
+    visit_daily AS (
+      SELECT
+        activity_date,
+        MAX(last_seen_at) AS last_seen_at,
+        SUM(request_count)::int AS request_count
+      FROM user_daily_activity
+      CROSS JOIN calendar
+      WHERE user_id = ${userId}
+        AND activity_date >= calendar.today - (${safeDays}::int - 1)
+      GROUP BY activity_date
+    ),
+    tutor_daily AS (
+      SELECT
+        (created_at AT TIME ZONE 'America/New_York')::date AS activity_date,
+        COUNT(*)::int AS tutor_messages
+      FROM tutor_messages
+      CROSS JOIN calendar
+      WHERE user_id = ${userId}
+        AND role = 'user'
+        AND (created_at AT TIME ZONE 'America/New_York')::date >= calendar.today - (${safeDays}::int - 1)
+      GROUP BY 1
+    )
+    SELECT
+      TO_CHAR(days.activity_date, 'YYYY-MM-DD') AS date,
+      COALESCE(a.questions, 0)::int AS questions,
+      COALESCE(a.correct, 0)::int AS correct,
+      COALESCE(e.exams, 0)::int AS exams,
+      COALESCE(t.tutor_messages, 0)::int AS tutor_messages,
+      COALESCE(v.request_count, 0)::int AS request_count,
+      v.last_seen_at,
+      (
+        COALESCE(a.questions, 0) > 0 OR
+        COALESCE(e.exams, 0) > 0 OR
+        COALESCE(t.tutor_messages, 0) > 0 OR
+        COALESCE(v.request_count, 0) > 0
+      ) AS active
+    FROM days
+    LEFT JOIN attempt_daily a USING (activity_date)
+    LEFT JOIN exam_daily e USING (activity_date)
+    LEFT JOIN visit_daily v USING (activity_date)
+    LEFT JOIN tutor_daily t USING (activity_date)
+    ORDER BY days.activity_date ASC
+  `;
 }
 
 export async function createUser(user) {
@@ -272,6 +572,17 @@ export async function getAttemptsByUser(userId) {
   return sql`SELECT * FROM attempts WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 1000`;
 }
 
+// Admin member analytics needs every member at once. Fetching per member on a
+// single-connection serverless client serialized dozens of round trips and
+// could exceed Vercel's five-minute limit.
+export async function getAllAttemptsForAdmin() {
+  return sql`
+    SELECT id, user_id, question_id, selected_answer, is_correct, topic, source, created_at
+    FROM attempts
+    ORDER BY created_at DESC
+  `;
+}
+
 // Returns question_ids where the user's MOST RECENT attempt was incorrect.
 // Used by the "Review Mistakes" feature to surface genuinely unmastered questions.
 export async function getWrongQuestionIdsByUser(userId) {
@@ -358,6 +669,23 @@ export async function getMockExamsMetaByUser(userId) {
   return rows.map(r => ({
     ...r,
     domain_scores: parseJsonbField(r.domain_scores),
+  }));
+}
+
+export async function getAllMockExamsMetaForAdmin() {
+  const rows = await sql`
+    SELECT id, user_id,
+           score::float8 AS score,
+           total_questions::int AS total_questions,
+           correct_answers::int AS correct_answers,
+           time_taken_minutes::int AS time_taken_minutes,
+           status, passed, domain_scores, created_at
+    FROM mock_exams
+    ORDER BY created_at DESC
+  `;
+  return rows.map(row => ({
+    ...row,
+    domain_scores: parseJsonbField(row.domain_scores),
   }));
 }
 

@@ -16,6 +16,7 @@ import { alpha, getTheme } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { getQuestionsByIds } from '../../services/questionService';
 import TranslationSheet, { TranslationTrigger } from '../../components/i18n/TranslationSheet.jsx';
+import QuestionMedia from '../../components/questions/QuestionMedia.jsx';
 import { buildQuestionTranslationContent } from '../../lib/questions/reviewed-question-translations.js';
 
 const API_BASE = 'https://www.rbtgenius.com';
@@ -220,6 +221,11 @@ export default function ReviewMistakesScreen({ navigation }) {
               onOpen={(payload) => setTranslationPanel(payload)}
             />
           </View>
+          <QuestionMedia
+            source={question.imageSource}
+            theme={theme}
+            accessibilityLabel={t('practice.visual_alt', { domain: t(`domains.${question.topic}`) })}
+          />
           <Text style={s.questionText}>{question.prompt}</Text>
         </View>
 

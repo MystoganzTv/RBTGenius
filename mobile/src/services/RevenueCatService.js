@@ -41,6 +41,27 @@ export async function getOfferings() {
   try { const o = await Purchases.getOfferings(); return o.current ?? null; }
   catch (e) { console.warn('[RC]', e); return null; }
 }
+export async function getTrialEligibility(productIdentifiers = []) {
+  const identifiers = [...new Set(productIdentifiers.filter(Boolean))];
+  if (identifiers.length === 0) return {};
+
+  try {
+    const eligibility = await Purchases.checkTrialOrIntroductoryPriceEligibility(identifiers);
+    const eligibleStatus =
+      Purchases.INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE;
+
+    return Object.fromEntries(
+      identifiers.map(identifier => [
+        identifier,
+        eligibility?.[identifier]?.status === eligibleStatus,
+      ]),
+    );
+  } catch (e) {
+    // RevenueCat recommends showing standard terms when eligibility is unknown.
+    console.warn('[RC trial eligibility]', e?.message || e);
+    return Object.fromEntries(identifiers.map(identifier => [identifier, false]));
+  }
+}
 export async function purchasePackage(pkg) {
   try {
     const { customerInfo } = await Purchases.purchasePackage(pkg);

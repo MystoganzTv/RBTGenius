@@ -28,6 +28,7 @@ export default function DashboardScreen({ navigation }) {
 
   const [dashboard, setDashboard] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [trialEligible, setTrialEligible] = useState(false);
 
   const fetchDashboard = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -61,6 +62,43 @@ export default function DashboardScreen({ navigation }) {
   const remaining = entitlements.usage?.practice_questions_remaining ?? (dailyLimit - questionsToday);
   const isPro = entitlements.is_premium ?? (user?.plan === 'premium' || user?.plan === 'premium_monthly' || user?.plan === 'premium_yearly');
   const domainMastery = progress.domain_mastery ?? {};
+
+  useEffect(() => {
+    if (isPro || process.env.EXPO_OS !== 'ios') {
+      setTrialEligible(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const checkTrialEligibility = async () => {
+      try {
+        const { getOfferings, getTrialEligibility } = require('../../services/RevenueCatService');
+        const offering = await getOfferings();
+        const monthlyPackage = offering?.availablePackages?.find((pkg) => {
+          const intro = pkg?.product?.introPrice;
+          const isSevenDays = intro?.period === 'P1W' || (
+            intro?.periodUnit === 'WEEK'
+            && Number(intro?.periodNumberOfUnits) === 1
+            && Number(intro?.cycles) === 1
+          );
+
+          return pkg?.packageType === 'MONTHLY' && Number(intro?.price) === 0 && isSevenDays;
+        });
+
+        if (!monthlyPackage || cancelled) return;
+
+        const productId = monthlyPackage.product.identifier;
+        const eligibility = await getTrialEligibility([productId]);
+        if (!cancelled) setTrialEligible(eligibility[productId] === true);
+      } catch {
+        if (!cancelled) setTrialEligible(false);
+      }
+    };
+
+    checkTrialEligibility();
+    return () => { cancelled = true; };
+  }, [isPro]);
 
   const readinessColor = readiness >= 80 ? theme.success : readiness >= 60 ? theme.gold : '#EF4444';
 
@@ -118,6 +156,26 @@ export default function DashboardScreen({ navigation }) {
             <Badge label={isPro ? t('common.pro') : t('common.free')} tone="gold" theme={theme} />
           </View>
         </View>
+
+        {/* Trial invitation — only shown when Apple confirms eligibility. */}
+        {!isPro && trialEligible && (
+          <View style={s.trialCard}>
+            <View style={s.trialBadge}>
+              <Text style={s.trialBadgeText}>{t('dashboard.trial_invite_badge')}</Text>
+            </View>
+            <Text style={s.trialTitle}>{t('dashboard.trial_invite_title')}</Text>
+            <Text style={s.trialBody}>{t('dashboard.trial_invite_body')}</Text>
+            <Text style={s.trialTerms}>{t('dashboard.trial_invite_terms')}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('dashboard.trial_invite_cta')}
+              style={s.trialButton}
+              onPress={() => navigation?.navigate('More', { screen: 'Upgrade' })}
+            >
+              <Text style={s.trialButtonText}>{t('dashboard.trial_invite_cta')}</Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Pro banner (premium users) */}
         {isPro && (
@@ -279,6 +337,23 @@ const styles = (theme) => StyleSheet.create({
   heroTitle: { color: theme.text, fontSize: 26, fontWeight: '900', lineHeight: 32, marginBottom: 8 },
   heroBody: { color: theme.muted, fontSize: 15, lineHeight: 22, maxWidth: '88%' },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 16 },
+  trialCard: {
+    backgroundColor: alpha(theme.primary, 0.08), borderColor: alpha(theme.primary, 0.28),
+    borderWidth: 1.5, borderRadius: 24, padding: 20, gap: 10,
+  },
+  trialBadge: {
+    alignSelf: 'flex-start', backgroundColor: theme.primary, borderRadius: 999,
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  trialBadgeText: { color: '#fff', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 },
+  trialTitle: { color: theme.text, fontSize: 20, fontWeight: '900', lineHeight: 25 },
+  trialBody: { color: theme.muted, fontSize: 14, lineHeight: 20 },
+  trialTerms: { color: theme.muted, fontSize: 11, lineHeight: 16 },
+  trialButton: {
+    alignItems: 'center', backgroundColor: theme.primary, borderRadius: 16,
+    paddingHorizontal: 18, paddingVertical: 14, marginTop: 2,
+  },
+  trialButtonText: { color: '#fff', fontSize: 15, fontWeight: '900' },
   proBanner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: alpha(theme.gold, 0.10), borderColor: alpha(theme.gold, 0.30),

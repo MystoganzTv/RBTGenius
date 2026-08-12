@@ -45,6 +45,11 @@ import {
   isRevenueCatConfigured,
   verifyWebhookAuth,
 } from '../server/lib/revenuecat.js';
+import {
+  buildMemberActivitySummary,
+  buildStudyDailySeries,
+  deriveSubscriptionLifecycle,
+} from '../server/lib/member-analytics.js';
 import { createTutorReply, isOpenAIConfigured, streamTutorReplyOpenAI } from '../server/lib/tutor.js';
 import * as db from './lib/db.js';
 
@@ -1407,17 +1412,74 @@ async function webApiHandler(req) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
     try {
-      const allUsers = await db.getAllUsers();
+      const dataset = await db.getAdminMembersDataset();
+      const allUsers = dataset.users;
+      const allPayments = dataset.payments;
+      const groupByUser = rows => rows.reduce((result, row) => {
+        const current = result.get(row.user_id) || [];
+        current.push(row);
+        result.set(row.user_id, current);
+        return result;
+      }, new Map());
+      const attemptsByUser = groupByUser(dataset.attempts);
+      const examsByUser = groupByUser(dataset.exams);
+      const sessionsByUser = groupByUser(dataset.sessions);
+      const visitsByUser = groupByUser(dataset.visits);
+      const tutorByUser = groupByUser(dataset.tutorActivity);
+      const paymentsByUser = new Map();
+      for (const payment of allPayments) {
+        const current = paymentsByUser.get(payment.user_id) || [];
+        current.push(payment);
+        paymentsByUser.set(payment.user_id, current);
+      }
+      const activityByUser = new Map(
+        allUsers.map(user => [
+          user.id,
+          buildMemberActivitySummary({
+            user,
+            attempts: attemptsByUser.get(user.id) || [],
+            exams: examsByUser.get(user.id) || [],
+            sessions: sessionsByUser.get(user.id) || [],
+            visits: visitsByUser.get(user.id) || [],
+            tutorActivity: tutorByUser.get(user.id) || [],
+          }),
+        ]),
+      );
       const now = new Date();
       const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
       const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
       const total = allUsers.length;
       const premium = allUsers.filter(u => u.plan && u.plan !== 'free').length;
-      const newThisWeek = allUsers.filter(u => u.created_at >= sevenDaysAgo).length;
-      const activeThisMonth = allUsers.filter(u => u.token_issued_at && u.token_issued_at >= thirtyDaysAgo).length;
-      const inactiveCount = allUsers.filter(u => !u.token_issued_at || u.token_issued_at < thirtyDaysAgo).length;
+      const newThisWeek = allUsers.filter(
+        user => new Date(user.created_at || 0).getTime() >= new Date(sevenDaysAgo).getTime(),
+      ).length;
+      const activeThisMonth = allUsers.filter(user => {
+        const lastActive = activityByUser.get(user.id)?.last_active_at;
+        return lastActive && new Date(lastActive).getTime() >= new Date(thirtyDaysAgo).getTime();
+      }).length;
+      const inactiveCount = total - activeThisMonth;
       const conversionRate = total > 0 ? Math.round((premium / total) * 100) : 0;
-      return json({ total, premium, newThisWeek, activeThisMonth, inactiveCount, conversionRate });
+      const lifecycles = allUsers.map(user =>
+        deriveSubscriptionLifecycle(user, paymentsByUser.get(user.id) || [], now),
+      );
+      const trialStarts = lifecycles.filter(lifecycle => lifecycle.trial_started_at).length;
+      const trialing = lifecycles.filter(lifecycle => lifecycle.status === 'trialing').length;
+      const convertedFromTrial = lifecycles.filter(lifecycle => lifecycle.status === 'converted').length;
+      const trialConversionRate = trialStarts > 0
+        ? Math.round((convertedFromTrial / trialStarts) * 100)
+        : 0;
+      return json({
+        total,
+        premium,
+        newThisWeek,
+        activeThisMonth,
+        inactiveCount,
+        conversionRate,
+        trialStarts,
+        trialing,
+        convertedFromTrial,
+        trialConversionRate,
+      });
     } catch (err) {
       console.error('[admin/metrics]', err.message);
       return json({ message: err.message }, { status: 500 });
@@ -1428,13 +1490,60 @@ async function webApiHandler(req) {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
     try {
-      const allUsers = await db.getAllUsers();
-      const members = await Promise.all(allUsers.map(async user => {
-        const [attempts, exams, payments] = await Promise.all([
-          db.getAttemptsByUser(user.id).catch(() => []),
-          db.getMockExamsMetaByUser(user.id).catch(() => []),
-          db.getPaymentsByUser(user.id).catch(() => []),
-        ]);
+      const dataset = await db.getAdminMembersDataset();
+      const allUsers = dataset.users;
+      const allPayments = dataset.payments;
+      const allAttempts = dataset.attempts;
+      const allExams = dataset.exams;
+      const paymentsByUser = new Map();
+      for (const payment of allPayments) {
+        const current = paymentsByUser.get(payment.user_id) || [];
+        current.push(payment);
+        paymentsByUser.set(payment.user_id, current);
+      }
+      const attemptsByUser = new Map();
+      for (const attempt of allAttempts) {
+        const current = attemptsByUser.get(attempt.user_id) || [];
+        current.push(attempt);
+        attemptsByUser.set(attempt.user_id, current);
+      }
+      const examsByUser = new Map();
+      for (const exam of allExams) {
+        const current = examsByUser.get(exam.user_id) || [];
+        current.push(exam);
+        examsByUser.set(exam.user_id, current);
+      }
+      const sessionsByUser = new Map();
+      for (const session of dataset.sessions) {
+        const current = sessionsByUser.get(session.user_id) || [];
+        current.push(session);
+        sessionsByUser.set(session.user_id, current);
+      }
+      const visitsByUser = new Map();
+      for (const visit of dataset.visits) {
+        const current = visitsByUser.get(visit.user_id) || [];
+        current.push(visit);
+        visitsByUser.set(visit.user_id, current);
+      }
+      const tutorByUser = new Map();
+      for (const item of dataset.tutorActivity) {
+        const current = tutorByUser.get(item.user_id) || [];
+        current.push(item);
+        tutorByUser.set(item.user_id, current);
+      }
+      const members = allUsers.map(user => {
+        const attempts = attemptsByUser.get(user.id) || [];
+        const exams = examsByUser.get(user.id) || [];
+        const payments = paymentsByUser.get(user.id) || [];
+        const activity = buildMemberActivitySummary({
+          user,
+          attempts,
+          exams,
+          sessions: sessionsByUser.get(user.id) || [],
+          visits: visitsByUser.get(user.id) || [],
+          tutorActivity: tutorByUser.get(user.id) || [],
+        });
+        const subscription = deriveSubscriptionLifecycle(user, payments);
         const progress = computeProgress({ attempts, mockExams: exams, users: [user] }, user.id);
         const completedPayments = payments.filter(p => p.status === 'completed');
         const totalPaid = completedPayments.reduce(
@@ -1447,18 +1556,93 @@ async function webApiHandler(req) {
           id: user.id, full_name: user.full_name, email: user.email, created_at: user.created_at,
           auth_provider: user.auth_provider, role: resolveUserRole(user.email, user.role),
           plan: user.plan, study_streak_days: progress.study_streak_days,
-          readiness_score: progress.readiness_score, total_questions_completed: progress.total_questions_completed,
-          attempts_count: attempts.length, exams_count: exams.length, last_study_date: progress.last_study_date,
-          questions_today: progress.questions_today,
+          readiness_score: progress.readiness_score,
+          total_questions_completed: activity.total_questions ?? progress.total_questions_completed,
+          attempts_count: activity.total_questions ?? attempts.length,
+          exams_count: activity.total_exams ?? exams.length,
+          last_study_date: progress.last_study_date,
+          questions_today: activity.questions_today ?? progress.questions_today,
+          questions_yesterday: activity.questions_yesterday ?? 0,
+          questions_7d: activity.questions_7d ?? 0,
+          questions_30d: activity.questions_30d ?? 0,
+          active_days_7d: activity.active_days_7d ?? 0,
+          active_days_30d: activity.active_days_30d ?? 0,
+          exams_30d: activity.exams_30d ?? 0,
           payments_count: payments.length, total_paid_amount: Number(totalPaid.toFixed(2)),
           last_payment_date: latestPayment?.payment_date || latestPayment?.created_at || null,
-          last_login: user.token_issued_at || null,
+          last_login: activity.last_active_at || null,
+          subscription_status: subscription.status,
+          trial_started_at: subscription.trial_started_at,
+          trial_ends_at: subscription.trial_ends_at,
+          converted_at: subscription.converted_at,
+          latest_renewal_at: subscription.latest_renewal_at,
+          trial_days_remaining: subscription.days_remaining,
+          activity_daily: activity.daily,
         };
-      }));
+      });
       return json(members);
     } catch (err) {
       console.error('[admin/members]', err.message);
       return json({ message: err.message || 'Failed to load members' }, { status: 500 });
+    }
+  }
+
+  const memberActivityMatch = apiPath.match(/^\/admin\/members\/([^/]+)\/activity$/);
+  if (memberActivityMatch && req.method === 'GET') {
+    const auth = await requireAdmin(req);
+    if (auth.error) return auth.error;
+    const member = await db.getUserById(memberActivityMatch[1]);
+    if (!member) return json({ message: 'Member not found' }, { status: 404 });
+
+    try {
+      const url = new URL(req.url);
+      const days = Math.min(90, Math.max(7, Number(url.searchParams.get('days')) || 30));
+      const [daily, payments, summaries] = await Promise.all([
+        db.getMemberDailyActivity(member.id, days),
+        db.getPaymentsByUser(member.id),
+        db.getAdminActivitySummaries(),
+      ]);
+      const subscription = deriveSubscriptionLifecycle(member, payments);
+      const summary = summaries.find(item => item.user_id === member.id) || {};
+      const totals = daily.reduce(
+        (result, day) => ({
+          questions: result.questions + Number(day.questions || 0),
+          correct: result.correct + Number(day.correct || 0),
+          exams: result.exams + Number(day.exams || 0),
+          tutorMessages: result.tutorMessages + Number(day.tutor_messages || 0),
+          activeDays: result.activeDays + (day.active ? 1 : 0),
+        }),
+        { questions: 0, correct: 0, exams: 0, tutorMessages: 0, activeDays: 0 },
+      );
+
+      return json({
+        member: {
+          id: member.id,
+          full_name: member.full_name,
+          email: member.email,
+          plan: member.plan,
+        },
+        timezone: 'America/New_York',
+        visit_tracking_since: '2026-08-12',
+        last_active_at: summary.last_active_at || null,
+        subscription,
+        summary: {
+          questions_today: Number(summary.questions_today || 0),
+          questions_yesterday: Number(summary.questions_yesterday || 0),
+          questions_7d: Number(summary.questions_7d || 0),
+          questions_30d: Number(summary.questions_30d || 0),
+          active_days_7d: Number(summary.active_days_7d || 0),
+          active_days_30d: Number(summary.active_days_30d || 0),
+          exams_30d: Number(summary.exams_30d || 0),
+          accuracy: totals.questions > 0
+            ? Math.round((totals.correct / totals.questions) * 100)
+            : 0,
+        },
+        daily,
+      });
+    } catch (err) {
+      console.error(`[admin/members] activity ${member.id} failed:`, err.message);
+      return json({ message: err.message || 'Failed to load member activity' }, { status: 500 });
     }
   }
 

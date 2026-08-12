@@ -62,8 +62,15 @@ import {
   streamTutorReplyOpenAI,
 } from './lib/tutor.js';
 import appleSignin from 'apple-signin-auth';
+import {
+  buildStudyDailySeries,
+  deriveSubscriptionLifecycle,
+  offsetDateKey,
+  toEasternDateKey,
+} from './lib/member-analytics.js';
 
 const app = express();
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 // Trust the first proxy hop so req.ip reflects the real client IP when running
 // behind Netlify / Heroku / Render / nginx. Safe default for a single proxy.
 app.set('trust proxy', 1);
@@ -1508,19 +1515,76 @@ app.post('/api/store/confirm', requireUser, async (req, res) => {
   }
 });
 
+function buildLocalMemberAnalytics(db, user) {
+  const today = toEasternDateKey();
+  const attempts = db.attempts.filter(attempt => attempt.user_id === user.id);
+  const exams = db.mockExams.filter(exam => exam.user_id === user.id);
+  const sessions = (db.sessions || []).filter(session => session.user_id === user.id);
+  const payments = db.payments.filter(payment => payment.user_id === user.id);
+  const questionCountSince = offset => attempts.filter(
+    attempt => toEasternDateKey(attempt.created_at) >= offsetDateKey(today, offset),
+  ).length;
+  const activeDays = new Set([
+    ...attempts.map(attempt => toEasternDateKey(attempt.created_at)),
+    ...exams.map(exam => toEasternDateKey(exam.created_at)),
+    ...sessions.map(session => toEasternDateKey(session.last_seen_at || session.issued_at)),
+  ]);
+  const activityDates = [
+    user.token_issued_at,
+    ...attempts.map(attempt => attempt.created_at),
+    ...exams.map(exam => exam.created_at),
+    ...sessions.map(session => session.last_seen_at || session.issued_at),
+  ].filter(Boolean);
+  const lastActiveAt = activityDates.sort(
+    (left, right) => new Date(right) - new Date(left),
+  )[0] || null;
+
+  return {
+    attempts,
+    exams,
+    payments,
+    total_questions: attempts.length,
+    questions_today: attempts.filter(attempt => toEasternDateKey(attempt.created_at) === today).length,
+    questions_yesterday: attempts.filter(
+      attempt => toEasternDateKey(attempt.created_at) === offsetDateKey(today, -1),
+    ).length,
+    questions_7d: questionCountSince(-6),
+    questions_30d: questionCountSince(-29),
+    active_days_7d: [...activeDays].filter(date => date >= offsetDateKey(today, -6)).length,
+    active_days_30d: [...activeDays].filter(date => date >= offsetDateKey(today, -29)).length,
+    last_active_at: lastActiveAt,
+    subscription: deriveSubscriptionLifecycle(user, payments),
+  };
+}
+
+app.get('/api/admin/metrics', requireAdmin, (req, res) => {
+  const db = readDb();
+  const analytics = db.users.map(user => buildLocalMemberAnalytics(db, user));
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const active = analytics.filter(item => item.last_active_at && Date.now() - new Date(item.last_active_at) <= THIRTY_DAYS_MS).length;
+  const trialStarts = analytics.filter(item => item.subscription.trial_started_at).length;
+  const converted = analytics.filter(item => item.subscription.status === 'converted').length;
+  res.json({
+    total: db.users.length,
+    premium: db.users.filter(user => user.plan !== 'free').length,
+    newThisWeek: db.users.filter(user => new Date(user.created_at || 0).getTime() >= weekAgo).length,
+    activeThisMonth: active,
+    inactiveCount: db.users.length - active,
+    trialStarts,
+    trialing: analytics.filter(item => item.subscription.status === 'trialing').length,
+    convertedFromTrial: converted,
+    trialConversionRate: trialStarts ? Math.round((converted / trialStarts) * 100) : 0,
+  });
+});
+
 app.get('/api/admin/members', requireAdmin, (req, res) => {
   const db = readDb();
   const members = db.users.map(user => {
     const progress = computeProgress(db, user.id);
-    const attemptsCount = db.attempts.filter(
-      attempt => attempt.user_id === user.id,
-    ).length;
-    const examsCount = db.mockExams.filter(
-      exam => exam.user_id === user.id,
-    ).length;
-    const memberPayments = db.payments.filter(
-      payment => payment.user_id === user.id,
-    );
+    const analytics = buildLocalMemberAnalytics(db, user);
+    const attemptsCount = analytics.total_questions;
+    const examsCount = analytics.exams.length;
+    const memberPayments = analytics.payments;
     const completedPayments = memberPayments.filter(
       payment => payment.status === 'completed',
     );
@@ -1556,10 +1620,71 @@ app.get('/api/admin/members', requireAdmin, (req, res) => {
       total_paid_amount: Number(totalPaid.toFixed(2)),
       last_payment_date:
         latestPayment?.payment_date || latestPayment?.created_at || null,
+      questions_today: analytics.questions_today,
+      questions_yesterday: analytics.questions_yesterday,
+      questions_7d: analytics.questions_7d,
+      questions_30d: analytics.questions_30d,
+      active_days_7d: analytics.active_days_7d,
+      active_days_30d: analytics.active_days_30d,
+      last_login: analytics.last_active_at,
+      subscription_status: analytics.subscription.status,
+      trial_started_at: analytics.subscription.trial_started_at,
+      trial_ends_at: analytics.subscription.trial_ends_at,
+      converted_at: analytics.subscription.converted_at,
+      latest_renewal_at: analytics.subscription.latest_renewal_at,
+      trial_days_remaining: analytics.subscription.days_remaining,
+      activity_daily: buildStudyDailySeries(analytics.attempts, analytics.exams, 30),
     };
   });
 
   res.json(members);
+});
+
+app.get('/api/admin/members/:memberId/activity', requireAdmin, (req, res) => {
+  const db = readDb();
+  const member = db.users.find(user => user.id === req.params.memberId);
+  if (!member) return res.status(404).json({ message: 'Member not found' });
+  const analytics = buildLocalMemberAnalytics(db, member);
+  const days = Math.min(90, Math.max(7, Number(req.query.days) || 30));
+  const today = toEasternDateKey();
+  const daily = Array.from({ length: days }, (_, index) => {
+    const date = offsetDateKey(today, index - days + 1);
+    const attempts = analytics.attempts.filter(attempt => toEasternDateKey(attempt.created_at) === date);
+    const exams = analytics.exams.filter(exam => toEasternDateKey(exam.created_at) === date);
+    const visited = (db.sessions || []).some(
+      session => session.user_id === member.id && toEasternDateKey(session.last_seen_at || session.issued_at) === date,
+    );
+    return {
+      date,
+      questions: attempts.length,
+      correct: attempts.filter(attempt => attempt.is_correct).length,
+      exams: exams.length,
+      tutor_messages: 0,
+      request_count: visited ? 1 : 0,
+      last_seen_at: null,
+      active: visited || attempts.length > 0 || exams.length > 0,
+    };
+  });
+  const recentAttempts = daily.reduce((sum, day) => sum + day.questions, 0);
+  const recentCorrect = daily.reduce((sum, day) => sum + day.correct, 0);
+  res.json({
+    member: { id: member.id, full_name: member.full_name, email: member.email, plan: member.plan },
+    timezone: 'America/New_York',
+    visit_tracking_since: '2026-08-12',
+    last_active_at: analytics.last_active_at,
+    subscription: analytics.subscription,
+    summary: {
+      questions_today: analytics.questions_today,
+      questions_yesterday: analytics.questions_yesterday,
+      questions_7d: analytics.questions_7d,
+      questions_30d: analytics.questions_30d,
+      active_days_7d: analytics.active_days_7d,
+      active_days_30d: analytics.active_days_30d,
+      exams_30d: analytics.exams.filter(exam => toEasternDateKey(exam.created_at) >= offsetDateKey(today, -29)).length,
+      accuracy: recentAttempts ? Math.round((recentCorrect / recentAttempts) * 100) : 0,
+    },
+    daily,
+  });
 });
 
 app.get('/api/admin/members/:memberId/payments', requireAdmin, (req, res) => {

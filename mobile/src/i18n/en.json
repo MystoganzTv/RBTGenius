@@ -97,6 +97,11 @@
     "weak_domain_sub": "{{pct}}% mastery — needs attention",
     "review_mistakes_btn": "Review Mistakes",
     "review_mistakes_sub": "{{count}} question{{count, plural, one{} other{s}}} to revisit",
+    "trial_invite_badge": "7 DAYS FREE",
+    "trial_invite_title": "Try RBTGenius Premium free for 7 days",
+    "trial_invite_body": "Get unlimited practice questions, mock exams, flashcards, and performance analytics.",
+    "trial_invite_terms": "Then $19.99/month. Your subscription automatically renews unless you cancel before the trial ends.",
+    "trial_invite_cta": "Start Your Free Trial",
     "tab_label": "Home"
   },
   "practice": {
@@ -121,7 +126,8 @@
     "tab_label": "Practice",
     "seen_once": "You've seen this before",
     "seen_times": "Seen {{count}} times",
-    "seen_wrong": "{{count}} incorrect"
+    "seen_wrong": "{{count}} incorrect",
+    "visual_alt": "Study illustration for {{domain}}"
   },
   "exams": {
     "title": "Mock Exam",
@@ -354,6 +360,12 @@
     "recommended": "RECOMMENDED",
     "best_value": "BEST VALUE",
     "start_pro": "Start Pro — {{price}}{{period}}",
+    "trial_badge": "7 DAYS FREE",
+    "trial_cta": "Start 7-day free trial",
+    "trial_then_price": "Then {{price}}{{period}}. Auto-renews until canceled.",
+    "trial_welcome": "🎉 Your free trial has started!",
+    "trial_started": "Pro is unlocked for 7 days. Cancel at least 24 hours before the trial ends to avoid being charged.",
+    "trial_legal_rc": "7 days free, then {{price}}{{period}}. Subscription auto-renews unless canceled at least 24 hours before the trial ends. Manage or cancel in App Store Settings.",
     "products_loading": "Products loading...",
     "cancel_anytime": "Cancel anytime",
     "instant_access": "Instant access",

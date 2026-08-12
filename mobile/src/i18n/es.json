@@ -97,6 +97,11 @@
     "weak_domain_sub": "{{pct}}% de dominio — necesita atención",
     "review_mistakes_btn": "Repasar Errores",
     "review_mistakes_sub": "{{count}} pregunta{{count, plural, one{} other{s}}} por repasar",
+    "trial_invite_badge": "7 DÍAS GRATIS",
+    "trial_invite_title": "Prueba RBTGenius Premium gratis durante 7 días",
+    "trial_invite_body": "Obtén preguntas ilimitadas, exámenes simulados, flashcards y estadísticas de rendimiento.",
+    "trial_invite_terms": "Luego $19.99 al mes. La suscripción se renueva automáticamente salvo que canceles antes de que termine la prueba.",
+    "trial_invite_cta": "Comenzar Prueba Gratis",
     "tab_label": "Inicio"
   },
   "practice": {
@@ -121,7 +126,8 @@
     "tab_label": "Práctica",
     "seen_once": "Ya viste esta pregunta",
     "seen_times": "Vista {{count}} veces",
-    "seen_wrong": "{{count}} incorrectas"
+    "seen_wrong": "{{count}} incorrectas",
+    "visual_alt": "Ilustración de estudio para {{domain}}"
   },
   "exams": {
     "title": "Examen Simulacro",
@@ -354,6 +360,12 @@
     "recommended": "RECOMENDADO",
     "best_value": "MEJOR VALOR",
     "start_pro": "Comenzar Pro — {{price}}{{period}}",
+    "trial_badge": "7 DÍAS GRATIS",
+    "trial_cta": "Comenzar prueba gratis de 7 días",
+    "trial_then_price": "Luego {{price}}{{period}}. Se renueva hasta que canceles.",
+    "trial_welcome": "🎉 ¡Comenzó tu prueba gratis!",
+    "trial_started": "Pro está desbloqueado por 7 días. Cancela al menos 24 horas antes de que termine la prueba para evitar el cargo.",
+    "trial_legal_rc": "7 días gratis, luego {{price}}{{period}}. La suscripción se renueva automáticamente a menos que canceles al menos 24 horas antes de que termine la prueba. Administra o cancela en Configuración de App Store.",
     "products_loading": "Cargando planes...",
     "cancel_anytime": "Cancela cuando quieras",
     "instant_access": "Acceso inmediato",

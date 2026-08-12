@@ -69,11 +69,17 @@ export function buildRevenueCatPayment(event, userId, plan = null) {
     plan || resolvePlanFromRevenueCatEvent(event) || PLAN_IDS.PREMIUM_MONTHLY;
   const currency = String(event.currency || 'USD').toUpperCase();
   const store = String(event.store || 'UNKNOWN').toUpperCase();
+  const isTrial = String(event.period_type || '').toUpperCase() === 'TRIAL';
 
   return {
     id: `pay_rc_${transactionId}`,
     user_id: userId,
-    status: event.environment === 'PRODUCTION' ? 'completed' : 'sandbox',
+    status:
+      event.environment !== 'PRODUCTION'
+        ? 'sandbox'
+        : isTrial
+          ? 'trial'
+          : 'completed',
     amount: Number.isFinite(amount) ? amount : 0,
     payment_date: occurredAt,
     created_at: occurredAt,
@@ -108,6 +114,12 @@ export function buildRevenueCatPayment(event, userId, plan = null) {
       period_type: event.period_type || null,
       renewal_number: event.renewal_number ?? null,
       country_code: event.country_code || null,
+      purchased_at: Number.isFinite(Number(event.purchased_at_ms))
+        ? new Date(Number(event.purchased_at_ms)).toISOString()
+        : occurredAt,
+      expiration_at: Number.isFinite(Number(event.expiration_at_ms))
+        ? new Date(Number(event.expiration_at_ms)).toISOString()
+        : null,
       event_timestamp: Number.isFinite(Number(event.event_timestamp_ms))
         ? new Date(Number(event.event_timestamp_ms)).toISOString()
         : null,

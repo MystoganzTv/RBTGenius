@@ -202,8 +202,8 @@ confirmStoreCheckout(sessionId) {
       },
     });
   },
-  listAdminMembers() {
-    return request("/api/admin/members");
+  listAdminMembers(options = {}) {
+    return request("/api/admin/members", options);
   },
   getAdminMetrics() {
     return request("/api/admin/metrics");
@@ -213,6 +213,9 @@ confirmStoreCheckout(sessionId) {
   },
   getAdminMemberPayments(memberId) {
     return request(`/api/admin/members/${memberId}/payments`);
+  },
+  getAdminMemberActivity(memberId, days = 30) {
+    return request(`/api/admin/members/${memberId}/activity?days=${days}`);
   },
   updateAdminMember(memberId, payload) {
     return request(`/api/admin/members/${memberId}`, {

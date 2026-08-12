@@ -2,14 +2,15 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Alert, ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { isAvailableAsync, requestReview } from 'expo-store-review';
 
 import { useTranslation } from 'react-i18next';
 import TranslationSheet, { TranslationTrigger } from '../../components/i18n/TranslationSheet.jsx';
+import QuestionMedia from '../../components/questions/QuestionMedia.jsx';
 import { buildQuestionTranslationContent } from '../../lib/questions/reviewed-question-translations.js';
 import { alpha, getTheme } from '../../theme';
 import { ProgressBar, toneColor } from '../../components/ui';
 import { getMockExamQuestions } from '../../services/questionService.js';
+import { requestReviewAfterPositiveMilestone } from '../../services/ReviewPromptService.js';
 import { useAuth } from '../../context/AuthContext';
 
 const API_BASE   = 'https://www.rbtgenius.com';
@@ -143,8 +144,7 @@ export default function MockExamScreen({ navigation }) {
         refreshDashboard?.(); // update readiness score in context
         // Pedir review si aprueba (≥80%)
         if ((data.score ?? 0) >= PASS_SCORE) {
-          const available = await isAvailableAsync();
-          if (available) requestReview();
+          void requestReviewAfterPositiveMilestone();
         }
       } else {
         throw new Error('Server error');
@@ -358,6 +358,11 @@ export default function MockExamScreen({ navigation }) {
               })}
             />
           </View>
+          <QuestionMedia
+            source={q?.imageSource}
+            theme={theme}
+            accessibilityLabel={t('practice.visual_alt', { domain: q ? t(`domains.${q.topic}`) : '' })}
+          />
           <Text style={s.qText}>{qText}</Text>
         </View>
 

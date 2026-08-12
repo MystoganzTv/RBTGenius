@@ -6,7 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { alpha, getTheme } from '../../theme';
 import { Badge } from '../../components/ui';
 import TranslationSheet, { TranslationTrigger } from '../../components/i18n/TranslationSheet.jsx';
+import QuestionMedia from '../../components/questions/QuestionMedia.jsx';
 import { getPracticeByTopic, TOPICS } from '../../services/questionService.js';
+import { recordPracticeResultForReview } from '../../services/ReviewPromptService.js';
 import { buildQuestionTranslationContent } from '../../lib/questions/reviewed-question-translations.js';
 import { useAuth } from '../../context/AuthContext';
 
@@ -101,6 +103,7 @@ export default function PracticeScreen({ navigation, route }) {
     if (answered || limitReached) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedOption(i);
+    void recordPracticeResultForReview(i === question.correctIndex);
     submitAttempt(question, i);
   };
 
@@ -170,6 +173,11 @@ export default function PracticeScreen({ navigation, route }) {
               <Badge label={t(`difficulties.${question.difficulty.toLowerCase()}`)} theme={theme} />
               <Badge label={`${question.timeEstimate} min`} tone="gold" theme={theme} />
             </View>
+            <QuestionMedia
+              source={question.imageSource}
+              theme={theme}
+              accessibilityLabel={t('practice.visual_alt', { domain: t(`domains.${question.topic}`) })}
+            />
             <View style={s.translateRow}>
               <Text style={s.questionText}>{questionText}</Text>
               <TranslationTrigger

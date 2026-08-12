@@ -1,8 +1,9 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
   ArrowUp,
+  BarChart3,
   Calendar,
   CheckCircle2,
   ChevronDown,
@@ -18,6 +19,7 @@ import {
   Mail,
   Send,
   Shield,
+  Sparkles,
   Trash2,
   TrendingUp,
   Users,
@@ -90,6 +92,23 @@ const memberOutlineButtonClass =
   "w-full border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100 dark:hover:!bg-slate-900 dark:hover:text-slate-50";
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const APP_STORE_URL = "https://apps.apple.com/app/id6766110248";
+const TRIAL_INVITATION_SUBJECT = "Try RBTGenius Premium Free for 7 Days";
+
+function buildTrialInvitationMessage(member) {
+  const firstName = member?.full_name?.trim().split(/\s+/)[0] || "there";
+  return `Hi ${firstName},
+
+Try RBTGenius Premium free for 7 days.
+
+Get unlimited practice questions, mock exams, flashcards, and performance analytics.
+
+After your 7-day free trial, your subscription will automatically renew for $19.99 per month unless you cancel before the trial ends.
+
+Open RBTGenius to start: ${APP_STORE_URL}
+
+Free trial available to eligible subscribers.`;
+}
 
 function formatJoinedDate(value) {
   if (!value) {
@@ -188,6 +207,8 @@ const SORT_ACCESSORS = {
   auth: (m) => String(m.auth_provider || ""),
   joined: (m) => new Date(m.created_at || 0).getTime(),
   active: (m) => (m.last_login ? new Date(m.last_login).getTime() : 0),
+  today: (m) => Number(m.questions_today || 0),
+  week: (m) => Number(m.questions_7d || 0),
   questions: (m) => Number(m.total_questions_completed || 0),
   paid: (m) => Number(m.total_paid_amount || 0),
 };
@@ -199,7 +220,9 @@ const TABLE_COLUMNS = [
   { key: "auth", label: "Source", align: "left" },
   { key: "joined", label: "Joined", align: "left" },
   { key: "active", label: "Last active", align: "left" },
-  { key: "questions", label: "Questions", align: "right" },
+  { key: "today", label: "Today", align: "right" },
+  { key: "week", label: "7 days", align: "right" },
+  { key: "questions", label: "Total", align: "right" },
   { key: "paid", label: "Paid", align: "right" },
 ];
 
@@ -211,17 +234,258 @@ function formatLastActive(member) {
   return `${days}d ago`;
 }
 
+function formatActivityDate(value, includeTime = false) {
+  if (!value) return "—";
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      ...(includeTime ? { hour: "numeric", minute: "2-digit" } : {}),
+      timeZone: "America/New_York",
+    }).format(new Date(value));
+  } catch {
+    return "—";
+  }
+}
+
+function getSubscriptionLabel(member) {
+  if (member.subscription_status === "trialing") {
+    return member.trial_days_remaining > 0
+      ? `Trial · ${member.trial_days_remaining}d left`
+      : "Trial";
+  }
+  if (member.subscription_status === "converted") return "Monthly · Converted";
+  if (member.subscription_status === "expired") return "Trial expired";
+  if (member.subscription_status === "trial_ended") return "Trial ended · awaiting renewal";
+  return PLAN_OPTIONS.find((option) => option.value === member.plan)?.label || member.plan;
+}
+
+function getSubscriptionBadgeClass(member) {
+  if (member.subscription_status === "trialing") {
+    return "bg-blue-100 text-blue-700 dark:bg-blue-400/15 dark:text-blue-200";
+  }
+  if (member.subscription_status === "converted") {
+    return "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300";
+  }
+  if (member.plan === "free") {
+    return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200";
+  }
+  return "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300";
+}
+
+function SubscriptionTimeline({ member, t }) {
+  const hasTrial = Boolean(member.trial_started_at);
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {t("Subscription lifecycle")}
+          </p>
+          <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
+            {t(getSubscriptionLabel(member))}
+          </p>
+        </div>
+        <Badge className={getSubscriptionBadgeClass(member)}>
+          {member.subscription_status === "trialing"
+            ? t("Active trial")
+            : member.subscription_status === "converted"
+              ? t("Converted to monthly")
+              : member.subscription_status === "expired"
+                ? t("Trial expired")
+                : member.subscription_status === "trial_ended"
+                  ? t("Trial ended")
+                : t(member.plan === "free" ? "Free" : "Premium")}
+        </Badge>
+      </div>
+
+      {hasTrial ? (
+        <div className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+          <div>
+            <p className="text-slate-500 dark:text-slate-400">{t("Trial started")}</p>
+            <p className="mt-1 font-medium text-slate-900 dark:text-slate-100">
+              {formatActivityDate(member.trial_started_at)}
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-slate-400">{t("Trial ends")}</p>
+            <p className="mt-1 font-medium text-slate-900 dark:text-slate-100">
+              {formatActivityDate(member.trial_ends_at)}
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-slate-400">{t("Converted")}</p>
+            <p className="mt-1 font-medium text-slate-900 dark:text-slate-100">
+              {formatActivityDate(member.converted_at)}
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-slate-400">{t("Latest renewal")}</p>
+            <p className="mt-1 font-medium text-slate-900 dark:text-slate-100">
+              {formatActivityDate(member.latest_renewal_at)}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+          {t("No trial has been recorded for this member.")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ActivityHistory({ data, isLoading, t }) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-48 items-center justify-center rounded-2xl border border-slate-200/80 bg-white dark:border-slate-700 dark:bg-slate-900/70">
+        <Loader2 className="h-5 w-5 animate-spin text-[#1E5EFF]" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+  const recentDays = (data.daily || []).slice(-14);
+  const maxQuestions = Math.max(1, ...recentDays.map((day) => Number(day.questions || 0)));
+
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/70">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-2">
+          <BarChart3 className="mt-0.5 h-4 w-4 text-[#1E5EFF] dark:text-[#7C97FF]" />
+          <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {t("Daily activity")}
+          </p>
+          <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
+            {t("Last 14 days · Eastern Time")}
+          </p>
+          </div>
+        </div>
+        <div className="flex gap-4 text-right text-xs">
+          <div>
+            <p className="text-slate-500 dark:text-slate-400">{t("Questions (30d)")}</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{data.summary.questions_30d}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-slate-400">{t("Active days")}</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{data.summary.active_days_30d}</p>
+          </div>
+          <div>
+            <p className="text-slate-500 dark:text-slate-400">{t("Accuracy")}</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{data.summary.accuracy}%</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex h-28 items-end gap-1.5" aria-label={t("Questions answered per day")}>
+        {recentDays.map((day, index) => {
+          const questions = Number(day.questions || 0);
+          const hasOtherActivity = day.active && questions === 0;
+          const height = questions > 0 ? Math.max(10, (questions / maxQuestions) * 88) : 4;
+          const dateLabel = new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          }).format(new Date(`${day.date}T12:00:00Z`));
+          return (
+            <div key={day.date} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
+              <span className="text-[10px] font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+                {questions || (hasOtherActivity ? "•" : "")}
+              </span>
+              <div
+                className={`w-full max-w-8 rounded-t-md ${
+                  questions > 0
+                    ? "bg-[#1E5EFF] dark:bg-[#7C97FF]"
+                    : hasOtherActivity
+                      ? "bg-emerald-300 dark:bg-emerald-500/70"
+                      : "bg-slate-200 dark:bg-slate-700"
+                }`}
+                style={{ height: `${height}px` }}
+                title={`${dateLabel}: ${questions} questions, ${day.exams} exams${hasOtherActivity ? ", app activity" : ""}`}
+              />
+              <span className="truncate text-[9px] text-slate-400 dark:text-slate-500">
+                {index % 2 === 0 ? dateLabel.replace(" ", "\u00a0") : ""}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <span>{t("Blue = questions · Green dot = visit without questions")}</span>
+        <span>{t("Visit tracking began Aug 12, 2026; study history is backfilled.")}</span>
+      </div>
+    </div>
+  );
+}
+
+function deriveAdminMetrics(members) {
+  const now = Date.now();
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const activeThisMonth = members.filter(
+    (member) => member.last_login && now - new Date(member.last_login).getTime() <= THIRTY_DAYS_MS,
+  ).length;
+  const trialStarts = members.filter((member) => member.trial_started_at).length;
+  const convertedFromTrial = members.filter(
+    (member) => member.subscription_status === "converted",
+  ).length;
+
+  return {
+    total: members.length,
+    premium: members.filter((member) => member.plan !== "free").length,
+    newThisWeek: members.filter(
+      (member) => new Date(member.created_at || 0).getTime() >= weekAgo,
+    ).length,
+    activeThisMonth,
+    inactiveCount: members.length - activeThisMonth,
+    trialStarts,
+    trialing: members.filter((member) => member.subscription_status === "trialing").length,
+    convertedFromTrial,
+    trialConversionRate:
+      trialStarts > 0 ? Math.round((convertedFromTrial / trialStarts) * 100) : 0,
+  };
+}
+
+function buildInlineActivityData(member) {
+  const daily = member.activity_daily || [];
+  const totalQuestions = daily.reduce((sum, day) => sum + Number(day.questions || 0), 0);
+  const totalCorrect = daily.reduce((sum, day) => sum + Number(day.correct || 0), 0);
+  return {
+    daily,
+    summary: {
+      questions_today: Number(member.questions_today || 0),
+      questions_yesterday: Number(member.questions_yesterday || 0),
+      questions_7d: Number(member.questions_7d || 0),
+      questions_30d: Number(member.questions_30d || 0),
+      active_days_7d: Number(member.active_days_7d || 0),
+      active_days_30d: Number(member.active_days_30d || 0),
+      exams_30d: Number(member.exams_30d || 0),
+      accuracy: totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0,
+    },
+  };
+}
+
 function exportToCsv(members) {
-  const headers = ["Name", "Email", "Plan", "Role", "Auth", "Joined", "Last Login", "Questions", "Readiness", "Total Paid"];
+  const headers = ["Name", "Email", "Plan", "Subscription Status", "Trial Started", "Trial Ends", "Converted", "Role", "Auth", "Joined", "Last Active", "Questions Today", "Questions Yesterday", "Questions 7d", "Questions Total", "Active Days 30d", "Readiness", "Total Paid"];
   const rows = members.map((m) => [
     m.full_name,
     m.email,
     m.plan,
+    m.subscription_status,
+    m.trial_started_at || "",
+    m.trial_ends_at || "",
+    m.converted_at || "",
     m.role,
     m.auth_provider,
     m.created_at ? new Date(m.created_at).toLocaleDateString() : "",
     m.last_login ? new Date(m.last_login).toLocaleDateString() : "Never",
+    m.questions_today || 0,
+    m.questions_yesterday || 0,
+    m.questions_7d || 0,
     m.total_questions_completed || 0,
+    m.active_days_30d || 0,
     m.readiness_score || 0,
     m.total_paid_amount || 0,
   ]);
@@ -253,6 +517,9 @@ export default function AdminMembers() {
   // Table view: which row is expanded for editing, and the active sort.
   const [expandedId, setExpandedId] = useState(null);
   const [sort, setSort] = useState({ key: "joined", dir: "desc" });
+  const [members, setMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [membersError, setMembersError] = useState("");
 
   const isAdmin = user?.role === "admin";
   const t = (value) => translateUi(value, language);
@@ -273,18 +540,44 @@ export default function AdminMembers() {
     }
   };
 
-  const { data: members = [], isLoading } = useQuery({
-    queryKey: ["admin-members"],
-    queryFn: api.listAdminMembers,
-    enabled: isAdmin,
-    initialData: [],
-  });
+  const refreshMembers = useCallback(async ({ silent = false } = {}) => {
+    if (!isAdmin) return;
+    if (!silent) setIsLoading(true);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 25_000);
+    try {
+      const nextMembers = await api.listAdminMembers({ signal: controller.signal });
+      setMembers(nextMembers);
+      setMembersError("");
+    } catch (error) {
+      setMembersError(
+        error?.name === "AbortError"
+          ? "Member activity took too long to load. Please try again."
+          : error?.message || "Unable to load members",
+      );
+    } finally {
+      window.clearTimeout(timeout);
+      if (!silent) setIsLoading(false);
+    }
+  }, [isAdmin]);
 
-  const { data: metrics } = useQuery({
-    queryKey: ["admin-metrics"],
-    queryFn: api.getAdminMetrics,
-    enabled: isAdmin,
-  });
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    let cancelled = false;
+    let timer;
+    const poll = async (silent = false) => {
+      await refreshMembers({ silent });
+      if (!cancelled) {
+        timer = window.setTimeout(() => poll(true), 60_000);
+      }
+    };
+    poll(false);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [isAdmin, refreshMembers]);
+  const metrics = deriveAdminMetrics(members);
 
   const {
     data: memberPaymentsData,
@@ -297,22 +590,17 @@ export default function AdminMembers() {
 
   const updateMemberMutation = useMutation({
     mutationFn: ({ memberId, payload }) => api.updateAdminMember(memberId, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-members"] });
+    onSuccess: async () => {
+      await refreshMembers({ silent: true });
       queryClient.invalidateQueries({ queryKey: ["profile-data"] });
     },
   });
 
   const deleteMemberMutation = useMutation({
     mutationFn: (memberId) => api.deleteAdminMember(memberId),
-    onMutate: async (memberId) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-members"] });
-      const previousMembers = queryClient.getQueryData(["admin-members"]);
-
-      queryClient.setQueryData(["admin-members"], (current = []) =>
-        current.filter((member) => member.id !== memberId),
-      );
-
+    onMutate: (memberId) => {
+      const previousMembers = members;
+      setMembers((current) => current.filter((member) => member.id !== memberId));
       return { previousMembers };
     },
     onSuccess: () => {
@@ -323,7 +611,7 @@ export default function AdminMembers() {
     },
     onError: (error, _memberId, context) => {
       if (context?.previousMembers) {
-        queryClient.setQueryData(["admin-members"], context.previousMembers);
+        setMembers(context.previousMembers);
       }
 
       toast({
@@ -335,7 +623,7 @@ export default function AdminMembers() {
       });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-members"] });
+      refreshMembers({ silent: true });
     },
   });
 
@@ -362,7 +650,11 @@ export default function AdminMembers() {
     const normalizedSearch = search.trim().toLowerCase();
 
     return members.filter((member) => {
-      const matchesPlan = planFilter === "all" || member.plan === planFilter;
+      const matchesPlan =
+        planFilter === "all" ||
+        (planFilter === "trialing"
+          ? member.subscription_status === "trialing"
+          : member.plan === planFilter);
       const matchesSearch =
         normalizedSearch.length === 0 ||
         member.full_name?.toLowerCase().includes(normalizedSearch) ||
@@ -448,6 +740,14 @@ export default function AdminMembers() {
   const openEmail = (member) => {
     setEmailTarget(member);
     setEmailForm({ subject: "", message: "" });
+  };
+
+  const openTrialInvitation = (member) => {
+    setEmailTarget(member);
+    setEmailForm({
+      subject: TRIAL_INVITATION_SUBJECT,
+      message: buildTrialInvitationMessage(member),
+    });
   };
 
   const handleSendEmail = () => {
@@ -545,21 +845,29 @@ export default function AdminMembers() {
             </Card>
             <Card className={summaryCardClass}>
               <div className="flex flex-col gap-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t("Inactive")}</p>
-                <p className="text-xl font-bold text-slate-500 dark:text-slate-400">
-                  {metrics.inactiveCount}
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("Active Trials")}</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-300">
+                  {metrics.trialing}
                 </p>
               </div>
             </Card>
             <Card className={summaryCardClass}>
               <div className="flex flex-col gap-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t("Conversion")}</p>
-                <p className="text-xl font-bold text-amber-600 dark:text-amber-300">
-                  {metrics.conversionRate}%
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("Converted")}</p>
+                <p className="text-xl font-bold text-emerald-600 dark:text-emerald-300">
+                  {metrics.convertedFromTrial}
                 </p>
               </div>
             </Card>
-            <Card className={`${summaryCardClass} col-span-2 sm:col-span-1 lg:col-span-2`}>
+            <Card className={summaryCardClass}>
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("Trial → Monthly")}</p>
+                <p className="text-xl font-bold text-amber-600 dark:text-amber-300">
+                  {metrics.trialConversionRate}%
+                </p>
+              </div>
+            </Card>
+            <Card className={summaryCardClass}>
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-5 w-5 shrink-0 text-[#1E5EFF]" />
                 <div className="min-w-0">
@@ -588,6 +896,7 @@ export default function AdminMembers() {
               </SelectTrigger>
               <SelectContent className="dark:!border-slate-700 dark:!bg-slate-950 dark:text-slate-100">
                 <SelectItem value="all">{t("All Plans")}</SelectItem>
+                <SelectItem value="trialing">{t("Active Trials")}</SelectItem>
                 {PLAN_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -616,7 +925,7 @@ export default function AdminMembers() {
             </div>
           ) : sortedMembers.length === 0 ? (
             <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-              {t("No members match the current filters.")}
+              {membersError || t("No members match the current filters.")}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -661,8 +970,8 @@ export default function AdminMembers() {
                     const hasChanges = draft.plan !== member.plan || draft.role !== member.role;
                     const isCurrentAdmin = member.id === user?.id;
                     const isExpanded = expandedId === member.id;
-                    const planLabel =
-                      PLAN_OPTIONS.find((option) => option.value === member.plan)?.label || member.plan;
+                    const planLabel = getSubscriptionLabel(member);
+                    const inlineActivityData = buildInlineActivityData(member);
 
                     return (
                       <Fragment key={member.id}>
@@ -703,13 +1012,7 @@ export default function AdminMembers() {
                           </td>
 
                           <td className="px-3 py-2.5">
-                            <Badge
-                              className={
-                                member.plan === "free"
-                                  ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                                  : "bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300"
-                              }
-                            >
+                            <Badge className={getSubscriptionBadgeClass(member)}>
                               {planLabel}
                             </Badge>
                           </td>
@@ -738,6 +1041,14 @@ export default function AdminMembers() {
                           </td>
 
                           <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-slate-300">
+                            {member.questions_today || 0}
+                          </td>
+
+                          <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-slate-300">
+                            {member.questions_7d || 0}
+                          </td>
+
+                          <td className="px-3 py-2.5 text-right tabular-nums text-slate-600 dark:text-slate-300">
                             {member.total_questions_completed || 0}
                           </td>
 
@@ -759,6 +1070,15 @@ export default function AdminMembers() {
                                     {t(`${member.questions_today} today`)}
                                   </span>
                                 ) : null}
+                              </div>
+
+                              <div className="mb-4 grid gap-3 xl:grid-cols-[minmax(340px,0.8fr)_minmax(520px,1.2fr)]">
+                                <SubscriptionTimeline member={member} t={t} />
+                                <ActivityHistory
+                                  data={inlineActivityData}
+                                  isLoading={false}
+                                  t={t}
+                                />
                               </div>
 
                               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -820,6 +1140,20 @@ export default function AdminMembers() {
                                     <Mail className="mr-2 h-4 w-4 shrink-0" />
                                     {t("Email")}
                                   </Button>
+
+                                  {member.plan === "free" && member.role !== "admin" ? (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openTrialInvitation(member)}
+                                      disabled={deleteMemberMutation.isPending}
+                                      className="w-auto border-blue-200 bg-blue-50 text-[#1E5EFF] hover:border-blue-300 hover:bg-blue-100 hover:text-blue-700 dark:border-blue-400/30 dark:bg-blue-950/30 dark:text-blue-200 dark:hover:bg-blue-950/50"
+                                    >
+                                      <Sparkles className="mr-2 h-4 w-4 shrink-0" />
+                                      {t("Invite to 7-day trial")}
+                                    </Button>
+                                  ) : null}
 
                                   <Button
                                     size="sm"

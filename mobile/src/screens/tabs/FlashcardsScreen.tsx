@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
 import { alpha, getTheme } from '../../theme';
 import TranslationSheet, { TranslationTrigger } from '../../components/i18n/TranslationSheet.jsx';
+import QuestionMedia from '../../components/questions/QuestionMedia.jsx';
 import { buildQuestionTranslationContent, getSpanishForOptionText } from '../../lib/questions/reviewed-question-translations.js';
 import { ProgressBar } from '../../components/ui';
 import { getFlashcards, TOPICS } from '../../services/questionService.js';
@@ -28,6 +29,7 @@ interface FlashcardItem {
   answer: string;
   explanation?: string;
   difficulty?: DifficultyKey | string;
+  imageSource?: any;
   _raw?: any;
 }
 
@@ -296,6 +298,11 @@ export default function FlashcardsScreen({ navigation }: { navigation?: Navigati
                 })}
               />
             </View>
+            <QuestionMedia
+              source={card.imageSource}
+              theme={theme}
+              accessibilityLabel={t('practice.visual_alt', { domain: t(`domains.${card.topic}`) })}
+            />
             <View style={s.cardBody}>
               <Text style={s.cardSide}>{flipped ? t('flashcard_ui.answer') : t('flashcard_ui.concept')}</Text>
               <Text style={s.cardText}>{flipped ? card.answer : card.question}</Text>
