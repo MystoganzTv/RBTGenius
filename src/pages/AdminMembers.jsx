@@ -578,6 +578,10 @@ export default function AdminMembers() {
     };
   }, [isAdmin, refreshMembers]);
   const metrics = deriveAdminMetrics(members);
+  const activeTrialMembers = useMemo(
+    () => members.filter((member) => member.subscription_status === "trialing"),
+    [members],
+  );
 
   const {
     data: memberPaymentsData,
@@ -682,6 +686,13 @@ export default function AdminMembers() {
         ? { key, dir: current.dir === "asc" ? "desc" : "asc" }
         : { key, dir: key === "name" || key === "plan" || key === "role" || key === "auth" ? "asc" : "desc" },
     );
+  };
+
+  const showActiveTrials = () => {
+    setSearch("");
+    setPlanFilter("trialing");
+    setSort({ key: "joined", dir: "desc" });
+    setExpandedId(activeTrialMembers.length === 1 ? activeTrialMembers[0].id : null);
   };
 
   const premiumCount = members.filter((member) => member.plan !== "free").length;
@@ -843,13 +854,28 @@ export default function AdminMembers() {
                 </p>
               </div>
             </Card>
-            <Card className={summaryCardClass}>
-              <div className="flex flex-col gap-1">
+            <Card
+              className={`${summaryCardClass} overflow-hidden p-0 transition-colors ${
+                planFilter === "trialing"
+                  ? "border-blue-400 bg-blue-50/80 ring-2 ring-blue-500/20 dark:!border-blue-500 dark:!bg-blue-500/10"
+                  : "hover:border-blue-300 dark:hover:!border-blue-500/70"
+              }`}
+            >
+              <button
+                type="button"
+                onClick={showActiveTrials}
+                disabled={metrics.trialing === 0}
+                className="flex h-full w-full flex-col items-start gap-1 p-4 text-left disabled:cursor-not-allowed disabled:opacity-60"
+                aria-pressed={planFilter === "trialing"}
+              >
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("Active Trials")}</p>
                 <p className="text-xl font-bold text-blue-600 dark:text-blue-300">
                   {metrics.trialing}
                 </p>
-              </div>
+                <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-300">
+                  {t("View trial members")} →
+                </span>
+              </button>
             </Card>
             <Card className={summaryCardClass}>
               <div className="flex flex-col gap-1">
@@ -918,6 +944,34 @@ export default function AdminMembers() {
           </div>
         </Card>
 
+        {planFilter === "trialing" ? (
+          <div
+            role="status"
+            className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-950 sm:flex-row sm:items-center sm:justify-between dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-100"
+          >
+            <div className="flex min-w-0 items-start gap-3">
+              <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-300" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">
+                  {t("Active trial members")}: {activeTrialMembers.length}
+                </p>
+                <p className="truncate text-xs text-blue-700 dark:text-blue-200">
+                  {activeTrialMembers.map((member) => member.full_name || member.email).join(", ") || t("None")}
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPlanFilter("all")}
+              className="shrink-0 border-blue-300 bg-white text-blue-700 hover:bg-blue-100 dark:border-blue-500/50 dark:bg-slate-950 dark:text-blue-200 dark:hover:bg-blue-500/20"
+            >
+              {t("Clear trial filter")}
+            </Button>
+          </div>
+        ) : null}
+
         <Card className="overflow-hidden border-slate-200/80 bg-white/95 p-0 shadow-[0_18px_38px_-28px_rgba(15,23,42,0.12)] dark:!border-slate-700/80 dark:!bg-slate-900/95 dark:shadow-[0_24px_55px_-38px_rgba(59,130,246,0.24)]">
           {isLoading ? (
             <div className="p-8 text-center text-slate-500 dark:text-slate-400">
@@ -978,7 +1032,11 @@ export default function AdminMembers() {
                         <tr
                           onClick={() => setExpandedId(isExpanded ? null : member.id)}
                           className={`cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 dark:!border-slate-800 dark:hover:!bg-slate-800/40 ${
-                            isExpanded ? "bg-slate-50 dark:!bg-slate-800/40" : ""
+                            isExpanded
+                              ? "bg-slate-50 dark:!bg-slate-800/40"
+                              : member.subscription_status === "trialing"
+                                ? "bg-blue-50/70 dark:!bg-blue-500/10"
+                                : ""
                           }`}
                         >
                           <td className="pl-3 text-slate-400 dark:text-slate-500">
@@ -997,6 +1055,11 @@ export default function AdminMembers() {
                                   <span className="truncate font-medium text-slate-900 dark:text-slate-50">
                                     {member.full_name || "—"}
                                   </span>
+                                  {member.subscription_status === "trialing" ? (
+                                    <Badge className="shrink-0 bg-blue-100 px-1.5 py-0 text-[10px] font-bold text-blue-700 dark:bg-blue-400/15 dark:text-blue-200">
+                                      {t("ACTIVE TRIAL")}
+                                    </Badge>
+                                  ) : null}
                                   {hasChanges ? (
                                     <span
                                       className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
@@ -1007,6 +1070,11 @@ export default function AdminMembers() {
                                 <div className="truncate text-xs text-slate-500 dark:text-slate-400">
                                   {member.email}
                                 </div>
+                                {member.subscription_status === "trialing" ? (
+                                  <div className="mt-0.5 truncate text-[11px] font-medium text-blue-600 dark:text-blue-300">
+                                    {t("Trial ends")} {formatActivityDate(member.trial_ends_at)} · {member.trial_days_remaining}d {t("left")}
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
                           </td>
