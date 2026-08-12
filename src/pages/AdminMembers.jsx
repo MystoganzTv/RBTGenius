@@ -1055,11 +1055,6 @@ export default function AdminMembers() {
                                   <span className="truncate font-medium text-slate-900 dark:text-slate-50">
                                     {member.full_name || "—"}
                                   </span>
-                                  {member.subscription_status === "trialing" ? (
-                                    <Badge className="shrink-0 bg-blue-100 px-1.5 py-0 text-[10px] font-bold text-blue-700 dark:bg-blue-400/15 dark:text-blue-200">
-                                      {t("ACTIVE TRIAL")}
-                                    </Badge>
-                                  ) : null}
                                   {hasChanges ? (
                                     <span
                                       className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
@@ -1072,7 +1067,7 @@ export default function AdminMembers() {
                                 </div>
                                 {member.subscription_status === "trialing" ? (
                                   <div className="mt-0.5 truncate text-[11px] font-medium text-blue-600 dark:text-blue-300">
-                                    {t("Trial ends")} {formatActivityDate(member.trial_ends_at)} · {member.trial_days_remaining}d {t("left")}
+                                    {t("Trial ends")} {formatActivityDate(member.trial_ends_at)}
                                   </div>
                                 ) : null}
                               </div>

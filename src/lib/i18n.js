@@ -568,8 +568,6 @@ const UI_TRANSLATIONS = {
   "View trial members": "Ver miembros en trial",
   "Active trial members": "Miembros con trial activo",
   "Clear trial filter": "Quitar filtro de trials",
-  "ACTIVE TRIAL": "TRIAL ACTIVO",
-  "left": "restantes",
   "None": "Ninguno",
   "Trial → Monthly": "Trial → Mensual",
   "Today": "Hoy",
