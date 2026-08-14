@@ -24,6 +24,7 @@ const UI_TRANSLATIONS = {
   "Analytics": "Analíticas",
   "Pricing": "Precios",
   "Members": "Miembros",
+  "Business Metrics": "Métricas del negocio",
   "Learning": "Aprendizaje",
   "Admin": "Admin",
   "Free Plan": "Plan Gratis",

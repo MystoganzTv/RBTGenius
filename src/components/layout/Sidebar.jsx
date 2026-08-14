@@ -29,8 +29,8 @@ const navItems = [
 ];
 
 const adminItems = [
-  { name: "Owner", icon: CircleDollarSign, page: "OwnerDashboard", badge: "PRIVATE" },
   { name: "Members", icon: Shield, page: "AdminMembers", badge: "ADMIN" },
+  { name: "Business Metrics", icon: CircleDollarSign, page: "OwnerDashboard", badge: "PRIVATE" },
 ];
 
 export default function Sidebar({ currentPage, isAdmin = false, plan = "free" }) {

@@ -32,8 +32,8 @@ const moreItems = [
 ];
 
 const adminMoreItems = [
-  { name: "Owner", icon: CircleDollarSign, page: "OwnerDashboard", badge: "PRIVATE" },
   { name: "Members", icon: Shield, page: "AdminMembers", badge: "ADMIN" },
+  { name: "Business Metrics", icon: CircleDollarSign, page: "OwnerDashboard", badge: "PRIVATE" },
 ];
 
 export default function MobileLayout({ children, currentPageName }) {

@@ -155,9 +155,9 @@ export default function OwnerDashboard() {
       <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#1E5EFF]">
-            <CircleDollarSign className="h-4 w-4" /> RBTGenius Owner
+            <CircleDollarSign className="h-4 w-4" /> Private business metrics
           </div>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Business & product health</h1>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">Business Metrics</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Private, source-labeled metrics. Refreshed {new Date(data.generatedAt).toLocaleString()}.
           </p>
