@@ -143,3 +143,23 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 -- ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 -- ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT TRUE;
 -- ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token TEXT;
+
+-- ── Row-Level Security ────────────────────────────────────────────────────────
+-- Supabase exposes every table in `public` through its REST Data API. This app
+-- never uses that API (direct Postgres via DATABASE_URL, no supabase-js), so we
+-- fail closed: RLS on, zero policies. The owner role behind DATABASE_URL keeps
+-- full access because owners bypass RLS. See
+-- scripts/migrations/2026-08-18-enable-rls-all-tables.sql.
+ALTER TABLE users                  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attempts               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mock_exams             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments               ENABLE ROW LEVEL SECURITY;
+ALTER TABLE practice_sessions      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tutor_conversations    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tutor_messages         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_tokens            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stripe_events          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE oauth_states           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rate_limits            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE apple_analytics_rows   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE apple_analytics_imports ENABLE ROW LEVEL SECURITY;
