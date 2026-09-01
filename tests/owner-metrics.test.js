@@ -99,3 +99,125 @@ test('legacy zero-dollar or unknown-provider records do not inflate transaction 
   assert.equal(metrics.money.transactions, 1);
   assert.equal(metrics.money.customerGross, 19.99);
 });
+
+test('reconciled Stripe balance transactions produce a real net payout', () => {
+  const metrics = buildOwnerMetrics({
+    now,
+    users: [{ id: 'u1', plan: 'premium_yearly' }],
+    payments: [
+      {
+        id: 'stripe-1',
+        user_id: 'u1',
+        status: 'completed',
+        amount: 99.99,
+        provider: 'stripe',
+        payment_date: '2026-08-02T12:00:00.000Z',
+        stripe_fee: 3.19,
+        stripe_net: 96.8,
+        stripe_settlement_currency: 'USD',
+      },
+    ],
+  });
+
+  assert.equal(metrics.money.stripe.gross, 99.99);
+  assert.equal(metrics.money.stripe.fees, 3.19);
+  assert.equal(metrics.money.stripe.net, 96.8);
+  assert.equal(metrics.money.stripe.feeDataStatus, 'live');
+  assert.equal(metrics.money.stripe.netCoverage, 1);
+  assert.equal(metrics.money.stripe.effectiveFeeRate, 3.19);
+  assert.equal(metrics.sources.stripe.status, 'live');
+  assert.equal(metrics.money.verifiedTakeHome, 96.8);
+  assert.deepEqual(metrics.money.verifiedTakeHomeBlockers, []);
+});
+
+test('partially reconciled Stripe charges never claim a verified take-home', () => {
+  const metrics = buildOwnerMetrics({
+    now,
+    users: [{ id: 'u1', plan: 'premium_monthly' }],
+    payments: [
+      {
+        id: 'stripe-1',
+        user_id: 'u1',
+        status: 'completed',
+        amount: 19.99,
+        provider: 'stripe',
+        payment_date: '2026-08-02T12:00:00.000Z',
+        stripe_fee: 0.88,
+        stripe_net: 19.11,
+        stripe_settlement_currency: 'USD',
+      },
+      {
+        id: 'stripe-2',
+        user_id: 'u1',
+        status: 'completed',
+        amount: 19.99,
+        provider: 'stripe',
+        payment_date: '2026-08-09T12:00:00.000Z',
+      },
+    ],
+  });
+
+  assert.equal(metrics.money.stripe.net, 19.11);
+  assert.equal(metrics.money.stripe.uncoveredGross, 19.99);
+  assert.equal(metrics.money.stripe.feeDataStatus, 'partial');
+  assert.equal(metrics.sources.stripe.status, 'partial');
+  assert.equal(metrics.money.verifiedTakeHome, null);
+  assert.deepEqual(metrics.money.verifiedTakeHomeBlockers, ['stripe_fees_pending']);
+});
+
+test('fees settled in another currency are not mixed into the USD net', () => {
+  const metrics = buildOwnerMetrics({
+    now,
+    users: [{ id: 'u1', plan: 'premium_monthly' }],
+    payments: [
+      {
+        id: 'stripe-eur',
+        user_id: 'u1',
+        status: 'completed',
+        amount: 19.99,
+        provider: 'stripe',
+        payment_date: '2026-08-02T12:00:00.000Z',
+        stripe_fee: 0.85,
+        stripe_net: 17.2,
+        stripe_settlement_currency: 'EUR',
+      },
+    ],
+  });
+
+  assert.equal(metrics.money.stripe.net, null);
+  assert.equal(metrics.money.stripe.feeDataStatus, 'setup');
+  assert.equal(metrics.money.verifiedTakeHome, null);
+});
+
+test('pending Apple payout blocks a verified take-home even with Stripe reconciled', () => {
+  const metrics = buildOwnerMetrics({
+    now,
+    users: [{ id: 'u1', plan: 'premium_monthly' }],
+    payments: [
+      {
+        id: 'stripe-1',
+        user_id: 'u1',
+        status: 'completed',
+        amount: 19.99,
+        provider: 'stripe',
+        payment_date: '2026-08-02T12:00:00.000Z',
+        stripe_fee: 0.88,
+        stripe_net: 19.11,
+        stripe_settlement_currency: 'USD',
+      },
+      {
+        id: 'apple-1',
+        user_id: 'u1',
+        status: 'completed',
+        amount: 19.99,
+        provider: 'revenuecat',
+        payment_date: '2026-08-03T12:00:00.000Z',
+        metadata: { provider: 'revenuecat', usd_price: 19.99, environment: 'PRODUCTION' },
+      },
+    ],
+  });
+
+  assert.equal(metrics.money.stripe.feeDataStatus, 'live');
+  assert.equal(metrics.money.verifiedTakeHome, null);
+  assert.deepEqual(metrics.money.verifiedTakeHomeBlockers, ['apple_final_payout_pending']);
+});

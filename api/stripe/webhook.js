@@ -7,6 +7,7 @@ import {
   notifyNewSubscription,
   sendPaymentConfirmation,
 } from '../../server/lib/admin-notify.js';
+import { reconcileStripeFees } from '../lib/stripe-fees.js';
 
 export const config = {
   api: { bodyParser: false },
@@ -166,6 +167,18 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('[stripe/webhook] Error handling event:', err.message);
     // Return 200 anyway so Stripe doesn't retry (event is saved as processed)
+  }
+
+  // Read the real processor fee for any payment still recorded as gross-only.
+  // charge.* events usually arrive first, so this also covers the payment the
+  // event above just created.
+  try {
+    const fees = await reconcileStripeFees({ limit: 5 });
+    if (fees.reconciled) {
+      console.log(`[stripe/webhook] reconciled fees for ${fees.reconciled} payment(s)`);
+    }
+  } catch (err) {
+    console.error('[stripe/webhook] Fee reconciliation skipped:', err.message);
   }
 
   return res.status(200).json({ received: true });

@@ -47,6 +47,7 @@ import {
   verifyWebhookAuth,
 } from '../server/lib/revenuecat.js';
 import { buildOwnerMetrics } from '../server/lib/owner-metrics.js';
+import { reconcileStripeFees } from './lib/stripe-fees.js';
 import {
   aggregateAppleRows,
   isAppleAnalyticsConfigured,
@@ -1414,10 +1415,33 @@ async function webApiHandler(req) {
   }
 
   // ── Admin ────────────────────────────────────────────────────────────────────
+  if (apiPath === '/admin/owner/stripe/reconcile-fees' && req.method === 'POST') {
+    const auth = await requireAdmin(req);
+    if (auth.error) return auth.error;
+    try {
+      const body = await req.json().catch(() => ({}));
+      const requestedLimit = Number(body?.limit);
+      const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+        ? Math.min(Math.trunc(requestedLimit), 200)
+        : 100;
+      return json(await reconcileStripeFees({ limit }));
+    } catch (err) {
+      return json(
+        { message: err.message || 'Stripe fee reconciliation failed' },
+        { status: 502 },
+      );
+    }
+  }
+
   if (apiPath === '/admin/owner' && req.method === 'GET') {
     const auth = await requireAdmin(req);
     if (auth.error) return auth.error;
     try {
+      try {
+        await reconcileStripeFees({ limit: 15 });
+      } catch {
+        // Metrics stay honest without it: unreconciled charges report as gross-only.
+      }
       const dataset = await db.getAdminMembersDataset();
       const groupByUser = rows => rows.reduce((result, row) => {
         const current = result.get(row.user_id) || [];

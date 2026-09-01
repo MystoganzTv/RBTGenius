@@ -115,6 +115,16 @@ export default function OwnerDashboard() {
   const data = query.data;
   const maxAppleProceeds = data?.money?.apple?.estimatedProceeds ?? 0;
   const appleProceedsKnown = data?.money?.apple?.source !== "setup";
+  const stripeMoney = data?.money?.stripe;
+  const stripeFeesKnown = Boolean(stripeMoney && stripeMoney.netCoverage > 0);
+  const stripeFeesComplete = stripeMoney?.feeDataStatus === "live";
+  const verifiedTakeHome = data?.money?.verifiedTakeHome;
+  const takeHomeBlockers = data?.money?.verifiedTakeHomeBlockers || [];
+  const takeHomeNote = verifiedTakeHome !== null && verifiedTakeHome !== undefined
+    ? "Every Stripe charge reconciled against its balance transaction. Still before your income taxes."
+    : takeHomeBlockers.includes("apple_final_payout_pending")
+      ? "Stripe fees are reconciled, but Apple's final financial payout is still not connected."
+      : "We will not call gross sales take-home. Stripe fees still need reconciliation.";
   const connectionRows = useMemo(
     () => Object.entries(data?.sources || {}),
     [data?.sources],
@@ -175,10 +185,14 @@ export default function OwnerDashboard() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             label="Verified total take-home"
-            value="Not ready"
-            note="We will not call gross sales take-home. Stripe fees and Apple final financial payout still need reconciliation."
+            value={
+              verifiedTakeHome !== null && verifiedTakeHome !== undefined
+                ? money(verifiedTakeHome)
+                : "Not ready"
+            }
+            note={takeHomeNote}
             icon={BadgeDollarSign}
-            tone="amber"
+            tone={verifiedTakeHome !== null && verifiedTakeHome !== undefined ? "green" : "amber"}
           />
           <MetricCard
             label="Customer spending"
@@ -195,14 +209,28 @@ export default function OwnerDashboard() {
           />
           <MetricCard
             label="Stripe payout after fees"
-            value="Connect"
-            note={`${money(data.money.stripe.gross)} gross is recorded; processing fees are not yet reconciled`}
+            value={stripeFeesKnown ? money(stripeMoney.net) : stripeMoney?.transactions ? "Pending" : "No charges"}
+            note={
+              stripeFeesKnown
+                ? `${money(stripeMoney.fees)} in processor fees${
+                    stripeMoney.effectiveFeeRate !== null
+                      ? ` (${stripeMoney.effectiveFeeRate}% of gross)`
+                      : ""
+                  }${
+                    stripeFeesComplete
+                      ? " · all charges reconciled"
+                      : ` · ${number(stripeMoney.netCoverage)} of ${number(stripeMoney.netCoverageTotal)} charges reconciled, ${money(stripeMoney.uncoveredGross)} still gross-only`
+                  }`
+                : stripeMoney?.transactions
+                  ? `${money(stripeMoney.gross)} gross recorded; waiting on Stripe balance transactions`
+                  : "No production Stripe charges recorded yet"
+            }
             icon={CircleDollarSign}
             tone="green"
           />
         </div>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-          <strong>Important:</strong> platform payout is still before your business or personal income taxes. “Customer spending” is revenue before Apple/Stripe deductions; it is not money in your bank.
+          <strong>Important:</strong> platform payout is still before your business or personal income taxes. “Customer spending” is revenue before Apple/Stripe deductions; it is not money in your bank. Stripe figures come from balance transactions and exclude refunds and disputes issued later.
         </div>
       </section>
 
@@ -228,7 +256,12 @@ export default function OwnerDashboard() {
                 <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300"><CreditCard className="h-5 w-5" /></div>
                 <div><p className="font-semibold text-slate-900 dark:text-white">Web · Stripe</p><p className="text-xs text-slate-500">{number(data.money.stripe.transactions)} transactions</p></div>
               </div>
-              <p className="text-lg font-bold text-slate-950 dark:text-white">{money(data.money.stripe.gross)}</p>
+              <div className="text-right">
+                <p className="text-lg font-bold text-slate-950 dark:text-white">{money(data.money.stripe.gross)}</p>
+                {stripeFeesKnown ? (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">{money(stripeMoney.net)} after fees</p>
+                ) : null}
+              </div>
             </div>
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">

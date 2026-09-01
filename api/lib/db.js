@@ -741,7 +741,52 @@ function normalizePayment(row) {
     stripe_subscription_id:
       row.stripe_subscription_id || metadata.stripe_subscription_id || null,
     stripe_invoice_id: row.stripe_invoice_id || metadata.stripe_invoice_id || null,
+    stripe_payment_intent_id:
+      row.stripe_payment_intent_id || metadata.stripe_payment_intent_id || null,
+    stripe_charge_id: row.stripe_charge_id || metadata.stripe_charge_id || null,
+    stripe_balance_transaction_id:
+      row.stripe_balance_transaction_id || metadata.stripe_balance_transaction_id || null,
+    stripe_fee: numberOrNull(row.stripe_fee ?? metadata.stripe_fee),
+    stripe_net: numberOrNull(row.stripe_net ?? metadata.stripe_net),
+    stripe_settlement_currency:
+      row.stripe_settlement_currency || metadata.stripe_settlement_currency || null,
+    stripe_fee_reconciled_at:
+      row.stripe_fee_reconciled_at || metadata.stripe_fee_reconciled_at || null,
   };
+}
+
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+/**
+ * Stores the real Stripe processing fee (from a balance transaction) on an
+ * existing payment row. Fee fields live in metadata so no migration is needed.
+ */
+export async function saveStripePaymentFees(paymentId, fees) {
+  if (!paymentId || !fees || !Number.isFinite(Number(fees.net))) return false;
+
+  const patch = {
+    stripe_charge_id: fees.charge_id || null,
+    stripe_balance_transaction_id: fees.balance_transaction_id || null,
+    stripe_fee: Number(fees.fee),
+    stripe_net: Number(fees.net),
+    stripe_settlement_currency: fees.settlement_currency || 'USD',
+    stripe_fee_available_on: fees.available_on || null,
+    stripe_fee_source: fees.source || 'stripe_balance_transaction',
+    stripe_fee_reconciled_at: fees.reconciled_at || new Date().toISOString(),
+  };
+
+  const updated = await sql`
+    UPDATE payments
+    SET metadata = COALESCE(metadata, '{}'::jsonb) || ${JSON.stringify(patch)}::jsonb
+    WHERE id = ${paymentId}
+    RETURNING id
+  `;
+
+  return updated.length > 0;
 }
 
 export async function getPaymentsByUser(userId) {
@@ -775,6 +820,12 @@ export async function createPayment(payment) {
     ...(payment.stripe_invoice_id && !payment.metadata?.stripe_invoice_id
       ? { stripe_invoice_id: payment.stripe_invoice_id }
       : {}),
+    ...(payment.stripe_payment_intent_id && !payment.metadata?.stripe_payment_intent_id
+      ? { stripe_payment_intent_id: payment.stripe_payment_intent_id }
+      : {}),
+    ...(payment.stripe_charge_id && !payment.metadata?.stripe_charge_id
+      ? { stripe_charge_id: payment.stripe_charge_id }
+      : {}),
   };
   const inserted = await sql`
     INSERT INTO payments (id, user_id, status, amount, payment_date, created_at, metadata)
@@ -790,7 +841,9 @@ export async function createPayment(payment) {
       SET status = ${payment.status ?? null},
           amount = ${Number(payment.amount ?? 0)},
           payment_date = ${payment.payment_date ?? null},
-          metadata = ${JSON.stringify(metadata)}
+          -- merge, never replace: a re-delivered event must not wipe the
+          -- reconciled Stripe fee/net stored by saveStripePaymentFees()
+          metadata = COALESCE(metadata, '{}'::jsonb) || ${JSON.stringify(metadata)}::jsonb
       WHERE id = ${payment.id}
     `;
   }

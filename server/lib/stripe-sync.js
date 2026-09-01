@@ -116,6 +116,8 @@ export function syncConfirmedCheckout(current, checkout, createId) {
     stripe_customer_id: getObjectId(checkout.customer),
     stripe_subscription_id: getObjectId(checkout.subscription),
     stripe_invoice_id: getObjectId(checkout.invoice),
+    stripe_payment_intent_id: getObjectId(checkout.payment_intent),
+    stripe_charge_id: null,
   };
 
   return {
@@ -178,6 +180,8 @@ function applyInvoicePaid(current, invoice, createId) {
     stripe_customer_id: getObjectId(invoice.customer),
     stripe_subscription_id: getObjectId(invoice.subscription),
     stripe_invoice_id: invoice.id,
+    stripe_payment_intent_id: getObjectId(invoice.payment_intent),
+    stripe_charge_id: getObjectId(invoice.charge),
   };
 
   return {
@@ -199,6 +203,95 @@ function applyInvoicePaid(current, invoice, createId) {
       nextPayment,
     ),
   };
+}
+
+function matchesStripePayment(payment, identifiers) {
+  if (String(payment?.provider || "").toLowerCase() !== "stripe") {
+    return false;
+  }
+
+  const { chargeId, paymentIntentId, invoiceId, sessionId } = identifiers;
+
+  return Boolean(
+    (chargeId && payment.stripe_charge_id === chargeId) ||
+      (paymentIntentId && payment.stripe_payment_intent_id === paymentIntentId) ||
+      (invoiceId && payment.stripe_invoice_id === invoiceId) ||
+      (sessionId && payment.stripe_session_id === sessionId),
+  );
+}
+
+/**
+ * Links a Stripe charge to the payment we already recorded so the fee
+ * reconciliation step knows which balance transaction to read.
+ */
+export function applyStripeChargeIdentifiers(current, charge) {
+  const identifiers = {
+    chargeId: charge?.id || null,
+    paymentIntentId: getObjectId(charge?.payment_intent),
+    invoiceId: getObjectId(charge?.invoice),
+    sessionId: null,
+  };
+
+  if (!identifiers.chargeId) {
+    return current;
+  }
+
+  let changed = false;
+  const payments = (current.payments || []).map((payment) => {
+    if (!matchesStripePayment(payment, identifiers)) {
+      return payment;
+    }
+
+    if (
+      payment.stripe_charge_id === identifiers.chargeId &&
+      payment.stripe_payment_intent_id === identifiers.paymentIntentId
+    ) {
+      return payment;
+    }
+
+    changed = true;
+    return {
+      ...payment,
+      stripe_charge_id: identifiers.chargeId,
+      stripe_payment_intent_id:
+        identifiers.paymentIntentId || payment.stripe_payment_intent_id || null,
+      stripe_invoice_id: payment.stripe_invoice_id || identifiers.invoiceId || null,
+    };
+  });
+
+  return changed ? { ...current, payments } : current;
+}
+
+/**
+ * Stores the real processor fee for one payment. `fees` comes from
+ * fetchStripePaymentFees() and is always expressed in the settlement currency.
+ */
+export function applyStripePaymentFees(current, paymentId, fees) {
+  if (!paymentId || !fees || !Number.isFinite(Number(fees.net))) {
+    return current;
+  }
+
+  let changed = false;
+  const payments = (current.payments || []).map((payment) => {
+    if (payment.id !== paymentId) {
+      return payment;
+    }
+
+    changed = true;
+    return {
+      ...payment,
+      stripe_charge_id: fees.charge_id || payment.stripe_charge_id || null,
+      stripe_balance_transaction_id: fees.balance_transaction_id || null,
+      stripe_fee: Number(fees.fee),
+      stripe_net: Number(fees.net),
+      stripe_settlement_currency: fees.settlement_currency || "USD",
+      stripe_fee_available_on: fees.available_on || null,
+      stripe_fee_source: fees.source || "stripe_balance_transaction",
+      stripe_fee_reconciled_at: fees.reconciled_at || new Date().toISOString(),
+    };
+  });
+
+  return changed ? { ...current, payments } : current;
 }
 
 function applySubscriptionDeleted(current, subscription) {
@@ -239,6 +332,11 @@ export function applyStripeWebhookEvent(current, event, createId) {
       break;
     case "invoice.paid":
       next = applyInvoicePaid(next, event.data?.object || {}, createId);
+      break;
+    case "charge.succeeded":
+    case "charge.updated":
+    case "charge.refunded":
+      next = applyStripeChargeIdentifiers(next, event.data?.object || {});
       break;
     case "customer.subscription.deleted":
       next = applySubscriptionDeleted(next, event.data?.object || {});

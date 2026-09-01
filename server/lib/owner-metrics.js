@@ -40,6 +40,81 @@ function estimatedStoreProceeds(payment) {
   return roundMoney(paymentGrossUsd(payment) * (1 - tax - commission));
 }
 
+function stripeFeeRecord(payment, currency = 'USD') {
+  const net = Number(payment?.stripe_net);
+  const fee = Number(payment?.stripe_fee);
+  if (!Number.isFinite(net) || !Number.isFinite(fee)) return null;
+  const settlementCurrency = String(
+    payment?.stripe_settlement_currency || currency,
+  ).toUpperCase();
+  // Balance transactions are settled in the account currency. Mixing
+  // currencies would silently fake a take-home number, so we do not.
+  if (settlementCurrency !== String(currency).toUpperCase()) return null;
+  return { net: roundMoney(net), fee: roundMoney(fee) };
+}
+
+function summarizeStripeFees(stripePayments, currency = 'USD') {
+  let fees = 0;
+  let net = 0;
+  let coveredGross = 0;
+  let covered = 0;
+
+  for (const payment of stripePayments) {
+    const record = stripeFeeRecord(payment, currency);
+    if (!record) continue;
+    covered += 1;
+    fees += record.fee;
+    net += record.net;
+    coveredGross += paymentGrossUsd(payment);
+  }
+
+  const total = stripePayments.length;
+  const gross = roundMoney(
+    stripePayments.reduce((sum, payment) => sum + paymentGrossUsd(payment), 0),
+  );
+  const complete = total > 0 && covered === total;
+
+  return {
+    gross,
+    transactions: total,
+    fees: covered ? roundMoney(fees) : null,
+    net: covered ? roundMoney(net) : null,
+    coveredGross: roundMoney(coveredGross),
+    uncoveredGross: roundMoney(gross - coveredGross),
+    netCoverage: covered,
+    netCoverageTotal: total,
+    effectiveFeeRate:
+      covered && coveredGross > 0
+        ? Number(((fees / coveredGross) * 100).toFixed(2))
+        : null,
+    feeDataStatus: complete ? 'live' : covered ? 'partial' : 'setup',
+    source: covered ? 'stripe_balance_transactions' : 'setup',
+  };
+}
+
+function stripeSourceDescriptor(stripe) {
+  if (stripe.feeDataStatus === 'live') {
+    return {
+      status: 'live',
+      label: `Gross and processor fees live · ${stripe.netCoverage} of ${stripe.netCoverageTotal} charges reconciled`,
+    };
+  }
+
+  if (stripe.feeDataStatus === 'partial') {
+    return {
+      status: 'partial',
+      label: `Processor fees reconciled for ${stripe.netCoverage} of ${stripe.netCoverageTotal} charges`,
+    };
+  }
+
+  return {
+    status: stripe.transactions ? 'partial' : 'setup',
+    label: stripe.transactions
+      ? 'Gross payments live; processor fees not reconciled yet'
+      : 'Connected · no production charges recorded yet',
+  };
+}
+
 function monthKey(date) {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'UTC',
@@ -125,9 +200,8 @@ export function buildOwnerMetrics({ users = [], payments = [], now = new Date() 
       payment?.metadata?.reason === 'subscription_renewal',
   ).length;
 
-  const stripeGross = roundMoney(
-    stripePayments.reduce((sum, payment) => sum + paymentGrossUsd(payment), 0),
-  );
+  const stripeSummary = summarizeStripeFees(stripePayments, 'USD');
+  const stripeGross = stripeSummary.gross;
   const appleGross = roundMoney(
     applePayments.reduce((sum, payment) => sum + paymentGrossUsd(payment), 0),
   );
@@ -144,12 +218,7 @@ export function buildOwnerMetrics({ users = [], payments = [], now = new Date() 
       ),
       transactions: productionPayments.length,
       transactions30d: recentPayments.length,
-      stripe: {
-        gross: stripeGross,
-        transactions: stripePayments.length,
-        net: null,
-        feeDataStatus: 'setup',
-      },
+      stripe: stripeSummary,
       apple: {
         gross: appleGross,
         transactions: applePayments.length,
@@ -158,7 +227,22 @@ export function buildOwnerMetrics({ users = [], payments = [], now = new Date() 
         proceedsCoverageTotal: applePayments.length,
         source: appleWithProceeds.length ? 'revenuecat_webhooks' : 'setup',
       },
-      verifiedTakeHome: null,
+      // Only a number we can defend: every Stripe charge reconciled and no
+      // iOS revenue waiting on Apple's final financial report.
+      verifiedTakeHome:
+        stripeSummary.feeDataStatus === 'live' && applePayments.length === 0
+          ? stripeSummary.net
+          : null,
+      verifiedTakeHomeBlockers: [
+        ...(stripeSummary.feeDataStatus === 'live'
+          ? []
+          : [
+              stripeSummary.transactions
+                ? 'stripe_fees_pending'
+                : 'stripe_no_charges',
+            ]),
+        ...(applePayments.length ? ['apple_final_payout_pending'] : []),
+      ],
       currency: 'USD',
     },
     customers: {
@@ -181,7 +265,7 @@ export function buildOwnerMetrics({ users = [], payments = [], now = new Date() 
     history: buildRevenueHistory(productionPayments, now),
     sources: {
       database: { status: 'live', label: 'Members, activity and recorded payments' },
-      stripe: { status: 'partial', label: 'Gross payments live; processor fees not connected' },
+      stripe: stripeSourceDescriptor(stripeSummary),
       revenueCat: {
         status: appleWithProceeds.length === applePayments.length && applePayments.length
           ? 'live'

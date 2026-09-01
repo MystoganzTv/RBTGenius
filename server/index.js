@@ -69,6 +69,7 @@ import {
   toEasternDateKey,
 } from './lib/member-analytics.js';
 import { buildOwnerMetrics } from './lib/owner-metrics.js';
+import { reconcileStripeFees } from './lib/stripe-fees.js';
 import { fetchRevenueCatOwnerRevenue } from './lib/revenuecat.js';
 
 const app = express();
@@ -159,6 +160,8 @@ app.post(
           }
         }
       }
+
+      void reconcileStripeFees({ limit: 5 }).catch(() => {});
 
       res.json({ received: true });
     } catch (error) {
@@ -1560,6 +1563,12 @@ function buildLocalMemberAnalytics(db, user) {
 }
 
 app.get('/api/admin/owner', requireAdmin, async (req, res) => {
+  try {
+    await reconcileStripeFees({ limit: 15 });
+  } catch {
+    // Metrics stay honest without it: unreconciled payments are reported as pending.
+  }
+
   const db = readDb();
   const users = db.users.map(user => {
     const analytics = buildLocalMemberAnalytics(db, user);
@@ -1598,6 +1607,22 @@ app.get('/api/admin/owner', requireAdmin, async (req, res) => {
   }
 
   res.json(ownerMetrics);
+});
+
+app.post('/api/admin/owner/stripe/reconcile-fees', requireAdmin, async (req, res) => {
+  const requestedLimit = Number(req.body?.limit);
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+    ? Math.min(Math.trunc(requestedLimit), 200)
+    : 100;
+
+  try {
+    const summary = await reconcileStripeFees({ limit });
+    res.json(summary);
+  } catch (error) {
+    res
+      .status(502)
+      .json({ message: error.message || 'Stripe fee reconciliation failed' });
+  }
 });
 
 app.get('/api/admin/metrics', requireAdmin, (req, res) => {

@@ -468,3 +468,206 @@ export async function confirmStripeStoreCheckoutSession(sessionId) {
     ).toISOString(),
   };
 }
+
+function centsToAmount(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return null;
+  }
+
+  return Number((number / 100).toFixed(2));
+}
+
+function firstDefined(...values) {
+  return values.find((value) => value !== null && value !== undefined && value !== "") || null;
+}
+
+async function retrieveWithOptionalExpand(retrieve, id, expand) {
+  try {
+    return await retrieve(id, { expand });
+  } catch (error) {
+    if (error?.type === "StripeInvalidRequestError") {
+      try {
+        return await retrieve(id);
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  }
+}
+
+async function resolveChargeIdFromPaymentIntent(stripe, paymentIntentId) {
+  if (!paymentIntentId) {
+    return null;
+  }
+
+  const intent = await retrieveWithOptionalExpand(
+    (id, options) => stripe.paymentIntents.retrieve(id, options),
+    paymentIntentId,
+    ["latest_charge"],
+  );
+
+  return getObjectId(intent?.latest_charge) || getObjectId(intent?.charges?.data?.[0]) || null;
+}
+
+async function resolveChargeIdFromInvoice(stripe, invoiceId) {
+  if (!invoiceId) {
+    return null;
+  }
+
+  const invoice = await retrieveWithOptionalExpand(
+    (id, options) => stripe.invoices.retrieve(id, options),
+    invoiceId,
+    ["payments.data.payment.payment_intent"],
+  );
+
+  if (!invoice) {
+    return null;
+  }
+
+  const directCharge = getObjectId(invoice.charge);
+  if (directCharge) {
+    return directCharge;
+  }
+
+  const payments = invoice.payments?.data || [];
+  for (const entry of payments) {
+    const payment = entry?.payment || entry;
+    const chargeId = getObjectId(payment?.charge);
+    if (chargeId) {
+      return chargeId;
+    }
+
+    const intent = payment?.payment_intent;
+    const resolved =
+      getObjectId(intent?.latest_charge) ||
+      (await resolveChargeIdFromPaymentIntent(stripe, getObjectId(intent)));
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return resolveChargeIdFromPaymentIntent(stripe, getObjectId(invoice.payment_intent));
+}
+
+async function resolveChargeIdFromSession(stripe, sessionId) {
+  if (!sessionId) {
+    return null;
+  }
+
+  const session = await retrieveWithOptionalExpand(
+    (id, options) => stripe.checkout.sessions.retrieve(id, options),
+    sessionId,
+    ["payment_intent"],
+  );
+
+  if (!session) {
+    return null;
+  }
+
+  const intent = session.payment_intent;
+  return (
+    getObjectId(intent?.latest_charge) ||
+    (await resolveChargeIdFromPaymentIntent(stripe, getObjectId(intent))) ||
+    (await resolveChargeIdFromInvoice(stripe, getObjectId(session.invoice)))
+  );
+}
+
+/**
+ * Resolves the real Stripe processing fee for one recorded payment.
+ * Returns null when Stripe is not configured, when the charge cannot be
+ * resolved, or when the balance transaction is not available yet.
+ */
+export async function fetchStripePaymentFees({
+  chargeId = null,
+  paymentIntentId = null,
+  invoiceId = null,
+  sessionId = null,
+} = {}) {
+  const stripe = getStripeClient();
+  if (!stripe) {
+    return null;
+  }
+
+  const resolvedChargeId =
+    chargeId ||
+    (await resolveChargeIdFromPaymentIntent(stripe, paymentIntentId)) ||
+    (await resolveChargeIdFromInvoice(stripe, invoiceId)) ||
+    (await resolveChargeIdFromSession(stripe, sessionId));
+
+  if (!resolvedChargeId) {
+    return null;
+  }
+
+  const charge = await retrieveWithOptionalExpand(
+    (id, options) => stripe.charges.retrieve(id, options),
+    resolvedChargeId,
+    ["balance_transaction"],
+  );
+
+  if (!charge) {
+    return null;
+  }
+
+  let balanceTransaction = charge.balance_transaction;
+  if (typeof balanceTransaction === "string") {
+    try {
+      balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTransaction);
+    } catch {
+      balanceTransaction = null;
+    }
+  }
+
+  if (!balanceTransaction) {
+    return null;
+  }
+
+  const fee = centsToAmount(balanceTransaction.fee);
+  const net = centsToAmount(balanceTransaction.net);
+  if (fee === null || net === null) {
+    return null;
+  }
+
+  return {
+    charge_id: charge.id,
+    balance_transaction_id: balanceTransaction.id,
+    fee,
+    net,
+    gross: centsToAmount(balanceTransaction.amount),
+    refunded: centsToAmount(charge.amount_refunded) || 0,
+    settlement_currency: normalizeCurrency(balanceTransaction.currency),
+    available_on: balanceTransaction.available_on
+      ? new Date(balanceTransaction.available_on * 1000).toISOString()
+      : null,
+    reconciled_at: new Date().toISOString(),
+    source: "stripe_balance_transaction",
+  };
+}
+
+export function paymentNeedsFeeReconciliation(payment) {
+  if (!payment) {
+    return false;
+  }
+
+  const provider = String(payment.provider || payment.metadata?.provider || "").toLowerCase();
+  if (provider !== "stripe") {
+    return false;
+  }
+
+  if (payment.status !== "completed") {
+    return false;
+  }
+
+  return !Number.isFinite(Number(payment.stripe_net));
+}
+
+export function stripeFeeLookupKeys(payment) {
+  return {
+    chargeId: firstDefined(payment?.stripe_charge_id),
+    paymentIntentId: firstDefined(payment?.stripe_payment_intent_id),
+    invoiceId: firstDefined(payment?.stripe_invoice_id),
+    sessionId: firstDefined(payment?.stripe_session_id),
+  };
+}
